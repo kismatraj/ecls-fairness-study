@@ -1,0 +1,144 @@
+# ECLS Fairness Study Configuration
+
+project:
+  name: "ecls-fairness-study"
+  version: "0.1.0"
+
+# Paths
+paths:
+  raw_data: "data/raw/"
+  processed_data: "data/processed/"
+  results: "results/"
+  figures: "results/figures/"
+  tables: "results/tables/"
+  models: "results/models/"
+
+# Data Configuration
+data:
+  filename: "childK5p.dat"
+  
+  # Missing value codes
+  missing_codes: [-1, -7, -8, -9]
+  suppressed_code: -2
+  
+  # Sample weights
+  weights:
+    cross_sectional: "W1C0"
+    longitudinal: "W9C29P_20"
+
+# Variables
+variables:
+  # Outcomes (5th grade)
+  outcomes:
+    reading: "X9RTHETA"
+    math: "X9MTHETA"
+
+  # At-risk threshold
+  at_risk_percentile: 25
+
+  # Demographics
+  demographics:
+    race: "X_RACETH_R"
+    sex: "X_CHSEX_R"
+    ses: "X1SESQ5"
+    language: "X12LANGST"
+
+  # Race labels
+  race_labels:
+    1: "White"
+    2: "Black"
+    3: "Hispanic"
+    4: "Asian"
+    5: "Other"  # NHPI
+    6: "Other"  # AIAN
+    7: "Other"  # Multiracial
+
+  # Predictors by category
+  predictors:
+    baseline_cognitive:
+      - "X1RTHETK"
+      - "X2RTHETK"
+      - "X1MTHETK"
+      - "X2MTHETK"
+
+    executive_function:
+      - "X6DCCSSCR"  # Only X6 available in public-use file
+
+    approaches_to_learning:
+      - "X1TCHAPP"
+      - "X2TCHAPP"
+      - "X4TCHAPP"
+
+    child_demographics:
+      - "X_CHSEX_R"
+      - "X_RACETH_R"
+      - "X1SESQ5"
+      - "X12LANGST"
+
+# Model Configuration
+model:
+  random_state: 42
+  test_size: 0.30
+  cv_folds: 5
+  
+  # Algorithms to train
+  algorithms:
+    logistic_regression:
+      enabled: true
+      params:
+        C: [0.01, 0.1, 1.0, 10.0]
+        penalty: ["l2"]
+        max_iter: [1000]
+    
+    elastic_net:
+      enabled: true
+      params:
+        alpha: [0.001, 0.01, 0.1, 1.0]
+        l1_ratio: [0.2, 0.5, 0.8]
+    
+    random_forest:
+      enabled: true
+      params:
+        n_estimators: [100, 200]
+        max_depth: [5, 10, 15]
+        min_samples_leaf: [5, 10]
+    
+    xgboost:
+      enabled: true
+      params:
+        n_estimators: [100, 200]
+        max_depth: [3, 5, 7]
+        learning_rate: [0.01, 0.1]
+
+# Fairness Configuration
+fairness:
+  # Protected attributes
+  protected_attributes:
+    - "race"
+    - "ses"
+    - "language"
+  
+  # Reference groups
+  reference_groups:
+    race: "White"
+    ses: 5
+    language: 1
+  
+  # Metrics to compute
+  metrics:
+    - "demographic_parity"
+    - "equalized_odds"
+    - "true_positive_rate"
+    - "false_positive_rate"
+    - "positive_predictive_value"
+  
+  # Disparity thresholds
+  thresholds:
+    disparate_impact: 0.80
+    max_tpr_gap: 0.10
+
+# Output Configuration
+output:
+  figure_format: "png"
+  figure_dpi: 300
+  table_formats: ["csv", "latex"]

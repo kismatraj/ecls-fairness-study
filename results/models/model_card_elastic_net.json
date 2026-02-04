@@ -1,0 +1,47 @@
+{
+  "model_name": "elastic_net",
+  "created_at": "2026-02-04T17:32:10.748005",
+  "task": "Binary classification (at-risk prediction)",
+  "dataset": "ECLS-K:2011 Public Use File",
+  "training": {
+    "cv_results": {
+      "best_params": {
+        "alpha": 0.01,
+        "l1_ratio": 0.5
+      },
+      "best_cv_score": 0.8423108102731796,
+      "cv_scores": [
+        0.8315416197967478,
+        0.8320336867413545,
+        0.8320635905560627,
+        0.8384174465007046,
+        0.839465996286658,
+        0.8388931694572029,
+        0.8422034645260957,
+        0.8423108102731796,
+        0.8422427999279266
+      ]
+    }
+  },
+  "performance": {
+    "auc_roc": 0.847712281582507,
+    "accuracy": 0.8499267935578331,
+    "precision": 0.6572769953051644,
+    "recall": 0.29350104821802936,
+    "f1": 0.4057971014492754,
+    "brier_score": 0.10771645423742196,
+    "sensitivity": 0.29350104821802936,
+    "specificity": 0.9676274944567628
+  },
+  "intended_use": "Research on algorithmic fairness in education",
+  "limitations": [
+    "Trained on single cohort (2010-2016)",
+    "Public-use data has some variables suppressed",
+    "Should not be used for individual-level decisions"
+  ],
+  "ethical_considerations": [
+    "Fairness across demographic groups must be evaluated",
+    "Model may perpetuate existing inequities",
+    "Requires careful validation before any deployment"
+  ]
+}
