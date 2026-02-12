@@ -809,6 +809,210 @@ def plot_model_comparison(
     return fig
 
 
+# =============================================================================
+# Temporal Generalization Visualizations
+# =============================================================================
+
+
+def plot_temporal_performance_trend(
+    best_model_df: pd.DataFrame,
+    title: str = "Model Performance Across Temporal Scenarios",
+    save_path: Optional[str] = None,
+) -> plt.Figure:
+    """
+    Line plot of AUC (and optionally accuracy/F1) across temporal scenarios.
+
+    Args:
+        best_model_df: DataFrame with columns scenario_label, auc_roc, accuracy, f1
+        title: Plot title
+        save_path: Path to save figure
+    """
+    set_publication_style()
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    x = np.arange(len(best_model_df))
+    labels = best_model_df["scenario_label"].values
+
+    for metric, marker, color in [
+        ("auc_roc", "o", "#1f77b4"),
+        ("accuracy", "s", "#2ca02c"),
+        ("f1", "^", "#ff7f0e"),
+    ]:
+        if metric in best_model_df.columns:
+            vals = best_model_df[metric].values
+            ax.plot(x, vals, marker=marker, color=color, lw=2, markersize=8, label=metric.upper())
+            for xi, v in zip(x, vals):
+                ax.annotate(f"{v:.3f}", (xi, v), textcoords="offset points",
+                            xytext=(0, 10), ha="center", fontsize=9)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=25, ha="right")
+    ax.set_ylabel("Score")
+    ax.set_title(title)
+    ax.legend(loc="lower right")
+    ax.set_ylim([0, 1.0])
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        logger.info(f"Figure saved to {save_path}")
+    return fig
+
+
+def plot_temporal_fairness_trend(
+    fairness_df: pd.DataFrame,
+    metric: str = "TPR",
+    title: Optional[str] = None,
+    save_path: Optional[str] = None,
+) -> plt.Figure:
+    """
+    Plot per-group metric across temporal scenarios with CI ribbons.
+
+    Args:
+        fairness_df: Output of TemporalGeneralizationAnalyzer.compare_fairness()
+                     with columns: scenario_label, Group, TPR, TPR_CI_lower, TPR_CI_upper, ...
+        metric: 'TPR' or 'FPR'
+        title: Plot title
+        save_path: Path to save figure
+    """
+    set_publication_style()
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    if title is None:
+        title = f"{metric} by Group Across Temporal Scenarios"
+
+    scenario_labels = fairness_df["scenario_label"].unique()
+    x = np.arange(len(scenario_labels))
+    label_map = {lab: i for i, lab in enumerate(scenario_labels)}
+
+    groups = sorted(fairness_df["Group"].unique())
+    for group in groups:
+        gdf = fairness_df[fairness_df["Group"] == group].copy()
+        gdf["x"] = gdf["scenario_label"].map(label_map)
+        gdf = gdf.sort_values("x")
+
+        color = GROUP_COLORS.get(group, None)
+        ax.plot(gdf["x"], gdf[metric], marker="o", lw=2, color=color, label=group)
+
+        ci_lo = f"{metric}_CI_lower"
+        ci_hi = f"{metric}_CI_upper"
+        if ci_lo in gdf.columns and ci_hi in gdf.columns:
+            ax.fill_between(gdf["x"], gdf[ci_lo], gdf[ci_hi], alpha=0.15, color=color)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(scenario_labels, rotation=25, ha="right")
+    ax.set_ylabel(metric)
+    ax.set_title(title)
+    ax.legend(title="Group", loc="best")
+    ax.set_ylim(bottom=0)
+    ax.grid(True, alpha=0.3)
+
+    plt.tight_layout()
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        logger.info(f"Figure saved to {save_path}")
+    return fig
+
+
+def plot_temporal_disparity_heatmap(
+    disparity_df: pd.DataFrame,
+    title: str = "TPR Disparity Ratio Across Temporal Scenarios",
+    save_path: Optional[str] = None,
+) -> plt.Figure:
+    """
+    Heatmap of TPR disparity ratios (scenario x group).
+
+    Args:
+        disparity_df: Output of compare_disparities() with
+                      scenario_label, Group, TPR Ratio columns
+    """
+    set_publication_style()
+
+    df = disparity_df.copy()
+    # Convert TPR Ratio from string to float if needed
+    if df["TPR Ratio"].dtype == object:
+        df["TPR Ratio"] = df["TPR Ratio"].str.replace(",", "").astype(float)
+
+    pivot = df.pivot_table(
+        values="TPR Ratio", index="Group", columns="scenario_label", aggfunc="first"
+    )
+    # Reorder columns by scenario order
+    ordered = disparity_df["scenario_label"].unique()
+    pivot = pivot[[c for c in ordered if c in pivot.columns]]
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    im = ax.imshow(pivot.values, cmap="RdYlGn", aspect="auto", vmin=0.5, vmax=3.0)
+    cbar = fig.colorbar(im, ax=ax)
+    cbar.ax.set_ylabel("TPR Ratio (vs White)", rotation=-90, va="bottom")
+
+    ax.set_xticks(np.arange(len(pivot.columns)))
+    ax.set_yticks(np.arange(len(pivot.index)))
+    ax.set_xticklabels(pivot.columns, rotation=25, ha="right")
+    ax.set_yticklabels(pivot.index)
+
+    for i in range(len(pivot.index)):
+        for j in range(len(pivot.columns)):
+            val = pivot.values[i, j]
+            if not np.isnan(val):
+                ax.text(j, i, f"{val:.2f}", ha="center", va="center",
+                        color="white" if val < 1.0 else "black", fontsize=10)
+
+    ax.set_title(title)
+    plt.tight_layout()
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        logger.info(f"Figure saved to {save_path}")
+    return fig
+
+
+def plot_temporal_fairness_gap(
+    fairness_df: pd.DataFrame,
+    metric: str = "TPR",
+    title: str = "Maximum Inter-Group TPR Gap Across Scenarios",
+    save_path: Optional[str] = None,
+) -> plt.Figure:
+    """
+    Bar chart of the maximum inter-group metric gap per scenario.
+
+    Args:
+        fairness_df: Output of compare_fairness()
+        metric: Metric column to compute gap on
+        title: Plot title
+        save_path: Path to save figure
+    """
+    set_publication_style()
+
+    gaps = []
+    for label in fairness_df["scenario_label"].unique():
+        sdf = fairness_df[fairness_df["scenario_label"] == label]
+        gap = sdf[metric].max() - sdf[metric].min()
+        gaps.append({"scenario_label": label, "gap": gap})
+    gap_df = pd.DataFrame(gaps)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    x = np.arange(len(gap_df))
+    colors = plt.cm.Blues(np.linspace(0.4, 0.9, len(gap_df)))
+
+    bars = ax.bar(x, gap_df["gap"], color=colors, edgecolor="black", linewidth=0.5)
+    for bar, val in zip(bars, gap_df["gap"]):
+        ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
+                f"{val:.3f}", ha="center", va="bottom", fontsize=10)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(gap_df["scenario_label"], rotation=25, ha="right")
+    ax.set_ylabel(f"Max {metric} Gap (max - min across groups)")
+    ax.set_title(title)
+    ax.set_ylim(bottom=0)
+    ax.grid(True, axis="y", alpha=0.3)
+
+    plt.tight_layout()
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches="tight")
+        logger.info(f"Figure saved to {save_path}")
+    return fig
+
+
 def create_all_figures_2025(
     y_true: np.ndarray,
     y_pred: np.ndarray,
@@ -821,7 +1025,8 @@ def create_all_figures_2025(
     calibration_df: Optional[pd.DataFrame] = None,
     explanation_comparison: Optional[pd.DataFrame] = None,
     fairness_shap: Optional[Dict] = None,
-    model_results: Optional[pd.DataFrame] = None
+    model_results: Optional[pd.DataFrame] = None,
+    temporal_results: Optional[Dict[str, Any]] = None
 ) -> List[str]:
     """
     Generate all publication figures including 2025 state-of-the-art visualizations.
@@ -839,6 +1044,8 @@ def create_all_figures_2025(
         explanation_comparison: SHAP vs permutation comparison
         fairness_shap: SHAP importance by group
         model_results: Model comparison results
+        temporal_results: Dict with 'best_model_summary', 'fairness_comparison',
+                          'disparity_comparison' DataFrames from temporal analysis
 
     Returns:
         List of saved file paths
@@ -903,6 +1110,39 @@ def create_all_figures_2025(
         plot_model_comparison(model_results, save_path=path)
         saved_files.append(path)
         plt.close()
+
+    # Temporal generalization figures
+    if temporal_results is not None:
+        try:
+            bm = temporal_results.get("best_model_summary")
+            if bm is not None:
+                path = str(output_dir / "temporal_performance_trend.png")
+                plot_temporal_performance_trend(bm, save_path=path)
+                saved_files.append(path)
+                plt.close()
+
+            fc = temporal_results.get("fairness_comparison")
+            if fc is not None:
+                for metric in ["TPR", "FPR"]:
+                    path = str(output_dir / f"temporal_fairness_{metric.lower()}_trend.png")
+                    plot_temporal_fairness_trend(fc, metric=metric, save_path=path)
+                    saved_files.append(path)
+                    plt.close()
+
+            dc = temporal_results.get("disparity_comparison")
+            if dc is not None:
+                path = str(output_dir / "temporal_disparity_heatmap.png")
+                plot_temporal_disparity_heatmap(dc, save_path=path)
+                saved_files.append(path)
+                plt.close()
+
+            if fc is not None:
+                path = str(output_dir / "temporal_fairness_gap.png")
+                plot_temporal_fairness_gap(fc, save_path=path)
+                saved_files.append(path)
+                plt.close()
+        except Exception as e:
+            logger.warning(f"Temporal figures failed: {e}")
 
     logger.info(f"Created {len(saved_files)} figures in {output_dir}")
 

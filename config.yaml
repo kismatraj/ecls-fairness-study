@@ -198,6 +198,63 @@ explainability:
   fairness_shap:
     enabled: true
 
+# Temporal Generalization Configuration
+temporal:
+  enabled: true
+
+  # Demographics always included in every scenario
+  demographics:
+    - "X_CHSEX_R"
+    - "X_RACETH_R"
+    - "X1SESQ5"
+    - "X12LANGST"
+
+  # Progressive feature-set scenarios
+  scenarios:
+    - name: "k_only"
+      label: "K Fall Only"
+      description: "Earliest possible prediction using K Fall data"
+      features:
+        - "X1RTHETK"
+        - "X1MTHETK"
+        - "X1TCHAPP"
+
+    - name: "k_complete"
+      label: "K Fall + Spring"
+      description: "Full kindergarten year data"
+      features:
+        - "X1RTHETK"
+        - "X1MTHETK"
+        - "X1TCHAPP"
+        - "X2RTHETK"
+        - "X2MTHETK"
+        - "X2TCHAPP"
+
+    - name: "k_through_1st"
+      label: "K + 1st Grade"
+      description: "Through 1st grade"
+      features:
+        - "X1RTHETK"
+        - "X1MTHETK"
+        - "X1TCHAPP"
+        - "X2RTHETK"
+        - "X2MTHETK"
+        - "X2TCHAPP"
+        - "X4TCHAPP"
+
+    - name: "k_through_3rd"
+      label: "K through 3rd"
+      description: "Full model matching main pipeline"
+      features:
+        - "X1RTHETK"
+        - "X1MTHETK"
+        - "X1TCHAPP"
+        - "X2RTHETK"
+        - "X2MTHETK"
+        - "X2TCHAPP"
+        - "X4TCHAPP"
+        - "X6DCCSSCR"
+
 # Output Configuration
 output:
   figure_format: "png"

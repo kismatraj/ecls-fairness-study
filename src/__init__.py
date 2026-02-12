@@ -41,6 +41,12 @@ from .fairness import (
     generate_comprehensive_fairness_report
 )
 
+from .temporal import (
+    TemporalScenario,
+    TemporalScenarioResult,
+    TemporalGeneralizationAnalyzer
+)
+
 from .visualization import (
     plot_roc_curves_by_group,
     plot_calibration_curves_by_group,
@@ -103,6 +109,10 @@ __all__ = [
     'plot_calibration_error_comparison',
     'plot_explanation_comparison',
     'create_all_figures_2025',
+    # Temporal
+    'TemporalScenario',
+    'TemporalScenarioResult',
+    'TemporalGeneralizationAnalyzer',
     # Explainability (conditional)
     'HAS_EXPLAINABILITY'
 ]

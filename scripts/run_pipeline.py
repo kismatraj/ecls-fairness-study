@@ -72,6 +72,7 @@ from src.fairness import (
     CalibrationFairnessAnalyzer
 )
 from src.visualization import create_all_figures, create_all_figures_2025
+from src.temporal import TemporalGeneralizationAnalyzer
 
 # 2025 State-of-the-Art imports
 try:
@@ -501,6 +502,93 @@ def step_fairness_analysis(config: dict, model_results: dict) -> dict:
     }
 
 
+def step_temporal_analysis(config: dict, df: pd.DataFrame) -> dict:
+    """
+    Step 5: Temporal Generalization Analysis
+
+    Train models with progressive feature sets and compare
+    performance + fairness across temporal scenarios.
+    """
+    logger.info("=" * 60)
+    logger.info("STEP 5: TEMPORAL GENERALIZATION ANALYSIS")
+    logger.info("=" * 60)
+
+    temporal_cfg = config.get("temporal", {})
+    if not temporal_cfg.get("enabled", False):
+        logger.info("Temporal analysis disabled in config. Skipping.")
+        return {}
+
+    tables_path = Path(config['paths']['tables'])
+    tables_path.mkdir(parents=True, exist_ok=True)
+    figures_path = Path(config['paths']['figures'])
+    figures_path.mkdir(parents=True, exist_ok=True)
+
+    analyzer = TemporalGeneralizationAnalyzer(
+        config=config,
+        random_state=config['model']['random_state'],
+        test_size=config['model']['test_size'],
+        cv_folds=config['model']['cv_folds'],
+    )
+
+    # Prepare common sample
+    outcome_col = f"{config['variables']['outcomes']['reading']}_at_risk"
+    n_obs = analyzer.prepare_common_sample(df, outcome_col=outcome_col)
+    logger.info(f"Common sample: {n_obs:,} observations")
+
+    # Run all scenarios
+    analyzer.run_all_scenarios()
+
+    # Save tables
+    saved_tables = analyzer.save_results(str(tables_path))
+    logger.info(f"Saved {len(saved_tables)} temporal tables")
+
+    # Prepare results dict for visualization
+    temporal_results = {
+        "best_model_summary": analyzer.get_best_model_comparison(),
+        "fairness_comparison": analyzer.compare_fairness(),
+        "disparity_comparison": analyzer.compare_disparities(),
+        "analyzer": analyzer,
+    }
+
+    # Generate temporal figures directly
+    from src.visualization import (
+        plot_temporal_performance_trend,
+        plot_temporal_fairness_trend,
+        plot_temporal_disparity_heatmap,
+        plot_temporal_fairness_gap,
+    )
+    import matplotlib.pyplot as plt
+
+    bm = temporal_results["best_model_summary"]
+    fc = temporal_results["fairness_comparison"]
+    dc = temporal_results["disparity_comparison"]
+
+    plot_temporal_performance_trend(
+        bm, save_path=str(figures_path / "temporal_performance_trend.png")
+    )
+    plt.close()
+
+    for metric in ["TPR", "FPR"]:
+        plot_temporal_fairness_trend(
+            fc, metric=metric,
+            save_path=str(figures_path / f"temporal_fairness_{metric.lower()}_trend.png"),
+        )
+        plt.close()
+
+    plot_temporal_disparity_heatmap(
+        dc, save_path=str(figures_path / "temporal_disparity_heatmap.png")
+    )
+    plt.close()
+
+    plot_temporal_fairness_gap(
+        fc, save_path=str(figures_path / "temporal_fairness_gap.png")
+    )
+    plt.close()
+
+    logger.info("Temporal generalization analysis complete")
+    return temporal_results
+
+
 def step_generate_figures(
     config: dict,
     model_results: dict,
@@ -565,6 +653,9 @@ def run_full_pipeline(config_path: str):
     # 2025: Enhanced Fairness Analysis (CI, Intersectional, Calibration)
     fairness_results = step_fairness_analysis(config, model_results)
 
+    # 2025: Temporal Generalization Analysis
+    temporal_results = step_temporal_analysis(config, df)
+
     # 2025: Enhanced Figures
     step_generate_figures(config, model_results, fairness_results, explainability_results)
 
@@ -576,7 +667,8 @@ def run_full_pipeline(config_path: str):
         'data': df,
         'model_results': model_results,
         'explainability_results': explainability_results,
-        'fairness_results': fairness_results
+        'fairness_results': fairness_results,
+        'temporal_results': temporal_results
     }
 
 
@@ -589,21 +681,24 @@ def main():
     )
     parser.add_argument(
         '--step', '-s',
-        choices=['data_prep', 'train_models', 'fairness_analysis', 'figures', 'all'],
+        choices=['data_prep', 'train_models', 'fairness_analysis', 'figures', 'temporal_analysis', 'all'],
         default='all',
         help='Pipeline step to run'
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         if args.step == 'all':
             run_full_pipeline(args.config)
         else:
             config = load_config(args.config)
-            
+
             if args.step == 'data_prep':
                 step_data_prep(config)
+            elif args.step == 'temporal_analysis':
+                df = step_data_prep(config)
+                step_temporal_analysis(config, df)
             else:
                 logger.info("For individual steps after data_prep, use notebooks or run 'all'")
                 
