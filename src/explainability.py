@@ -124,7 +124,11 @@ class SHAPExplainer:
         """
         logger.info(f"Computing SHAP values for {len(X)} samples...")
 
-        shap_values = self.explainer.shap_values(X, check_additivity=check_additivity)
+        try:
+            shap_values = self.explainer.shap_values(X, check_additivity=check_additivity)
+        except TypeError:
+            # Newer SHAP versions removed check_additivity for some explainers
+            shap_values = self.explainer.shap_values(X)
 
         # Handle binary classification (take positive class)
         if isinstance(shap_values, list) and len(shap_values) == 2:

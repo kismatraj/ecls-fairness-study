@@ -51,7 +51,9 @@ try:
     from sklearn.base import BaseEstimator, ClassifierMixin
 
     class CatBoostClassifierWrapper(BaseEstimator, ClassifierMixin):
-        """Wrapper to make CatBoost compatible with sklearn >= 1.8 GridSearchCV."""
+        """Wrapper to make CatBoost compatible with sklearn >= 1.7 GridSearchCV."""
+
+        _estimator_type = "classifier"
 
         def __init__(self, random_state=42, verbose=False,
                      allow_writing_files=False, iterations=100,
@@ -63,6 +65,13 @@ try:
             self.depth = depth
             self.learning_rate = learning_rate
             self._extra_kwargs = kwargs
+
+        def __sklearn_tags__(self):
+            from sklearn.utils._tags import ClassifierTags
+            tags = super().__sklearn_tags__()
+            tags.estimator_type = "classifier"
+            tags.classifier_tags = ClassifierTags()
+            return tags
 
         def _get_cb(self):
             return _CatBoostClassifier(
@@ -173,7 +182,6 @@ class ModelTrainer:
             configs["xgboost"] = {
                 "model": xgb.XGBClassifier(
                     random_state=self.random_state,
-                    use_label_encoder=False,
                     eval_metric="logloss"
                 ),
                 "params": {
@@ -235,7 +243,8 @@ class ModelTrainer:
             configs["tabpfn"] = {
                 "model": TabPFNClassifier(
                     device="cpu",
-                    N_ensemble_configurations=32
+                    n_estimators=32,
+                    random_state=self.random_state
                 ),
                 "params": {}  # TabPFN requires no tuning
             }

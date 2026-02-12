@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 LINES_PER_RECORD = 27
 
 
-def parse_dct_file(dct_path: str) -> Tuple[Dict[str, Tuple[int, int, str, int]], int]:
+def parse_dct_file(dct_path: str) -> Tuple[Dict[str, Tuple[int, int, str, int]], Dict[int, int]]:
     """
     Parse Stata dictionary file to extract column specifications.
 
@@ -128,7 +128,7 @@ def read_multiline_fixed_width(
                     start, width, pytype, _ = dct_specs[col]
                     value = record[start:start + width].strip()
 
-                    if value in ['', '.'] or value.startswith('-1') and len(value) < 3:
+                    if value in ['', '.'] or (value.startswith('-1') and len(value) < 3):
                         row[col] = np.nan
                     elif pytype == 'float':
                         try:

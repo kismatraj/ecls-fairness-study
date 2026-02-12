@@ -767,10 +767,10 @@ class IntersectionalFairnessAnalyzer:
                 "Subgroup": group,
                 "N": m.n,
                 "Prevalence": f"{m.prevalence:.1%}",
-                "TPR": f"{m.tpr:.3f}",
-                "FPR": f"{m.fpr:.3f}",
-                "PPV": f"{m.ppv:.3f}",
-                "Accuracy": f"{m.accuracy:.3f}"
+                "TPR": round(m.tpr, 3),
+                "FPR": round(m.fpr, 3),
+                "PPV": round(m.ppv, 3),
+                "Accuracy": round(m.accuracy, 3)
             })
 
         return pd.DataFrame(rows).sort_values("TPR")
@@ -820,7 +820,7 @@ class FairnessConfidenceIntervals:
             DataFrame with metrics and confidence intervals
         """
         y_pred = (self.y_prob >= threshold).astype(int)
-        unique_groups = self.groups.unique()
+        unique_groups = [g for g in self.groups.unique() if pd.notna(g)]
 
         results = []
 
