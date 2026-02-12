@@ -1,4 +1,5 @@
 # ECLS Fairness Study - Python Dependencies
+# Updated 2025 with state-of-the-art ML and explainability packages
 # Install with: pip install -r requirements.txt
 
 # Core Data Science
@@ -7,21 +8,34 @@ numpy>=1.24.0
 scipy>=1.10.0
 pyarrow>=12.0.0  # For parquet files
 
-# Machine Learning
-scikit-learn>=1.3.0
+# Machine Learning - Core
+scikit-learn>=1.4.0
 xgboost>=2.0.0
-imbalanced-learn>=0.11.0  # For sampling strategies
+imbalanced-learn>=0.12.0  # For sampling strategies
 
-# Fairness & Interpretability
-fairlearn>=0.9.0
-shap>=0.42.0
+# Machine Learning - 2025 State-of-the-Art
+lightgbm>=4.3.0           # Fast gradient boosting
+catboost>=1.2.0           # Gradient boosting with categorical support
+tabpfn>=0.1.10            # Transformer for tabular data (2024-2025 breakthrough)
+
+# Fairness Libraries
+fairlearn>=0.10.0         # Microsoft fairness toolkit
+aif360>=0.6.0             # IBM AI Fairness 360
+
+# Explainability - 2025 State-of-the-Art
+shap>=0.45.0              # SHAP values and interactions
+lime>=0.2.0               # Local Interpretable Model-agnostic Explanations
+dice-ml>=0.11             # Counterfactual explanations
+interpret>=0.6.0          # Microsoft InterpretML (EBM, global explanations)
+alibi>=0.9.0              # Alibaba's explanation toolkit (anchors, counterfactuals)
 
 # Statistical Analysis
 statsmodels>=0.14.0
 
 # Visualization
-matplotlib>=3.7.0
-seaborn>=0.12.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+plotly>=5.18.0            # Interactive visualizations
 
 # Configuration & Utilities
 PyYAML>=6.0
@@ -34,6 +48,8 @@ ipykernel>=6.25.0
 
 # Testing
 pytest>=7.4.0
+pytest-cov>=4.1.0
 
 # Code Quality
-black>=23.0.0
+black>=24.0.0
+ruff>=0.2.0

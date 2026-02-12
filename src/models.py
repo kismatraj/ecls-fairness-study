@@ -40,6 +40,69 @@ try:
 except ImportError:
     HAS_XGBOOST = False
 
+try:
+    import lightgbm as lgb
+    HAS_LIGHTGBM = True
+except ImportError:
+    HAS_LIGHTGBM = False
+
+try:
+    from catboost import CatBoostClassifier as _CatBoostClassifier
+    from sklearn.base import BaseEstimator, ClassifierMixin
+
+    class CatBoostClassifierWrapper(BaseEstimator, ClassifierMixin):
+        """Wrapper to make CatBoost compatible with sklearn >= 1.8 GridSearchCV."""
+
+        def __init__(self, random_state=42, verbose=False,
+                     allow_writing_files=False, iterations=100,
+                     depth=6, learning_rate=0.1, **kwargs):
+            self.random_state = random_state
+            self.verbose = verbose
+            self.allow_writing_files = allow_writing_files
+            self.iterations = iterations
+            self.depth = depth
+            self.learning_rate = learning_rate
+            self._extra_kwargs = kwargs
+
+        def _get_cb(self):
+            return _CatBoostClassifier(
+                random_seed=self.random_state,
+                verbose=self.verbose,
+                allow_writing_files=self.allow_writing_files,
+                iterations=self.iterations,
+                depth=self.depth,
+                learning_rate=self.learning_rate,
+                **self._extra_kwargs
+            )
+
+        def fit(self, X, y, **kwargs):
+            self._model = self._get_cb()
+            self._model.fit(X, y, **kwargs)
+            self.classes_ = np.array([0, 1])
+            return self
+
+        def predict(self, X):
+            return self._model.predict(X).flatten().astype(int)
+
+        def predict_proba(self, X):
+            return self._model.predict_proba(X)
+
+    HAS_CATBOOST = True
+except ImportError:
+    HAS_CATBOOST = False
+
+try:
+    from tabpfn import TabPFNClassifier
+    HAS_TABPFN = True
+except ImportError:
+    HAS_TABPFN = False
+
+try:
+    from sklearn.ensemble import HistGradientBoostingClassifier
+    HAS_HISTGB = True
+except ImportError:
+    HAS_HISTGB = False
+
 logger = logging.getLogger(__name__)
 
 
@@ -119,7 +182,64 @@ class ModelTrainer:
                     "learning_rate": [0.01, 0.1]
                 }
             }
-        
+
+        # 2025 State-of-the-Art Models
+
+        if HAS_LIGHTGBM:
+            configs["lightgbm"] = {
+                "model": lgb.LGBMClassifier(
+                    random_state=self.random_state,
+                    verbose=-1,
+                    force_col_wise=True
+                ),
+                "params": {
+                    "n_estimators": [100, 200],
+                    "max_depth": [5, -1],
+                    "learning_rate": [0.05, 0.1],
+                    "num_leaves": [31]
+                }
+            }
+
+        if HAS_CATBOOST:
+            configs["catboost"] = {
+                "model": CatBoostClassifierWrapper(
+                    random_state=self.random_state,
+                    verbose=False,
+                    allow_writing_files=False
+                ),
+                "params": {
+                    "iterations": [100, 200],
+                    "depth": [4, 6],
+                    "learning_rate": [0.05, 0.1]
+                }
+            }
+
+        if HAS_HISTGB:
+            configs["hist_gradient_boosting"] = {
+                "model": HistGradientBoostingClassifier(
+                    random_state=self.random_state,
+                    early_stopping=True,
+                    validation_fraction=0.1
+                ),
+                "params": {
+                    "max_iter": [100, 200],
+                    "max_depth": [5, 7],
+                    "learning_rate": [0.05, 0.1]
+                }
+            }
+
+        if HAS_TABPFN:
+            # TabPFN - Transformer for Tabular Data (2024-2025 breakthrough)
+            # Pre-trained on synthetic data, requires no hyperparameter tuning
+            # Best for small-medium datasets (<10k samples, <100 features)
+            configs["tabpfn"] = {
+                "model": TabPFNClassifier(
+                    device="cpu",
+                    N_ensemble_configurations=32
+                ),
+                "params": {}  # TabPFN requires no tuning
+            }
+
         return configs
     
     def split_data(
@@ -252,8 +372,12 @@ class ModelTrainer:
         all_results = {}
         
         for name in model_names:
-            model, results = self.train_model(name, X_train, y_train)
-            all_results[name] = results
+            try:
+                model, results = self.train_model(name, X_train, y_train)
+                all_results[name] = results
+            except Exception as e:
+                logger.error(f"Failed to train {name}: {e}")
+                continue
         
         return all_results
     

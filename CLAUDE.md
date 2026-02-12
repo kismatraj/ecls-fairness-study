@@ -40,16 +40,37 @@ pytest
   - `prepare_modeling_data()` - Returns (X, y, groups) tuple for modeling
 
 - **models.py**: ML training via `ModelTrainer` class
-  - Supports logistic regression, elastic net, random forest, XGBoost
+  - **Classic models**: Logistic regression, elastic net, random forest, XGBoost
+  - **2025 State-of-the-Art**: LightGBM, CatBoost, HistGradientBoosting, TabPFN
   - 5-fold CV with grid search, stratified train/test split
   - `get_feature_importance()` for interpretability
 
-- **fairness.py**: Fairness evaluation and mitigation
+- **explainability.py** (NEW 2025): Model interpretability and explanations
+  - `SHAPExplainer`: SHAP values, interactions, fairness-aware SHAP by group
+  - `PermutationImportanceAnalyzer`: Bootstrap confidence intervals
+  - `PartialDependenceAnalyzer`: PDP and ICE plots
+  - `CounterfactualExplainer`: DiCE-based counterfactual explanations
+  - `LIMEExplainer`: Local interpretable explanations
+  - `compare_explanations()`: Compare SHAP vs permutation importance
+
+- **fairness.py**: Fairness evaluation and mitigation (2025 enhanced)
   - `FairnessEvaluator`: Computes TPR/FPR/PPV/accuracy by demographic group
   - `ThresholdOptimizer`: Post-processing threshold adjustment to equalize TPR
-  - `compare_before_after_mitigation()` for pre/post comparison
+  - **2025 Additions**:
+    - `IntersectionalFairnessAnalyzer`: Analyze fairness across intersecting attributes
+    - `FairnessConfidenceIntervals`: Bootstrap CI for fairness metrics
+    - `CalibrationFairnessAnalyzer`: ECE/MCE calibration error by group
+    - `IndividualFairnessAnalyzer`: Consistency and Lipschitz violation metrics
+    - `generate_comprehensive_fairness_report()`: Full 2025 fairness analysis
 
-- **visualization.py**: Publication figures (ROC curves, calibration plots by group)
+- **visualization.py**: Publication figures (2025 enhanced)
+  - ROC curves, calibration plots by group
+  - **2025 Additions**:
+    - `plot_fairness_with_ci()`: Metrics with confidence intervals
+    - `plot_intersectional_heatmap()`: Intersectional fairness visualization
+    - `plot_calibration_error_comparison()`: ECE/MCE by group
+    - `plot_explanation_comparison()`: SHAP vs permutation importance
+    - `plot_shap_importance_by_group()`: Fairness-aware SHAP visualization
 
 ### Pipeline Flow
 
@@ -97,3 +118,86 @@ ECLS-K:2011 public-use file (free, no approval needed):
 - `results/tables/` - CSV and LaTeX tables
 - `results/figures/` - Publication figures
 - `logs/pipeline.log` - Pipeline execution logs
+
+## 2025 State-of-the-Art Enhancements
+
+### New ML Algorithms
+
+| Algorithm | Description | Best For |
+|-----------|-------------|----------|
+| LightGBM | Fast gradient boosting with leaf-wise growth | Large datasets, speed |
+| CatBoost | Gradient boosting with native categorical support | Categorical features |
+| HistGradientBoosting | Sklearn's histogram-based boosting | Balanced performance |
+| TabPFN | Transformer pre-trained on synthetic tabular data | Small datasets (<10k) |
+
+### Explainability Methods
+
+| Method | Type | Output |
+|--------|------|--------|
+| SHAP | Global/Local | Feature importance, dependence plots, interactions |
+| Permutation Importance | Global | Bootstrap CI for feature importance |
+| PDP/ICE | Global | Marginal effect of features |
+| LIME | Local | Per-prediction explanations |
+| DiCE | Local | Counterfactual explanations |
+| Fairness-aware SHAP | Group-level | SHAP importance stratified by protected groups |
+
+### Advanced Fairness Metrics
+
+| Metric | Category | Description |
+|--------|----------|-------------|
+| Bootstrap CI | Uncertainty | 95% confidence intervals for TPR/FPR/PPV |
+| Intersectional Fairness | Group | Metrics for race×SES subgroups |
+| ECE/MCE | Calibration | Expected/Maximum Calibration Error by group |
+| Consistency Score | Individual | Similar individuals → similar predictions |
+| Lipschitz Violation | Individual | Check continuity of predictions |
+
+### Pipeline Flow (2025)
+
+```
+data_prep → train_models → explainability_analysis → fairness_analysis → figures
+```
+
+### New Configuration Options
+
+```yaml
+# Enable/disable 2025 models
+model:
+  algorithms:
+    lightgbm: {enabled: true}
+    catboost: {enabled: true}
+    hist_gradient_boosting: {enabled: true}
+    tabpfn: {enabled: false}  # For small datasets
+
+# Explainability settings
+explainability:
+  shap: {enabled: true, explainer_type: "auto"}
+  permutation: {enabled: true, n_bootstrap: 50}
+  counterfactuals: {enabled: false}
+
+# Fairness settings
+fairness:
+  bootstrap_iterations: 500
+  confidence_level: 0.95
+  min_intersectional_group_size: 20
+```
+
+### New Output Files
+
+| File | Description |
+|------|-------------|
+| `shap_importance.csv` | SHAP-based feature importance |
+| `shap_importance_{group}.csv` | Per-group SHAP importance |
+| `permutation_importance_bootstrap.csv` | Permutation importance with CI |
+| `explanation_comparison.csv` | SHAP vs permutation comparison |
+| `fairness_metrics_with_ci.csv` | Metrics with 95% CI |
+| `calibration_fairness.csv` | ECE/MCE by group |
+| `intersectional_fairness.csv` | Intersectional subgroup metrics |
+
+### New Figures
+
+- `shap_summary.png` - SHAP beeswarm plot
+- `fairness_tpr_with_ci.png` - TPR by group with error bars
+- `calibration_error_comparison.png` - ECE/MCE comparison
+- `explanation_comparison.png` - SHAP vs permutation
+- `intersectional_fairness_heatmap.png` - Intersectional analysis
+- `model_comparison.png` - All models performance comparison

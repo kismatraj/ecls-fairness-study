@@ -1,6 +1,6 @@
 {
   "model_name": "elastic_net",
-  "created_at": "2026-02-04T17:32:10.748005",
+  "created_at": "2026-02-12T13:10:24.123063",
   "task": "Binary classification (at-risk prediction)",
   "dataset": "ECLS-K:2011 Public Use File",
   "training": {
