@@ -8,7 +8,6 @@ Machine learning model training, tuning, and evaluation.
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
-from pathlib import Path
 import logging
 import joblib
 from datetime import datetime
@@ -17,7 +16,6 @@ from sklearn.model_selection import (
     train_test_split,
     StratifiedKFold,
     GridSearchCV,
-    cross_val_score
 )
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression, SGDClassifier
@@ -30,18 +28,18 @@ from sklearn.metrics import (
     f1_score,
     brier_score_loss,
     confusion_matrix,
-    classification_report,
-    roc_curve
 )
 
 try:
     import xgboost as xgb
+
     HAS_XGBOOST = True
 except (ImportError, OSError):
     HAS_XGBOOST = False
 
 try:
     import lightgbm as lgb
+
     HAS_LIGHTGBM = True
 except (ImportError, OSError):
     HAS_LIGHTGBM = False
@@ -55,9 +53,16 @@ try:
 
         _estimator_type = "classifier"
 
-        def __init__(self, random_state=42, verbose=False,
-                     allow_writing_files=False, iterations=100,
-                     depth=6, learning_rate=0.1, **kwargs):
+        def __init__(
+            self,
+            random_state=42,
+            verbose=False,
+            allow_writing_files=False,
+            iterations=100,
+            depth=6,
+            learning_rate=0.1,
+            **kwargs,
+        ):
             self.random_state = random_state
             self.verbose = verbose
             self.allow_writing_files = allow_writing_files
@@ -68,6 +73,7 @@ try:
 
         def __sklearn_tags__(self):
             from sklearn.utils._tags import ClassifierTags
+
             tags = super().__sklearn_tags__()
             tags.estimator_type = "classifier"
             tags.classifier_tags = ClassifierTags()
@@ -81,7 +87,7 @@ try:
                 iterations=self.iterations,
                 depth=self.depth,
                 learning_rate=self.learning_rate,
-                **self._extra_kwargs
+                **self._extra_kwargs,
             )
 
         def fit(self, X, y, **kwargs):
@@ -102,12 +108,14 @@ except (ImportError, OSError):
 
 try:
     from tabpfn import TabPFNClassifier
+
     HAS_TABPFN = True
 except (ImportError, OSError):
     HAS_TABPFN = False
 
 try:
     from sklearn.ensemble import HistGradientBoostingClassifier
+
     HAS_HISTGB = True
 except (ImportError, OSError):
     HAS_HISTGB = False
@@ -118,19 +126,19 @@ logger = logging.getLogger(__name__)
 class ModelTrainer:
     """
     Train and evaluate ML models for binary classification.
-    
+
     Attributes:
         random_state: Random seed for reproducibility
         test_size: Fraction of data for test set
         cv_folds: Number of cross-validation folds
     """
-    
+
     def __init__(
         self,
         random_state: int = 42,
         test_size: float = 0.3,
         cv_folds: int = 5,
-        sample_weights: Optional[np.ndarray] = None
+        sample_weights: Optional[np.ndarray] = None,
     ):
         self.random_state = random_state
         self.test_size = test_size
@@ -141,56 +149,47 @@ class ModelTrainer:
         self.results = {}
         self.best_model = None
         self.scaler = StandardScaler()
-    
+
     def get_model_configs(self) -> Dict[str, Dict]:
         """Get default model configurations."""
         configs = {
             "logistic_regression": {
                 "model": LogisticRegression(
-                    random_state=self.random_state,
-                    max_iter=1000,
-                    l1_ratio=0
+                    random_state=self.random_state, max_iter=1000, l1_ratio=0
                 ),
-                "params": {
-                    "C": [0.01, 0.1, 1.0, 10.0]
-                }
+                "params": {"C": [0.01, 0.1, 1.0, 10.0]},
             },
             "elastic_net": {
                 "model": SGDClassifier(
                     loss="log_loss",
                     penalty="elasticnet",
                     random_state=self.random_state,
-                    max_iter=1000
+                    max_iter=1000,
                 ),
-                "params": {
-                    "alpha": [0.0001, 0.001, 0.01],
-                    "l1_ratio": [0.2, 0.5, 0.8]
-                }
+                "params": {"alpha": [0.0001, 0.001, 0.01], "l1_ratio": [0.2, 0.5, 0.8]},
             },
             "random_forest": {
                 "model": RandomForestClassifier(
-                    random_state=self.random_state,
-                    n_jobs=-1
+                    random_state=self.random_state, n_jobs=-1
                 ),
                 "params": {
                     "n_estimators": [100, 200],
                     "max_depth": [5, 10, 15],
-                    "min_samples_leaf": [5, 10]
-                }
-            }
+                    "min_samples_leaf": [5, 10],
+                },
+            },
         }
-        
+
         if HAS_XGBOOST:
             configs["xgboost"] = {
                 "model": xgb.XGBClassifier(
-                    random_state=self.random_state,
-                    eval_metric="logloss"
+                    random_state=self.random_state, eval_metric="logloss"
                 ),
                 "params": {
                     "n_estimators": [100, 200],
                     "max_depth": [3, 5, 7],
-                    "learning_rate": [0.01, 0.1]
-                }
+                    "learning_rate": [0.01, 0.1],
+                },
             }
 
         # 2025 State-of-the-Art Models
@@ -198,16 +197,14 @@ class ModelTrainer:
         if HAS_LIGHTGBM:
             configs["lightgbm"] = {
                 "model": lgb.LGBMClassifier(
-                    random_state=self.random_state,
-                    verbose=-1,
-                    force_col_wise=True
+                    random_state=self.random_state, verbose=-1, force_col_wise=True
                 ),
                 "params": {
                     "n_estimators": [100, 200],
                     "max_depth": [5, -1],
                     "learning_rate": [0.05, 0.1],
-                    "num_leaves": [31]
-                }
+                    "num_leaves": [31],
+                },
             }
 
         if HAS_CATBOOST:
@@ -215,13 +212,13 @@ class ModelTrainer:
                 "model": CatBoostClassifierWrapper(
                     random_state=self.random_state,
                     verbose=False,
-                    allow_writing_files=False
+                    allow_writing_files=False,
                 ),
                 "params": {
                     "iterations": [100, 200],
                     "depth": [4, 6],
-                    "learning_rate": [0.05, 0.1]
-                }
+                    "learning_rate": [0.05, 0.1],
+                },
             }
 
         if HAS_HISTGB:
@@ -229,13 +226,13 @@ class ModelTrainer:
                 "model": HistGradientBoostingClassifier(
                     random_state=self.random_state,
                     early_stopping=True,
-                    validation_fraction=0.1
+                    validation_fraction=0.1,
                 ),
                 "params": {
                     "max_iter": [100, 200],
                     "max_depth": [5, 7],
-                    "learning_rate": [0.05, 0.1]
-                }
+                    "learning_rate": [0.05, 0.1],
+                },
             }
 
         if HAS_TABPFN:
@@ -244,29 +241,27 @@ class ModelTrainer:
             # Best for small-medium datasets (<10k samples, <100 features)
             configs["tabpfn"] = {
                 "model": TabPFNClassifier(
-                    device="cpu",
-                    n_estimators=32,
-                    random_state=self.random_state
+                    device="cpu", n_estimators=32, random_state=self.random_state
                 ),
-                "params": {}  # TabPFN requires no tuning
+                "params": {},  # TabPFN requires no tuning
             }
 
         return configs
-    
+
     def split_data(
         self,
         X: pd.DataFrame,
         y: pd.Series,
-        stratify_cols: Optional[pd.DataFrame] = None
+        stratify_cols: Optional[pd.DataFrame] = None,
     ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
         """
         Split data into train and test sets.
-        
+
         Args:
             X: Feature matrix
             y: Target variable
             stratify_cols: Columns to stratify by (combined)
-        
+
         Returns:
             X_train, X_test, y_train, y_test
         """
@@ -275,18 +270,19 @@ class ModelTrainer:
             stratify = stratify_cols.astype(str).agg("_".join, axis=1)
         else:
             stratify = y
-        
+
         X_train, X_test, y_train, y_test = train_test_split(
-            X, y,
+            X,
+            y,
             test_size=self.test_size,
             random_state=self.random_state,
-            stratify=stratify
+            stratify=stratify,
         )
-        
+
         logger.info(f"Train: {len(X_train):,}, Test: {len(X_test):,}")
-        
+
         return X_train, X_test, y_train, y_test
-    
+
     def train_model(
         self,
         model_name: str,
@@ -294,7 +290,7 @@ class ModelTrainer:
         y_train: pd.Series,
         param_grid: Optional[Dict] = None,
         scale_features: bool = True,
-        sample_weight: Optional[np.ndarray] = None
+        sample_weight: Optional[np.ndarray] = None,
     ) -> Tuple[Any, Dict]:
         """
         Train a single model with hyperparameter tuning.
@@ -327,9 +323,7 @@ class ModelTrainer:
 
         # Grid search with CV
         cv = StratifiedKFold(
-            n_splits=self.cv_folds,
-            shuffle=True,
-            random_state=self.random_state
+            n_splits=self.cv_folds, shuffle=True, random_state=self.random_state
         )
 
         logger.info(f"Training {model_name} with {self.cv_folds}-fold CV...")
@@ -344,12 +338,7 @@ class ModelTrainer:
                 logger.info(f"  Using sample weights (sum={sw.sum():.0f})")
 
         grid_search = GridSearchCV(
-            model,
-            params,
-            cv=cv,
-            scoring="roc_auc",
-            n_jobs=-1,
-            verbose=0
+            model, params, cv=cv, scoring="roc_auc", n_jobs=-1, verbose=0
         )
 
         grid_search.fit(X_scaled, y_train, **fit_params)
@@ -359,7 +348,7 @@ class ModelTrainer:
         cv_results = {
             "best_params": grid_search.best_params_,
             "best_cv_score": grid_search.best_score_,
-            "cv_scores": grid_search.cv_results_["mean_test_score"]
+            "cv_scores": grid_search.cv_results_["mean_test_score"],
         }
 
         logger.info(f"  Best AUC: {cv_results['best_cv_score']:.4f}")
@@ -368,13 +357,13 @@ class ModelTrainer:
         self.models[model_name] = best_model
 
         return best_model, cv_results
-    
+
     def train_all_models(
         self,
         X_train: pd.DataFrame,
         y_train: pd.Series,
         model_names: Optional[List[str]] = None,
-        sample_weight: Optional[np.ndarray] = None
+        sample_weight: Optional[np.ndarray] = None,
     ) -> Dict[str, Dict]:
         """
         Train all specified models.
@@ -406,23 +395,23 @@ class ModelTrainer:
                 continue
 
         return all_results
-    
+
     def evaluate_model(
         self,
         model: Any,
         X_test: pd.DataFrame,
         y_test: pd.Series,
-        scale_features: bool = True
+        scale_features: bool = True,
     ) -> Dict[str, float]:
         """
         Evaluate model on test set.
-        
+
         Args:
             model: Trained model
             X_test: Test features
             y_test: Test target
             scale_features: Whether to scale features
-        
+
         Returns:
             Dictionary of performance metrics
         """
@@ -430,11 +419,11 @@ class ModelTrainer:
             X_scaled = self.scaler.transform(X_test)
         else:
             X_scaled = X_test.values
-        
+
         # Predictions
         y_pred = model.predict(X_scaled)
         y_prob = model.predict_proba(X_scaled)[:, 1]
-        
+
         # Metrics
         metrics = {
             "auc_roc": roc_auc_score(y_test, y_prob),
@@ -442,62 +431,57 @@ class ModelTrainer:
             "precision": precision_score(y_test, y_pred, zero_division=0),
             "recall": recall_score(y_test, y_pred, zero_division=0),
             "f1": f1_score(y_test, y_pred, zero_division=0),
-            "brier_score": brier_score_loss(y_test, y_prob)
+            "brier_score": brier_score_loss(y_test, y_prob),
         }
-        
+
         # Confusion matrix
         tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
         metrics["sensitivity"] = tp / (tp + fn) if (tp + fn) > 0 else 0
         metrics["specificity"] = tn / (tn + fp) if (tn + fp) > 0 else 0
-        
+
         return metrics
-    
+
     def evaluate_all_models(
-        self,
-        X_test: pd.DataFrame,
-        y_test: pd.Series
+        self, X_test: pd.DataFrame, y_test: pd.Series
     ) -> pd.DataFrame:
         """
         Evaluate all trained models.
-        
+
         Args:
             X_test: Test features
             y_test: Test target
-        
+
         Returns:
             DataFrame with metrics for each model
         """
         results = []
-        
+
         for name, model in self.models.items():
             metrics = self.evaluate_model(model, X_test, y_test)
             metrics["model"] = name
             results.append(metrics)
-        
+
         df = pd.DataFrame(results)
         df = df.set_index("model")
-        
+
         # Identify best model
         best_idx = df["auc_roc"].idxmax()
         self.best_model = self.models[best_idx]
         logger.info(f"Best model: {best_idx} (AUC={df.loc[best_idx, 'auc_roc']:.4f})")
-        
+
         return df
-    
+
     def get_predictions(
-        self,
-        model: Any,
-        X: pd.DataFrame,
-        scale_features: bool = True
+        self, model: Any, X: pd.DataFrame, scale_features: bool = True
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Get predictions from a model.
-        
+
         Args:
             model: Trained model
             X: Features
             scale_features: Whether to scale features
-        
+
         Returns:
             Tuple of (predicted labels, predicted probabilities)
         """
@@ -505,26 +489,23 @@ class ModelTrainer:
             X_scaled = self.scaler.transform(X)
         else:
             X_scaled = X.values
-        
+
         y_pred = model.predict(X_scaled)
         y_prob = model.predict_proba(X_scaled)[:, 1]
-        
+
         return y_pred, y_prob
-    
+
     def save_model(
-        self,
-        model: Any,
-        filepath: str,
-        include_scaler: bool = True
+        self, model: Any, filepath: str, include_scaler: bool = True
     ) -> None:
         """Save model to disk."""
         save_dict = {"model": model}
         if include_scaler:
             save_dict["scaler"] = self.scaler
-        
+
         joblib.dump(save_dict, filepath)
         logger.info(f"Model saved to {filepath}")
-    
+
     def load_model(self, filepath: str) -> Any:
         """Load model from disk."""
         save_dict = joblib.load(filepath)
@@ -533,18 +514,16 @@ class ModelTrainer:
 
 
 def get_feature_importance(
-    model: Any,
-    feature_names: List[str],
-    top_n: int = 20
+    model: Any, feature_names: List[str], top_n: int = 20
 ) -> pd.DataFrame:
     """
     Extract feature importance from model.
-    
+
     Args:
         model: Trained model
         feature_names: Names of features
         top_n: Number of top features to return
-    
+
     Returns:
         DataFrame with feature importance
     """
@@ -557,14 +536,11 @@ def get_feature_importance(
     else:
         logger.warning("Model does not have feature importance attribute")
         return pd.DataFrame()
-    
-    df = pd.DataFrame({
-        "feature": feature_names,
-        "importance": importance
-    })
-    
+
+    df = pd.DataFrame({"feature": feature_names, "importance": importance})
+
     df = df.sort_values("importance", ascending=False)
-    
+
     return df.head(top_n)
 
 
@@ -572,17 +548,17 @@ def create_model_card(
     model_name: str,
     metrics: Dict[str, float],
     training_info: Dict[str, Any],
-    output_path: Optional[str] = None
+    output_path: Optional[str] = None,
 ) -> Dict:
     """
     Create a model card documenting the model.
-    
+
     Args:
         model_name: Name of model
         metrics: Performance metrics
         training_info: Training details
         output_path: Optional path to save JSON
-    
+
     Returns:
         Model card dictionary
     """
@@ -597,15 +573,15 @@ def create_model_card(
         "limitations": [
             "Trained on single cohort (2010-2016)",
             "Public-use data has some variables suppressed",
-            "Should not be used for individual-level decisions"
+            "Should not be used for individual-level decisions",
         ],
         "ethical_considerations": [
             "Fairness across demographic groups must be evaluated",
             "Model may perpetuate existing inequities",
-            "Requires careful validation before any deployment"
-        ]
+            "Requires careful validation before any deployment",
+        ],
     }
-    
+
     if output_path:
         import json
 
@@ -620,7 +596,7 @@ def create_model_card(
                     return float(obj)
                 return super().default(obj)
 
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             json.dump(card, f, indent=2, cls=NumpyEncoder)
         logger.info(f"Model card saved to {output_path}")
 

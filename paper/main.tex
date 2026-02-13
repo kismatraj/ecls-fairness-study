@@ -21,6 +21,7 @@
 
 % Formatting
 \doublespacing
+\emergencystretch=1em
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -82,7 +83,7 @@ This study makes several contributions to the literature on algorithmic fairness
     \item We provide one of the first comprehensive, multi-dimensional fairness audits of longitudinal educational prediction models using nationally representative data, examining group fairness, calibration fairness, and intersectional fairness simultaneously.
     \item We compare seven ML algorithms---including three state-of-the-art gradient boosting methods---finding that classical regularized models match or exceed modern approaches on this prediction task, consistent with recent tabular ML benchmarks \citep{grinsztajn2022tree}.
     \item We employ SHAP-based explainability to examine whether predictive features operate differently across racial groups, providing transparency into the model's decision-making process \citep{lundberg2017unified}.
-    \item We introduce calibration fairness and intersectional (race $\times$ SES) analysis to educational prediction, revealing systematic under-identification of high-SES minority students.
+    \item We introduce calibration fairness and intersectional (race $\times$ SES) analysis to educational prediction, revealing systematic under-identification of high-SES minority students.\looseness=-1
     \item We examine temporal generalization across four developmental windows spanning kindergarten through 3rd grade, discovering that additional data improves accuracy but does not resolve fairness disparities.
     \item We demonstrate the fragility of fairness assessments by showing that compliance with equal opportunity criteria depends critically on the choice of at-risk threshold.
 \end{itemize}
@@ -173,7 +174,7 @@ We included predictors from kindergarten through 2nd grade across four domains:
 
 \textbf{Approaches to Learning:}
 \begin{itemize}
-    \item Teacher-reported approaches to learning: Fall K (X1TCHAPP), Spring K (X2TCHAPP), Spring 1st grade (X4TCHAPP)
+    \item Teacher-reported approaches to learning: Fall~K~(X1TCHAPP),\\ Spring~K~(X2TCHAPP), Spring 1st grade~(X4TCHAPP)
 \end{itemize}
 
 \textbf{Demographic Characteristics:}
@@ -197,22 +198,22 @@ We trained seven classification algorithms spanning classical and state-of-the-a
 \begin{enumerate}
     \item \textbf{Logistic Regression:} L2-regularized logistic regression with regularization strength selected via cross-validation from $C \in \{0.01, 0.1, 1.0, 10.0\}$.
 
-    \item \textbf{Elastic Net:} Logistic regression with elastic net penalty, tuning both $\alpha \in \{0.001, 0.01, 0.1, 1.0\}$ and L1 ratio $\in \{0.2, 0.5, 0.8\}$.
+    \item \textbf{Elastic Net:} Logistic regression with elastic net penalty, tuning both regularization strength $\alpha \in \{0.001, 0.01, 0.1, 1.0\}$ and L1~ratio~$\in \{0.2, 0.5, 0.8\}$.
 
-    \item \textbf{Random Forest:} Ensemble of decision trees with hyperparameters: $n\_estimators \in \{100, 200\}$, $max\_depth \in \{5, 10, 15\}$, $min\_samples\_leaf \in \{5, 10\}$.
+    \item \textbf{Random Forest:} Ensemble of decision trees with hyperparameters: $n_\mathit{estimators} \in \{100, 200\}$, $max_\mathit{depth} \in \{5, 10, 15\}$, $min_\mathit{samples\_leaf} \in \{5, 10\}$.
 
-    \item \textbf{XGBoost:} Gradient boosted trees \citep{chen2016xgboost} with $n\_estimators \in \{100, 200\}$, $max\_depth \in \{3, 5, 7\}$, $learning\_rate \in \{0.01, 0.1\}$.
+    \item \textbf{XGBoost:} Gradient boosted trees \citep{chen2016xgboost} with $n_\mathit{estimators} \in \{100, 200\}$, $max_\mathit{depth} \in \{3, 5, 7\}$, $learning_\mathit{rate} \in \{0.01, 0.1\}$.
 \end{enumerate}
 
 \subsubsection{State-of-the-Art Gradient Boosting Methods}
 
 \begin{enumerate}
     \setcounter{enumi}{4}
-    \item \textbf{LightGBM:} Gradient boosting with leaf-wise tree growth and histogram-based binning \citep{ke2017lightgbm}. Hyperparameters: $n\_estimators \in \{100, 200, 300\}$, $max\_depth \in \{3, 5, 7, -1\}$, $learning\_rate \in \{0.01, 0.05, 0.1\}$, $num\_leaves \in \{31, 63, 127\}$.
+    \item \textbf{LightGBM:} Gradient boosting with leaf-wise tree growth and histogram-based binning \citep{ke2017lightgbm}. Hyperparameters: $n_\mathit{estimators} \in \{100, 200, 300\}$, $max_\mathit{depth} \in \{3, 5, 7, {-}1\}$, $learning_\mathit{rate} \in \{0.01, 0.05, 0.1\}$, $num_\mathit{leaves} \in \{31, 63, 127\}$.
 
-    \item \textbf{CatBoost:} Gradient boosting with ordered boosting to reduce prediction shift and native handling of categorical features \citep{prokhorenkova2018catboost}. Hyperparameters: $iterations \in \{100, 200, 300\}$, $depth \in \{4, 6, 8\}$, $learning\_rate \in \{0.01, 0.05, 0.1\}$.
+    \item \textbf{CatBoost:} Gradient boosting with ordered boosting to reduce prediction shift and native handling of categorical features \citep{prokhorenkova2018catboost}. Hyperparameters: $iterations \in \{100, 200, 300\}$, $depth \in \{4, 6, 8\}$, $learning_\mathit{rate} \in \{0.01, 0.05, 0.1\}$.
 
-    \item \textbf{HistGradientBoosting:} Scikit-learn's histogram-based gradient boosting, inspired by LightGBM, with native missing value support and early stopping. Hyperparameters: $max\_iter \in \{100, 200, 300\}$, $max\_depth \in \{3, 5, 7\}$, $learning\_rate \in \{0.01, 0.05, 0.1\}$.
+    \item \textbf{HistGradientBoosting:} Scikit-learn's histogram-based gradient boosting, inspired by LightGBM, with native missing value support and early stopping. Hyperparameters: $max_\mathit{iter} \in \{100, 200, 300\}$, $max_\mathit{depth} \in \{3, 5, 7\}$, $learning_\mathit{rate} \in \{0.01, 0.05, 0.1\}$.
 \end{enumerate}
 
 Recent benchmarks suggest that tree-based ensemble methods remain competitive with or superior to deep learning on structured tabular data \citep{grinsztajn2022tree}. We include three recent gradient boosting variants to test whether state-of-the-art methods improve upon classical approaches for educational prediction.
@@ -269,7 +270,7 @@ We employed multiple explainability methods to understand predictive mechanisms:
 
 \textbf{Permutation importance:} We computed permutation importance with 50 bootstrap iterations to obtain 95\% confidence intervals for feature importance, providing a model-agnostic comparison to SHAP.
 
-\textbf{Fairness-aware SHAP:} SHAP values were computed separately for each racial/ethnic group to detect whether predictive features operate with differential magnitude or direction across populations.
+\textbf{Fairness-aware SHAP:} SHAP values were computed separately for each racial/ethnic group to detect whether predictive features operate with differential magnitude or direction across populations.\looseness=-1
 
 \subsection{Temporal Generalization Analysis}
 
@@ -379,9 +380,10 @@ Table \ref{tab:features} presents feature importance from three complementary me
 \centering
 \caption{Feature Importance: SHAP, Elastic Net Coefficients, and Permutation Importance}
 \label{tab:features}
+\footnotesize
 \begin{tabular}{lccc}
 \toprule
-\textbf{Feature} & \textbf{Mean $|$SHAP$|$} & \textbf{EN Coef.} & \textbf{Perm. Imp. [95\% CI]} \\
+\textbf{Feature} & \textbf{Mean $|$SHAP$|$} & \textbf{EN Coef.} & \textbf{Perm.\ Imp.\ [95\% CI]} \\
 \midrule
 Spring K Math (X2MTHETK) & 0.410 & 0.501 & 0.046 [0.042, 0.054] \\
 Spring K Reading (X2RTHETK) & 0.254 & 0.350 & 0.023 [0.018, 0.027] \\
@@ -628,7 +630,7 @@ We applied threshold optimization to equalize TPR across groups, targeting the o
 \label{tab:mitigation}
 \begin{tabular}{lcccccc}
 \toprule
-\textbf{Group} & \textbf{TPR Before} & \textbf{TPR After} & \textbf{$\Delta$ TPR} & \textbf{Acc. Before} & \textbf{Acc. After} & \textbf{$\Delta$ Acc.} \\
+\textbf{Group} & \textbf{TPR Bef.} & \textbf{TPR Aft.} & \textbf{$\Delta$TPR} & \textbf{Acc.\ Bef.} & \textbf{Acc.\ Aft.} & \textbf{$\Delta$Acc.} \\
 \midrule
 White & 0.160 & 0.293 & +0.133 & 0.891 & 0.886 & $-$0.005 \\
 Black & 0.296 & 0.293 & $-$0.003 & 0.747 & 0.747 & +0.000 \\
@@ -704,7 +706,7 @@ This study has several limitations:
 
     \item \textbf{Single cohort:} The ECLS-K:2011 followed a single cohort (2010--2016). Findings may not generalize to other cohorts or contexts.
 
-    \item \textbf{Binary outcome:} We operationalized risk as a binary threshold ($<$25th percentile). Alternative operationalizations---as demonstrated by our sensitivity analysis---yield different fairness results.
+    \item \textbf{Binary outcome:} We operationalized risk as a binary threshold ($<$25th percentile). Alternative operationalizations---as demonstrated by our sensitivity analysis---yield different fairness results.\looseness=-1
 
     \item \textbf{Small subgroup sizes:} The Asian subgroup (N = 8 in the test set) and several intersectional subgroups (N = 24--42) were small, limiting statistical power for these comparisons.
 
@@ -923,7 +925,7 @@ The high rate of missing outcome data (37\%) reflects sample attrition over the 
 
 \subsection{Outcome Comparison: Reading vs. Math}
 
-Math prediction (AUC = 0.867, Logistic Regression) outperformed reading prediction (AUC = 0.848, Elastic Net). Both outcomes showed higher TPR for Hispanic and Black students relative to White students. Math prediction uniquely showed disparate impact for the Other racial group (TPR ratio = 0.24 vs. White). Full fairness metrics by outcome are available in the project repository (\texttt{results/tables/outcome\_fairness\_comparison.csv}).
+Math prediction (AUC = 0.867, Logistic Regression) outperformed reading prediction (AUC = 0.848, Elastic Net). Both outcomes showed higher TPR for Hispanic and Black students relative to White students. Math prediction uniquely showed disparate impact for the Other racial group (TPR ratio = 0.24 vs.\ White). Full fairness metrics by outcome are available in the project repository (\texttt{results/\allowbreak tables/\allowbreak outcome\_fairness\_comparison.csv}).
 
 \subsection{Supplementary Figures}
 

@@ -2,7 +2,6 @@
 
 import pandas as pd
 import numpy as np
-import pytest
 
 from src.fairness import (
     FairnessEvaluator,
@@ -129,10 +128,12 @@ class TestIntersectionalFairness:
     def test_compute_metrics(self, binary_predictions):
         y_true, y_pred, y_prob, groups = binary_predictions
         rng = np.random.RandomState(42)
-        protected = pd.DataFrame({
-            "race": groups.values,
-            "ses": rng.choice(["Low", "High"], len(groups)),
-        })
+        protected = pd.DataFrame(
+            {
+                "race": groups.values,
+                "ses": rng.choice(["Low", "High"], len(groups)),
+            }
+        )
 
         analyzer = IntersectionalFairnessAnalyzer(
             y_true, y_pred, y_prob, protected, min_group_size=10
@@ -143,10 +144,12 @@ class TestIntersectionalFairness:
     def test_summary_table(self, binary_predictions):
         y_true, y_pred, y_prob, groups = binary_predictions
         rng = np.random.RandomState(42)
-        protected = pd.DataFrame({
-            "race": groups.values,
-            "ses": rng.choice(["Low", "High"], len(groups)),
-        })
+        protected = pd.DataFrame(
+            {
+                "race": groups.values,
+                "ses": rng.choice(["Low", "High"], len(groups)),
+            }
+        )
 
         analyzer = IntersectionalFairnessAnalyzer(
             y_true, y_pred, y_prob, protected, min_group_size=10

@@ -1,0 +1,96 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "ecls-fairness-study"
+version = "0.2.0"
+description = "Algorithmic fairness and temporal generalization in early childhood risk prediction using ECLS-K:2011"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Kismat Raj"},
+]
+keywords = [
+    "algorithmic-fairness",
+    "machine-learning",
+    "education",
+    "ECLS-K",
+    "SHAP",
+    "bias-mitigation",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "pyarrow>=12.0.0",
+    "scikit-learn>=1.4.0",
+    "xgboost>=2.0.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "PyYAML>=6.0",
+    "tqdm>=4.65.0",
+    "joblib>=1.3.0",
+]
+
+[project.optional-dependencies]
+boosting = [
+    "lightgbm>=4.3.0",
+    "catboost>=1.2.0",
+]
+explainability = [
+    "shap>=0.45.0",
+    "lime>=0.2.0",
+    "dice-ml>=0.11",
+]
+fairness = [
+    "fairlearn>=0.10.0",
+    "aif360>=0.6.0",
+]
+all = [
+    "ecls-fairness-study[boosting,explainability,fairness]",
+    "tabpfn>=0.1.10",
+    "interpret>=0.6.0",
+    "alibi>=0.9.0",
+    "plotly>=5.18.0",
+    "imbalanced-learn>=0.12.0",
+    "statsmodels>=0.14.0",
+]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=24.0.0",
+    "ruff>=0.2.0",
+]
+
+[project.urls]
+Repository = "https://github.com/kismatraj/ecls-fairness-study"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py39"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

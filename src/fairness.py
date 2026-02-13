@@ -15,35 +15,35 @@ Includes:
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Any, Union
+from typing import Dict, List, Tuple, Optional, Any
 import logging
 from dataclasses import dataclass, field
-from itertools import combinations
 
 from sklearn.metrics import confusion_matrix, brier_score_loss
 from sklearn.calibration import calibration_curve
 from sklearn.utils import resample
-from scipy import stats
 
 try:
     from fairlearn.metrics import (
         MetricFrame,
-        demographic_parity_difference,
-        demographic_parity_ratio,
-        equalized_odds_difference,
-        equalized_odds_ratio,
+        demographic_parity_difference,  # noqa: F401
+        demographic_parity_ratio,  # noqa: F401
+        equalized_odds_difference,  # noqa: F401
+        equalized_odds_ratio,  # noqa: F401
         false_positive_rate,
         false_negative_rate,
-        selection_rate
+        selection_rate,
     )
+
     HAS_FAIRLEARN = True
 except ImportError:
     HAS_FAIRLEARN = False
     logging.warning("fairlearn not installed. Some features unavailable.")
 
 try:
-    from aif360.metrics import BinaryLabelDatasetMetric, ClassificationMetric
-    from aif360.datasets import BinaryLabelDataset
+    from aif360.metrics import BinaryLabelDatasetMetric, ClassificationMetric  # noqa: F401
+    from aif360.datasets import BinaryLabelDataset  # noqa: F401
+
     HAS_AIF360 = True
 except ImportError:
     HAS_AIF360 = False
@@ -55,6 +55,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class GroupMetrics:
     """Metrics for a single demographic group."""
+
     group: str
     n: int
     prevalence: float
@@ -69,7 +70,7 @@ class GroupMetrics:
 class FairnessEvaluator:
     """
     Evaluate algorithmic fairness across demographic groups.
-    
+
     Attributes:
         y_true: True labels
         y_pred: Predicted labels
@@ -77,14 +78,14 @@ class FairnessEvaluator:
         groups: Demographic group labels
         reference_group: Reference group for comparisons
     """
-    
+
     def __init__(
         self,
         y_true: np.ndarray,
         y_pred: np.ndarray,
         y_prob: np.ndarray,
         groups: pd.Series,
-        reference_group: Optional[str] = None
+        reference_group: Optional[str] = None,
     ):
         self.y_true = np.array(y_true)
         self.y_pred = np.array(y_pred)
@@ -98,32 +99,34 @@ class FairnessEvaluator:
 
         self.group_metrics = {}
         self.fairness_metrics = {}
-    
+
     def compute_group_metrics(self, group: str) -> GroupMetrics:
         """
         Compute metrics for a single group.
-        
+
         Args:
             group: Group label
-        
+
         Returns:
             GroupMetrics dataclass
         """
         mask = self.groups == group
-        
+
         y_true_g = self.y_true[mask]
         y_pred_g = self.y_pred[mask]
-        
+
         n = len(y_true_g)
-        
+
         if n == 0:
             return None
-        
+
         # Confusion matrix
-        tn, fp, fn, tp = confusion_matrix(
-            y_true_g, y_pred_g, labels=[0, 1]
-        ).ravel() if len(np.unique(y_true_g)) > 1 else (0, 0, 0, 0)
-        
+        tn, fp, fn, tp = (
+            confusion_matrix(y_true_g, y_pred_g, labels=[0, 1]).ravel()
+            if len(np.unique(y_true_g)) > 1
+            else (0, 0, 0, 0)
+        )
+
         # Metrics
         tpr = tp / (tp + fn) if (tp + fn) > 0 else 0
         fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
@@ -132,7 +135,7 @@ class FairnessEvaluator:
         accuracy = (tp + tn) / n if n > 0 else 0
         positive_rate = y_pred_g.mean()
         prevalence = y_true_g.mean()
-        
+
         return GroupMetrics(
             group=group,
             n=n,
@@ -142,158 +145,172 @@ class FairnessEvaluator:
             ppv=ppv,
             npv=npv,
             accuracy=accuracy,
-            positive_rate=positive_rate
+            positive_rate=positive_rate,
         )
-    
+
     def compute_all_group_metrics(self) -> Dict[str, GroupMetrics]:
         """Compute metrics for all groups."""
         self.group_metrics = {}
-        
+
         for group in self.unique_groups:
             metrics = self.compute_group_metrics(group)
             if metrics:
                 self.group_metrics[group] = metrics
-        
+
         return self.group_metrics
-    
+
     def compute_fairness_metrics(self) -> Dict[str, Dict]:
         """
         Compute fairness metrics comparing groups.
-        
+
         Returns:
             Dictionary with fairness metrics
         """
         if not self.group_metrics:
             self.compute_all_group_metrics()
-        
+
         ref_metrics = self.group_metrics.get(self.reference_group)
         if not ref_metrics:
             logger.warning(f"Reference group {self.reference_group} not found")
             return {}
-        
+
         fairness = {}
-        
+
         for group, metrics in self.group_metrics.items():
             if group == self.reference_group:
                 continue
-            
+
             # Compute disparities relative to reference
             fairness[group] = {
-                "tpr_ratio": metrics.tpr / ref_metrics.tpr if ref_metrics.tpr > 0 else np.nan,
+                "tpr_ratio": (
+                    metrics.tpr / ref_metrics.tpr if ref_metrics.tpr > 0 else np.nan
+                ),
                 "tpr_diff": metrics.tpr - ref_metrics.tpr,
-                "fpr_ratio": metrics.fpr / ref_metrics.fpr if ref_metrics.fpr > 0 else np.nan,
+                "fpr_ratio": (
+                    metrics.fpr / ref_metrics.fpr if ref_metrics.fpr > 0 else np.nan
+                ),
                 "fpr_diff": metrics.fpr - ref_metrics.fpr,
-                "ppv_ratio": metrics.ppv / ref_metrics.ppv if ref_metrics.ppv > 0 else np.nan,
+                "ppv_ratio": (
+                    metrics.ppv / ref_metrics.ppv if ref_metrics.ppv > 0 else np.nan
+                ),
                 "ppv_diff": metrics.ppv - ref_metrics.ppv,
-                "stat_parity_ratio": metrics.positive_rate / ref_metrics.positive_rate if ref_metrics.positive_rate > 0 else np.nan,
-                "stat_parity_diff": metrics.positive_rate - ref_metrics.positive_rate
+                "stat_parity_ratio": (
+                    metrics.positive_rate / ref_metrics.positive_rate
+                    if ref_metrics.positive_rate > 0
+                    else np.nan
+                ),
+                "stat_parity_diff": metrics.positive_rate - ref_metrics.positive_rate,
             }
-            
+
             # Flag disparate impact
             fairness[group]["disparate_impact"] = fairness[group]["tpr_ratio"] < 0.8
-        
+
         self.fairness_metrics = fairness
         return fairness
-    
+
     def get_summary_table(self) -> pd.DataFrame:
         """
         Create summary table of group metrics.
-        
+
         Returns:
             DataFrame with metrics by group
         """
         if not self.group_metrics:
             self.compute_all_group_metrics()
-        
+
         rows = []
         for group, m in self.group_metrics.items():
-            rows.append({
-                "Group": group,
-                "N": m.n,
-                "Prevalence": f"{m.prevalence:.1%}",
-                "TPR": f"{m.tpr:.3f}",
-                "FPR": f"{m.fpr:.3f}",
-                "PPV": f"{m.ppv:.3f}",
-                "Accuracy": f"{m.accuracy:.3f}",
-                "Pos. Rate": f"{m.positive_rate:.1%}"
-            })
-        
+            rows.append(
+                {
+                    "Group": group,
+                    "N": m.n,
+                    "Prevalence": f"{m.prevalence:.1%}",
+                    "TPR": f"{m.tpr:.3f}",
+                    "FPR": f"{m.fpr:.3f}",
+                    "PPV": f"{m.ppv:.3f}",
+                    "Accuracy": f"{m.accuracy:.3f}",
+                    "Pos. Rate": f"{m.positive_rate:.1%}",
+                }
+            )
+
         return pd.DataFrame(rows)
-    
+
     def get_disparity_table(self) -> pd.DataFrame:
         """
         Create table of fairness disparities.
-        
+
         Returns:
             DataFrame with disparity metrics
         """
         if not self.fairness_metrics:
             self.compute_fairness_metrics()
-        
+
         rows = []
         for group, metrics in self.fairness_metrics.items():
-            rows.append({
-                "Group": group,
-                "vs": self.reference_group,
-                "TPR Ratio": f"{metrics['tpr_ratio']:.3f}",
-                "TPR Diff": f"{metrics['tpr_diff']:+.3f}",
-                "FPR Ratio": f"{metrics['fpr_ratio']:.3f}",
-                "FPR Diff": f"{metrics['fpr_diff']:+.3f}",
-                "Disparate Impact": "Yes" if metrics['disparate_impact'] else "No"
-            })
-        
+            rows.append(
+                {
+                    "Group": group,
+                    "vs": self.reference_group,
+                    "TPR Ratio": f"{metrics['tpr_ratio']:.3f}",
+                    "TPR Diff": f"{metrics['tpr_diff']:+.3f}",
+                    "FPR Ratio": f"{metrics['fpr_ratio']:.3f}",
+                    "FPR Diff": f"{metrics['fpr_diff']:+.3f}",
+                    "Disparate Impact": "Yes" if metrics["disparate_impact"] else "No",
+                }
+            )
+
         return pd.DataFrame(rows)
-    
+
     def check_fairness_criteria(
-        self,
-        tpr_threshold: float = 0.8,
-        fpr_threshold: float = 1.25
+        self, tpr_threshold: float = 0.8, fpr_threshold: float = 1.25
     ) -> Dict[str, bool]:
         """
         Check if model meets fairness criteria.
-        
+
         Args:
             tpr_threshold: Minimum TPR ratio (80% rule)
             fpr_threshold: Maximum FPR ratio
-        
+
         Returns:
             Dictionary with pass/fail for each criterion
         """
         if not self.fairness_metrics:
             self.compute_fairness_metrics()
-        
+
         results = {
             "equal_opportunity": True,  # TPR parity
-            "equalized_odds": True,     # TPR + FPR parity
-            "statistical_parity": True  # Positive rate parity
+            "equalized_odds": True,  # TPR + FPR parity
+            "statistical_parity": True,  # Positive rate parity
         }
-        
+
         for group, metrics in self.fairness_metrics.items():
             if metrics["tpr_ratio"] < tpr_threshold:
                 results["equal_opportunity"] = False
                 results["equalized_odds"] = False
-            
-            if metrics["fpr_ratio"] > fpr_threshold or metrics["fpr_ratio"] < (1/fpr_threshold):
+
+            if metrics["fpr_ratio"] > fpr_threshold or metrics["fpr_ratio"] < (
+                1 / fpr_threshold
+            ):
                 results["equalized_odds"] = False
-            
+
             if metrics["stat_parity_ratio"] < tpr_threshold:
                 results["statistical_parity"] = False
-        
+
         return results
 
 
 class ThresholdOptimizer:
     """
     Optimize classification thresholds to improve fairness.
-    
+
     This implements post-processing threshold adjustment to equalize
     metrics across demographic groups.
     """
-    
+
     def __init__(
         self,
         constraint: str = "equal_opportunity",
-        target_metric: Optional[float] = None
+        target_metric: Optional[float] = None,
     ):
         """
         Args:
@@ -306,60 +323,54 @@ class ThresholdOptimizer:
         self.constraint = constraint
         self.target_metric = target_metric
         self.thresholds = {}
-    
+
     def find_threshold_for_tpr(
-        self,
-        y_true: np.ndarray,
-        y_prob: np.ndarray,
-        target_tpr: float
+        self, y_true: np.ndarray, y_prob: np.ndarray, target_tpr: float
     ) -> float:
         """
         Find threshold to achieve target TPR.
-        
+
         Args:
             y_true: True labels
             y_prob: Predicted probabilities
             target_tpr: Desired true positive rate
-        
+
         Returns:
             Optimal threshold
         """
         # Get positive cases
         pos_mask = y_true == 1
         pos_probs = y_prob[pos_mask]
-        
+
         if len(pos_probs) == 0:
             return 0.5
-        
+
         # Threshold is percentile of positive class probabilities
         # To get TPR of X%, threshold should be at (1-X)th percentile
         threshold = np.percentile(pos_probs, (1 - target_tpr) * 100)
-        
+
         return threshold
-    
+
     def fit(
-        self,
-        y_true: np.ndarray,
-        y_prob: np.ndarray,
-        groups: pd.Series
+        self, y_true: np.ndarray, y_prob: np.ndarray, groups: pd.Series
     ) -> Dict[str, float]:
         """
         Fit group-specific thresholds.
-        
+
         Args:
             y_true: True labels
             y_prob: Predicted probabilities
             groups: Group labels
-        
+
         Returns:
             Dictionary of thresholds by group
         """
         y_true = np.array(y_true)
         y_prob = np.array(y_prob)
         groups = pd.Series(groups).reset_index(drop=True)
-        
+
         unique_groups = groups.unique()
-        
+
         # Determine target metric
         if self.target_metric is None:
             # Use overall TPR at default threshold
@@ -368,60 +379,49 @@ class ThresholdOptimizer:
             target = y_pred_default[pos_mask].mean()
         else:
             target = self.target_metric
-        
+
         logger.info(f"Target TPR: {target:.3f}")
-        
+
         # Find threshold for each group
         self.thresholds = {}
-        
+
         for group in unique_groups:
             mask = groups == group
-            
-            threshold = self.find_threshold_for_tpr(
-                y_true[mask],
-                y_prob[mask],
-                target
-            )
-            
+
+            threshold = self.find_threshold_for_tpr(y_true[mask], y_prob[mask], target)
+
             self.thresholds[group] = threshold
             logger.info(f"  {group}: threshold = {threshold:.4f}")
-        
+
         return self.thresholds
-    
-    def transform(
-        self,
-        y_prob: np.ndarray,
-        groups: pd.Series
-    ) -> np.ndarray:
+
+    def transform(self, y_prob: np.ndarray, groups: pd.Series) -> np.ndarray:
         """
         Apply group-specific thresholds.
-        
+
         Args:
             y_prob: Predicted probabilities
             groups: Group labels
-        
+
         Returns:
             Adjusted predictions
         """
         if not self.thresholds:
             raise ValueError("Must call fit() first")
-        
+
         y_prob = np.array(y_prob)
         groups = pd.Series(groups).reset_index(drop=True)
-        
+
         y_pred = np.zeros(len(y_prob), dtype=int)
-        
+
         for group, threshold in self.thresholds.items():
             mask = groups == group
             y_pred[mask] = (y_prob[mask] >= threshold).astype(int)
-        
+
         return y_pred
-    
+
     def fit_transform(
-        self,
-        y_true: np.ndarray,
-        y_prob: np.ndarray,
-        groups: pd.Series
+        self, y_true: np.ndarray, y_prob: np.ndarray, groups: pd.Series
     ) -> np.ndarray:
         """Fit and transform in one step."""
         self.fit(y_true, y_prob, groups)
@@ -429,45 +429,39 @@ class ThresholdOptimizer:
 
 
 def compute_calibration_by_group(
-    y_true: np.ndarray,
-    y_prob: np.ndarray,
-    groups: pd.Series,
-    n_bins: int = 10
+    y_true: np.ndarray, y_prob: np.ndarray, groups: pd.Series, n_bins: int = 10
 ) -> Dict[str, Tuple[np.ndarray, np.ndarray]]:
     """
     Compute calibration curves by group.
-    
+
     Args:
         y_true: True labels
         y_prob: Predicted probabilities
         groups: Group labels
         n_bins: Number of bins for calibration
-    
+
     Returns:
         Dictionary with calibration data per group
     """
     y_true = np.array(y_true)
     y_prob = np.array(y_prob)
     groups = pd.Series(groups).reset_index(drop=True)
-    
+
     calibration = {}
-    
+
     for group in groups.unique():
         mask = groups == group
-        
+
         if mask.sum() < n_bins * 5:
             logger.warning(f"Group {group} has few samples for calibration")
             continue
-        
+
         prob_true, prob_pred = calibration_curve(
-            y_true[mask],
-            y_prob[mask],
-            n_bins=n_bins,
-            strategy='uniform'
+            y_true[mask], y_prob[mask], n_bins=n_bins, strategy="uniform"
         )
-        
+
         calibration[group] = (prob_true, prob_pred)
-    
+
     return calibration
 
 
@@ -476,60 +470,61 @@ def compare_before_after_mitigation(
     y_pred_before: np.ndarray,
     y_pred_after: np.ndarray,
     y_prob: np.ndarray,
-    groups: pd.Series
+    groups: pd.Series,
 ) -> pd.DataFrame:
     """
     Compare metrics before and after bias mitigation.
-    
+
     Args:
         y_true: True labels
         y_pred_before: Predictions before mitigation
         y_pred_after: Predictions after mitigation
         y_prob: Predicted probabilities
         groups: Group labels
-    
+
     Returns:
         DataFrame comparing metrics
     """
     # Evaluate before
     eval_before = FairnessEvaluator(y_true, y_pred_before, y_prob, groups)
     eval_before.compute_all_group_metrics()
-    
+
     # Evaluate after
     eval_after = FairnessEvaluator(y_true, y_pred_after, y_prob, groups)
     eval_after.compute_all_group_metrics()
-    
+
     # Compare
     rows = []
     for group in groups.unique():
         before = eval_before.group_metrics.get(group)
         after = eval_after.group_metrics.get(group)
-        
+
         if before and after:
-            rows.append({
-                "Group": group,
-                "TPR Before": f"{before.tpr:.3f}",
-                "TPR After": f"{after.tpr:.3f}",
-                "TPR Change": f"{after.tpr - before.tpr:+.3f}",
-                "Accuracy Before": f"{before.accuracy:.3f}",
-                "Accuracy After": f"{after.accuracy:.3f}",
-                "Accuracy Change": f"{after.accuracy - before.accuracy:+.3f}"
-            })
-    
+            rows.append(
+                {
+                    "Group": group,
+                    "TPR Before": f"{before.tpr:.3f}",
+                    "TPR After": f"{after.tpr:.3f}",
+                    "TPR Change": f"{after.tpr - before.tpr:+.3f}",
+                    "Accuracy Before": f"{before.accuracy:.3f}",
+                    "Accuracy After": f"{after.accuracy:.3f}",
+                    "Accuracy Change": f"{after.accuracy - before.accuracy:+.3f}",
+                }
+            )
+
     return pd.DataFrame(rows)
 
 
 def generate_fairness_report(
-    evaluator: FairnessEvaluator,
-    output_path: Optional[str] = None
+    evaluator: FairnessEvaluator, output_path: Optional[str] = None
 ) -> str:
     """
     Generate a text report of fairness analysis.
-    
+
     Args:
         evaluator: FairnessEvaluator with computed metrics
         output_path: Optional path to save report
-    
+
     Returns:
         Report as string
     """
@@ -538,44 +533,44 @@ def generate_fairness_report(
     report.append("ALGORITHMIC FAIRNESS REPORT")
     report.append("=" * 60)
     report.append("")
-    
+
     # Group metrics
     report.append("GROUP-LEVEL METRICS")
     report.append("-" * 40)
-    
+
     summary = evaluator.get_summary_table()
     report.append(summary.to_string(index=False))
     report.append("")
-    
+
     # Disparity metrics
     report.append("DISPARITY ANALYSIS")
     report.append("-" * 40)
     report.append(f"Reference group: {evaluator.reference_group}")
     report.append("")
-    
+
     disparity = evaluator.get_disparity_table()
     report.append(disparity.to_string(index=False))
     report.append("")
-    
+
     # Fairness criteria
     report.append("FAIRNESS CRITERIA CHECK")
     report.append("-" * 40)
-    
+
     criteria = evaluator.check_fairness_criteria()
     for criterion, passed in criteria.items():
         status = "PASS" if passed else "FAIL"
         report.append(f"  {criterion}: {status}")
-    
+
     report.append("")
     report.append("=" * 60)
-    
+
     report_text = "\n".join(report)
-    
+
     if output_path:
-        with open(output_path, 'w') as f:
+        with open(output_path, "w") as f:
             f.write(report_text)
         logger.info(f"Report saved to {output_path}")
-    
+
     return report_text
 
 
@@ -587,6 +582,7 @@ def generate_fairness_report(
 @dataclass
 class IntersectionalMetrics:
     """Metrics for an intersectional subgroup (e.g., Black + Low SES)."""
+
     subgroup: str
     n: int
     prevalence: float
@@ -613,7 +609,7 @@ class IntersectionalFairnessAnalyzer:
         y_pred: np.ndarray,
         y_prob: np.ndarray,
         protected_attributes: pd.DataFrame,
-        min_group_size: int = 30
+        min_group_size: int = 30,
     ):
         """
         Args:
@@ -631,8 +627,7 @@ class IntersectionalFairnessAnalyzer:
         self.intersectional_metrics = {}
 
     def create_intersectional_groups(
-        self,
-        attributes: Optional[List[str]] = None
+        self, attributes: Optional[List[str]] = None
     ) -> pd.Series:
         """Create intersectional group labels from multiple attributes."""
         if attributes is None:
@@ -643,8 +638,7 @@ class IntersectionalFairnessAnalyzer:
         return groups
 
     def compute_intersectional_metrics(
-        self,
-        attributes: Optional[List[str]] = None
+        self, attributes: Optional[List[str]] = None
     ) -> Dict[str, IntersectionalMetrics]:
         """
         Compute fairness metrics for all intersectional subgroups.
@@ -661,7 +655,9 @@ class IntersectionalFairnessAnalyzer:
             mask = groups == group
 
             if mask.sum() < self.min_group_size:
-                logger.debug(f"Skipping {group}: n={mask.sum()} < {self.min_group_size}")
+                logger.debug(
+                    f"Skipping {group}: n={mask.sum()} < {self.min_group_size}"
+                )
                 continue
 
             y_true_g = self.y_true[mask]
@@ -673,9 +669,7 @@ class IntersectionalFairnessAnalyzer:
             if len(np.unique(y_true_g)) < 2 or len(np.unique(y_pred_g)) < 2:
                 continue
 
-            tn, fp, fn, tp = confusion_matrix(
-                y_true_g, y_pred_g, labels=[0, 1]
-            ).ravel()
+            tn, fp, fn, tp = confusion_matrix(y_true_g, y_pred_g, labels=[0, 1]).ravel()
 
             tpr = tp / (tp + fn) if (tp + fn) > 0 else 0
             fpr = fp / (fp + tn) if (fp + tn) > 0 else 0
@@ -685,10 +679,9 @@ class IntersectionalFairnessAnalyzer:
             prevalence = y_true_g.mean()
 
             # Parse attribute values
-            attr_values = dict(zip(
-                attributes or self.protected_df.columns,
-                group.split("_")
-            ))
+            attr_values = dict(
+                zip(attributes or self.protected_df.columns, group.split("_"))
+            )
 
             self.intersectional_metrics[group] = IntersectionalMetrics(
                 subgroup=group,
@@ -699,15 +692,13 @@ class IntersectionalFairnessAnalyzer:
                 ppv=ppv,
                 accuracy=accuracy,
                 positive_rate=positive_rate,
-                attributes=attr_values
+                attributes=attr_values,
             )
 
         return self.intersectional_metrics
 
     def get_worst_subgroups(
-        self,
-        metric: str = "tpr",
-        n: int = 5
+        self, metric: str = "tpr", n: int = 5
     ) -> List[IntersectionalMetrics]:
         """
         Identify subgroups with worst performance on a metric.
@@ -727,9 +718,7 @@ class IntersectionalFairnessAnalyzer:
         # Sort by metric (ascending for tpr/ppv/accuracy, descending for fpr)
         reverse = metric == "fpr"
         sorted_metrics = sorted(
-            metrics_list,
-            key=lambda x: getattr(x, metric),
-            reverse=reverse
+            metrics_list, key=lambda x: getattr(x, metric), reverse=reverse
         )
 
         return sorted_metrics[:n]
@@ -763,15 +752,17 @@ class IntersectionalFairnessAnalyzer:
 
         rows = []
         for group, m in self.intersectional_metrics.items():
-            rows.append({
-                "Subgroup": group,
-                "N": m.n,
-                "Prevalence": f"{m.prevalence:.1%}",
-                "TPR": round(m.tpr, 3),
-                "FPR": round(m.fpr, 3),
-                "PPV": round(m.ppv, 3),
-                "Accuracy": round(m.accuracy, 3)
-            })
+            rows.append(
+                {
+                    "Subgroup": group,
+                    "N": m.n,
+                    "Prevalence": f"{m.prevalence:.1%}",
+                    "TPR": round(m.tpr, 3),
+                    "FPR": round(m.fpr, 3),
+                    "PPV": round(m.ppv, 3),
+                    "Accuracy": round(m.accuracy, 3),
+                }
+            )
 
         return pd.DataFrame(rows).sort_values("TPR")
 
@@ -790,7 +781,7 @@ class FairnessConfidenceIntervals:
         y_prob: np.ndarray,
         groups: pd.Series,
         n_bootstrap: int = 1000,
-        confidence_level: float = 0.95
+        confidence_level: float = 0.95,
     ):
         self.y_true = np.array(y_true)
         self.y_prob = np.array(y_prob)
@@ -806,10 +797,7 @@ class FairnessConfidenceIntervals:
             return np.nan
         return y_pred[mask].mean()
 
-    def bootstrap_group_metrics(
-        self,
-        threshold: float = 0.5
-    ) -> pd.DataFrame:
+    def bootstrap_group_metrics(self, threshold: float = 0.5) -> pd.DataFrame:
         """
         Compute bootstrap CI for group-level metrics.
 
@@ -819,7 +807,7 @@ class FairnessConfidenceIntervals:
         Returns:
             DataFrame with metrics and confidence intervals
         """
-        y_pred = (self.y_prob >= threshold).astype(int)
+        y_pred = (self.y_prob >= threshold).astype(int)  # noqa: F841
         unique_groups = [g for g in self.groups.unique() if pd.notna(g)]
 
         results = []
@@ -856,28 +844,32 @@ class FairnessConfidenceIntervals:
             fpr_samples = np.array(fpr_samples)
             ppv_samples = np.array(ppv_samples)
 
-            results.append({
-                "Group": group,
-                "N": mask.sum(),
-                "TPR": np.nanmean(tpr_samples),
-                "TPR_CI_lower": np.nanpercentile(tpr_samples, self.alpha / 2 * 100),
-                "TPR_CI_upper": np.nanpercentile(tpr_samples, (1 - self.alpha / 2) * 100),
-                "FPR": np.nanmean(fpr_samples),
-                "FPR_CI_lower": np.nanpercentile(fpr_samples, self.alpha / 2 * 100),
-                "FPR_CI_upper": np.nanpercentile(fpr_samples, (1 - self.alpha / 2) * 100),
-                "PPV": np.nanmean(ppv_samples),
-                "PPV_CI_lower": np.nanpercentile(ppv_samples, self.alpha / 2 * 100),
-                "PPV_CI_upper": np.nanpercentile(ppv_samples, (1 - self.alpha / 2) * 100)
-            })
+            results.append(
+                {
+                    "Group": group,
+                    "N": mask.sum(),
+                    "TPR": np.nanmean(tpr_samples),
+                    "TPR_CI_lower": np.nanpercentile(tpr_samples, self.alpha / 2 * 100),
+                    "TPR_CI_upper": np.nanpercentile(
+                        tpr_samples, (1 - self.alpha / 2) * 100
+                    ),
+                    "FPR": np.nanmean(fpr_samples),
+                    "FPR_CI_lower": np.nanpercentile(fpr_samples, self.alpha / 2 * 100),
+                    "FPR_CI_upper": np.nanpercentile(
+                        fpr_samples, (1 - self.alpha / 2) * 100
+                    ),
+                    "PPV": np.nanmean(ppv_samples),
+                    "PPV_CI_lower": np.nanpercentile(ppv_samples, self.alpha / 2 * 100),
+                    "PPV_CI_upper": np.nanpercentile(
+                        ppv_samples, (1 - self.alpha / 2) * 100
+                    ),
+                }
+            )
 
         return pd.DataFrame(results)
 
     def bootstrap_disparity_test(
-        self,
-        group1: str,
-        group2: str,
-        metric: str = "tpr",
-        threshold: float = 0.5
+        self, group1: str, group2: str, metric: str = "tpr", threshold: float = 0.5
     ) -> Dict[str, Any]:
         """
         Bootstrap hypothesis test for disparity between groups.
@@ -921,7 +913,7 @@ class FairnessConfidenceIntervals:
         # Bootstrap under null (pooled data)
         pooled_y_true = np.concatenate([y_true_1, y_true_2])
         pooled_y_prob = np.concatenate([y_prob_1, y_prob_2])
-        n1, n2 = len(y_true_1), len(y_true_2)
+        n1, n2 = len(y_true_1), len(y_true_2)  # noqa: F841
 
         null_diffs = []
         for i in range(self.n_bootstrap):
@@ -964,7 +956,7 @@ class FairnessConfidenceIntervals:
             "p_value": p_value,
             "significant": p_value < self.alpha,
             "ci_lower": np.percentile(null_diffs, self.alpha / 2 * 100),
-            "ci_upper": np.percentile(null_diffs, (1 - self.alpha / 2) * 100)
+            "ci_upper": np.percentile(null_diffs, (1 - self.alpha / 2) * 100),
         }
 
 
@@ -982,7 +974,7 @@ class CalibrationFairnessAnalyzer:
         y_true: np.ndarray,
         y_prob: np.ndarray,
         groups: pd.Series,
-        n_bins: int = 10
+        n_bins: int = 10,
     ):
         self.y_true = np.array(y_true)
         self.y_prob = np.array(y_prob)
@@ -990,9 +982,7 @@ class CalibrationFairnessAnalyzer:
         self.n_bins = n_bins
 
     def compute_expected_calibration_error(
-        self,
-        y_true: np.ndarray,
-        y_prob: np.ndarray
+        self, y_true: np.ndarray, y_prob: np.ndarray
     ) -> float:
         """
         Compute Expected Calibration Error (ECE).
@@ -1013,9 +1003,7 @@ class CalibrationFairnessAnalyzer:
         return ece / len(y_true)
 
     def compute_maximum_calibration_error(
-        self,
-        y_true: np.ndarray,
-        y_prob: np.ndarray
+        self, y_true: np.ndarray, y_prob: np.ndarray
     ) -> float:
         """Compute Maximum Calibration Error (MCE)."""
         bin_boundaries = np.linspace(0, 1, self.n_bins + 1)
@@ -1052,13 +1040,15 @@ class CalibrationFairnessAnalyzer:
             mce = self.compute_maximum_calibration_error(y_true_g, y_prob_g)
             brier = brier_score_loss(y_true_g, y_prob_g)
 
-            results.append({
-                "Group": group,
-                "N": mask.sum(),
-                "ECE": ece,
-                "MCE": mce,
-                "Brier": brier
-            })
+            results.append(
+                {
+                    "Group": group,
+                    "N": mask.sum(),
+                    "ECE": ece,
+                    "MCE": mce,
+                    "Brier": brier,
+                }
+            )
 
         df = pd.DataFrame(results)
 
@@ -1098,7 +1088,7 @@ class CalibrationFairnessAnalyzer:
             "threshold": threshold,
             "worst_calibrated_group": worst_group,
             "best_calibrated_group": best_group,
-            "calibration_by_group": calibration_df
+            "calibration_by_group": calibration_df,
         }
 
 
@@ -1112,10 +1102,7 @@ class IndividualFairnessAnalyzer:
     """
 
     def __init__(
-        self,
-        X: pd.DataFrame,
-        y_prob: np.ndarray,
-        distance_metric: str = "euclidean"
+        self, X: pd.DataFrame, y_prob: np.ndarray, distance_metric: str = "euclidean"
     ):
         from sklearn.metrics import pairwise_distances
 
@@ -1128,12 +1115,11 @@ class IndividualFairnessAnalyzer:
             self.distances = pairwise_distances(X, metric=distance_metric)
         else:
             self.distances = None
-            logger.warning("Dataset too large for full distance matrix. Using sampling.")
+            logger.warning(
+                "Dataset too large for full distance matrix. Using sampling."
+            )
 
-    def compute_consistency(
-        self,
-        n_neighbors: int = 5
-    ) -> float:
+    def compute_consistency(self, n_neighbors: int = 5) -> float:
         """
         Compute consistency score (individual fairness metric).
 
@@ -1163,9 +1149,7 @@ class IndividualFairnessAnalyzer:
         return np.mean(consistencies)
 
     def compute_lipschitz_violation(
-        self,
-        sample_size: int = 1000,
-        lipschitz_constant: float = 1.0
+        self, sample_size: int = 1000, lipschitz_constant: float = 1.0
     ) -> Dict[str, float]:
         """
         Check Lipschitz continuity violation (individual fairness).
@@ -1189,6 +1173,7 @@ class IndividualFairnessAnalyzer:
         else:
             # Use all pairs (for small datasets)
             from itertools import combinations
+
             pairs = list(combinations(range(n), 2))
             sample_size = min(sample_size, len(pairs))
             rng = np.random.RandomState(42)
@@ -1208,6 +1193,7 @@ class IndividualFairnessAnalyzer:
                 feat_dist = self.distances[i, j]
             else:
                 from sklearn.metrics import pairwise_distances
+
                 feat_dist = pairwise_distances(
                     self.X.iloc[[i]], self.X.iloc[[j]], metric=self.distance_metric
                 )[0, 0]
@@ -1225,17 +1211,19 @@ class IndividualFairnessAnalyzer:
 
         return {
             "violation_rate": np.mean(violations),
-            "mean_violation_magnitude": np.mean(violation_magnitudes) if violation_magnitudes else 0,
-            "max_violation_magnitude": np.max(violation_magnitudes) if violation_magnitudes else 0,
+            "mean_violation_magnitude": (
+                np.mean(violation_magnitudes) if violation_magnitudes else 0
+            ),
+            "max_violation_magnitude": (
+                np.max(violation_magnitudes) if violation_magnitudes else 0
+            ),
             "n_pairs_checked": len(violations),
-            "lipschitz_constant": lipschitz_constant
+            "lipschitz_constant": lipschitz_constant,
         }
 
 
 def compute_fairlearn_metrics(
-    y_true: np.ndarray,
-    y_pred: np.ndarray,
-    groups: pd.Series
+    y_true: np.ndarray, y_pred: np.ndarray, groups: pd.Series
 ) -> pd.DataFrame:
     """
     Compute comprehensive fairness metrics using Fairlearn.
@@ -1260,14 +1248,11 @@ def compute_fairlearn_metrics(
         "recall": lambda y, p: recall_score(y, p, zero_division=0),
         "selection_rate": selection_rate,
         "false_positive_rate": false_positive_rate,
-        "false_negative_rate": false_negative_rate
+        "false_negative_rate": false_negative_rate,
     }
 
     mf = MetricFrame(
-        metrics=metrics,
-        y_true=y_true,
-        y_pred=y_pred,
-        sensitive_features=groups
+        metrics=metrics, y_true=y_true, y_pred=y_pred, sensitive_features=groups
     )
 
     results = mf.by_group.copy()
@@ -1284,7 +1269,7 @@ def generate_comprehensive_fairness_report(
     groups: pd.Series,
     X: Optional[pd.DataFrame] = None,
     protected_attributes: Optional[pd.DataFrame] = None,
-    output_dir: Optional[str] = None
+    output_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Generate comprehensive fairness analysis report (2025 state-of-the-art).
@@ -1334,7 +1319,9 @@ def generate_comprehensive_fairness_report(
         )
         intersect_analyzer.compute_intersectional_metrics()
         results["intersectional_metrics"] = intersect_analyzer.get_summary_table()
-        results["worst_subgroups"] = intersect_analyzer.get_worst_subgroups(metric="tpr", n=5)
+        results["worst_subgroups"] = intersect_analyzer.get_worst_subgroups(
+            metric="tpr", n=5
+        )
 
     # 4. Calibration fairness
     logger.info("Computing calibration fairness...")
@@ -1357,8 +1344,12 @@ def generate_comprehensive_fairness_report(
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        results["group_metrics"].to_csv(output_dir / "group_fairness_metrics.csv", index=False)
-        results["metrics_with_ci"].to_csv(output_dir / "metrics_with_confidence_intervals.csv", index=False)
+        results["group_metrics"].to_csv(
+            output_dir / "group_fairness_metrics.csv", index=False
+        )
+        results["metrics_with_ci"].to_csv(
+            output_dir / "metrics_with_confidence_intervals.csv", index=False
+        )
 
         if "intersectional_metrics" in results:
             results["intersectional_metrics"].to_csv(

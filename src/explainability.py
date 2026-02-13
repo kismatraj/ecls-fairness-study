@@ -22,6 +22,7 @@ from sklearn.utils import resample
 
 try:
     import shap
+
     HAS_SHAP = True
 except ImportError:
     HAS_SHAP = False
@@ -30,6 +31,7 @@ except ImportError:
 try:
     import lime
     import lime.lime_tabular
+
     HAS_LIME = True
 except ImportError:
     HAS_LIME = False
@@ -37,6 +39,7 @@ except ImportError:
 
 try:
     import dice_ml
+
     HAS_DICE = True
 except ImportError:
     HAS_DICE = False
@@ -59,7 +62,7 @@ class SHAPExplainer:
         model: Any,
         X_train: pd.DataFrame,
         feature_names: Optional[List[str]] = None,
-        explainer_type: str = "auto"
+        explainer_type: str = "auto",
     ):
         """
         Initialize SHAP explainer.
@@ -88,9 +91,15 @@ class SHAPExplainer:
 
         if explainer_type == "auto":
             # Auto-detect best explainer
-            if any(tree in model_name for tree in ['forest', 'xgb', 'lgbm', 'catboost', 'gradient']):
+            if any(
+                tree in model_name
+                for tree in ["forest", "xgb", "lgbm", "catboost", "gradient"]
+            ):
                 explainer_type = "tree"
-            elif any(linear in model_name for linear in ['logistic', 'linear', 'sgd', 'elastic']):
+            elif any(
+                linear in model_name
+                for linear in ["logistic", "linear", "sgd", "elastic"]
+            ):
                 explainer_type = "linear"
             else:
                 explainer_type = "kernel"
@@ -108,9 +117,7 @@ class SHAPExplainer:
             return shap.KernelExplainer(self.model.predict_proba, background)
 
     def compute_shap_values(
-        self,
-        X: pd.DataFrame,
-        check_additivity: bool = False
+        self, X: pd.DataFrame, check_additivity: bool = False
     ) -> np.ndarray:
         """
         Compute SHAP values for given data.
@@ -125,7 +132,9 @@ class SHAPExplainer:
         logger.info(f"Computing SHAP values for {len(X)} samples...")
 
         try:
-            shap_values = self.explainer.shap_values(X, check_additivity=check_additivity)
+            shap_values = self.explainer.shap_values(
+                X, check_additivity=check_additivity
+            )
         except TypeError:
             # Newer SHAP versions removed check_additivity for some explainers
             shap_values = self.explainer.shap_values(X)
@@ -137,7 +146,11 @@ class SHAPExplainer:
         self.shap_values = shap_values
         self.expected_value = self.explainer.expected_value
         if isinstance(self.expected_value, np.ndarray):
-            self.expected_value = self.expected_value[1] if len(self.expected_value) == 2 else self.expected_value[0]
+            self.expected_value = (
+                self.expected_value[1]
+                if len(self.expected_value) == 2
+                else self.expected_value[0]
+            )
 
         return shap_values
 
@@ -156,18 +169,18 @@ class SHAPExplainer:
 
         importance = np.abs(self.shap_values).mean(axis=0)
 
-        df = pd.DataFrame({
-            "feature": self.feature_names,
-            "mean_abs_shap": importance,
-            "std_shap": np.std(self.shap_values, axis=0)
-        }).sort_values("mean_abs_shap", ascending=False)
+        df = pd.DataFrame(
+            {
+                "feature": self.feature_names,
+                "mean_abs_shap": importance,
+                "std_shap": np.std(self.shap_values, axis=0),
+            }
+        ).sort_values("mean_abs_shap", ascending=False)
 
         return df.head(top_n)
 
     def get_shap_interaction_values(
-        self,
-        X: pd.DataFrame,
-        max_samples: int = 500
+        self, X: pd.DataFrame, max_samples: int = 500
     ) -> np.ndarray:
         """
         Compute SHAP interaction values (pairwise feature interactions).
@@ -179,21 +192,21 @@ class SHAPExplainer:
         Returns:
             Interaction values array (n_samples, n_features, n_features)
         """
-        if not hasattr(self.explainer, 'shap_interaction_values'):
+        if not hasattr(self.explainer, "shap_interaction_values"):
             logger.warning("Explainer does not support interaction values")
             return None
 
         if len(X) > max_samples:
-            logger.info(f"Sampling {max_samples} from {len(X)} for interaction computation")
+            logger.info(
+                f"Sampling {max_samples} from {len(X)} for interaction computation"
+            )
             X = X.sample(n=max_samples, random_state=42)
 
         logger.info("Computing SHAP interaction values (this may take time)...")
         return self.explainer.shap_interaction_values(X)
 
     def get_top_interactions(
-        self,
-        interaction_values: np.ndarray,
-        top_n: int = 10
+        self, interaction_values: np.ndarray, top_n: int = 10
     ) -> pd.DataFrame:
         """
         Extract top feature interactions from interaction values.
@@ -215,20 +228,19 @@ class SHAPExplainer:
         interactions = []
         for i in range(len(self.feature_names)):
             for j in range(i + 1, len(self.feature_names)):
-                interactions.append({
-                    "feature_1": self.feature_names[i],
-                    "feature_2": self.feature_names[j],
-                    "interaction_strength": mean_interactions[i, j]
-                })
+                interactions.append(
+                    {
+                        "feature_1": self.feature_names[i],
+                        "feature_2": self.feature_names[j],
+                        "interaction_strength": mean_interactions[i, j],
+                    }
+                )
 
         df = pd.DataFrame(interactions)
         return df.sort_values("interaction_strength", ascending=False).head(top_n)
 
     def fairness_aware_shap(
-        self,
-        X: pd.DataFrame,
-        groups: pd.Series,
-        protected_attribute: str = "race"
+        self, X: pd.DataFrame, groups: pd.Series, protected_attribute: str = "race"
     ) -> Dict[str, pd.DataFrame]:
         """
         Compute SHAP-based feature importance stratified by protected groups.
@@ -256,12 +268,14 @@ class SHAPExplainer:
             mask = groups == group
             group_shap = self.shap_values[mask]
 
-            importance = pd.DataFrame({
-                "feature": self.feature_names,
-                "mean_abs_shap": np.abs(group_shap).mean(axis=0),
-                "mean_shap": group_shap.mean(axis=0),  # Direction of effect
-                "std_shap": group_shap.std(axis=0)
-            }).sort_values("mean_abs_shap", ascending=False)
+            importance = pd.DataFrame(
+                {
+                    "feature": self.feature_names,
+                    "mean_abs_shap": np.abs(group_shap).mean(axis=0),
+                    "mean_shap": group_shap.mean(axis=0),  # Direction of effect
+                    "std_shap": group_shap.std(axis=0),
+                }
+            ).sort_values("mean_abs_shap", ascending=False)
 
             results[group] = importance
 
@@ -282,10 +296,7 @@ class SHAPExplainer:
         return results
 
     def plot_summary(
-        self,
-        X: pd.DataFrame,
-        max_display: int = 15,
-        output_path: Optional[str] = None
+        self, X: pd.DataFrame, max_display: int = 15, output_path: Optional[str] = None
     ) -> None:
         """Generate SHAP summary plot."""
         import matplotlib.pyplot as plt
@@ -299,11 +310,11 @@ class SHAPExplainer:
             X,
             feature_names=self.feature_names,
             max_display=max_display,
-            show=False
+            show=False,
         )
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
             logger.info(f"SHAP summary plot saved to {output_path}")
         plt.close()
 
@@ -312,7 +323,7 @@ class SHAPExplainer:
         feature: str,
         X: pd.DataFrame,
         interaction_feature: Optional[str] = "auto",
-        output_path: Optional[str] = None
+        output_path: Optional[str] = None,
     ) -> None:
         """Generate SHAP dependence plot for a feature."""
         import matplotlib.pyplot as plt
@@ -327,11 +338,11 @@ class SHAPExplainer:
             X,
             feature_names=self.feature_names,
             interaction_index=interaction_feature,
-            show=False
+            show=False,
         )
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
             logger.info(f"SHAP dependence plot saved to {output_path}")
         plt.close()
 
@@ -345,11 +356,7 @@ class PermutationImportanceAnalyzer:
     """
 
     def __init__(
-        self,
-        model: Any,
-        X: pd.DataFrame,
-        y: np.ndarray,
-        scoring: str = "roc_auc"
+        self, model: Any, X: pd.DataFrame, y: np.ndarray, scoring: str = "roc_auc"
     ):
         self.model = model
         self.X = X
@@ -358,11 +365,7 @@ class PermutationImportanceAnalyzer:
         self.feature_names = list(X.columns)
         self.importance_results = None
 
-    def compute_importance(
-        self,
-        n_repeats: int = 30,
-        n_jobs: int = -1
-    ) -> pd.DataFrame:
+    def compute_importance(self, n_repeats: int = 30, n_jobs: int = -1) -> pd.DataFrame:
         """
         Compute permutation importance with confidence intervals.
 
@@ -382,25 +385,25 @@ class PermutationImportanceAnalyzer:
             n_repeats=n_repeats,
             n_jobs=n_jobs,
             scoring=self.scoring,
-            random_state=42
+            random_state=42,
         )
 
         self.importance_results = result
 
-        df = pd.DataFrame({
-            "feature": self.feature_names,
-            "importance_mean": result.importances_mean,
-            "importance_std": result.importances_std,
-            "ci_lower": result.importances_mean - 1.96 * result.importances_std,
-            "ci_upper": result.importances_mean + 1.96 * result.importances_std
-        }).sort_values("importance_mean", ascending=False)
+        df = pd.DataFrame(
+            {
+                "feature": self.feature_names,
+                "importance_mean": result.importances_mean,
+                "importance_std": result.importances_std,
+                "ci_lower": result.importances_mean - 1.96 * result.importances_std,
+                "ci_upper": result.importances_mean + 1.96 * result.importances_std,
+            }
+        ).sort_values("importance_mean", ascending=False)
 
         return df
 
     def bootstrap_importance(
-        self,
-        n_bootstrap: int = 100,
-        sample_fraction: float = 0.8
+        self, n_bootstrap: int = 100, sample_fraction: float = 0.8
     ) -> pd.DataFrame:
         """
         Bootstrap confidence intervals for permutation importance.
@@ -422,9 +425,7 @@ class PermutationImportanceAnalyzer:
         for i in range(n_bootstrap):
             # Bootstrap sample
             indices = resample(
-                range(len(self.X)),
-                n_samples=n_samples,
-                random_state=42 + i
+                range(len(self.X)), n_samples=n_samples, random_state=42 + i
             )
             X_boot = self.X.iloc[indices]
             y_boot = self.y[indices]
@@ -437,19 +438,21 @@ class PermutationImportanceAnalyzer:
                 n_repeats=10,
                 n_jobs=-1,
                 scoring=self.scoring,
-                random_state=42 + i
+                random_state=42 + i,
             )
             all_importances.append(result.importances_mean)
 
         importances = np.array(all_importances)
 
-        df = pd.DataFrame({
-            "feature": self.feature_names,
-            "importance_mean": importances.mean(axis=0),
-            "importance_std": importances.std(axis=0),
-            "ci_2.5": np.percentile(importances, 2.5, axis=0),
-            "ci_97.5": np.percentile(importances, 97.5, axis=0)
-        }).sort_values("importance_mean", ascending=False)
+        df = pd.DataFrame(
+            {
+                "feature": self.feature_names,
+                "importance_mean": importances.mean(axis=0),
+                "importance_std": importances.std(axis=0),
+                "ci_2.5": np.percentile(importances, 2.5, axis=0),
+                "ci_97.5": np.percentile(importances, 97.5, axis=0),
+            }
+        ).sort_values("importance_mean", ascending=False)
 
         return df
 
@@ -472,7 +475,7 @@ class PartialDependenceAnalyzer:
         features: List[Union[str, Tuple[str, str]]],
         output_path: Optional[str] = None,
         kind: str = "both",  # 'average', 'individual', or 'both'
-        subsample: int = 100
+        subsample: int = 100,
     ) -> None:
         """
         Generate PDP/ICE plots for specified features.
@@ -489,9 +492,9 @@ class PartialDependenceAnalyzer:
         feature_indices = []
         for f in features:
             if isinstance(f, tuple):
-                feature_indices.append(tuple(
-                    self.feature_names.index(name) for name in f
-                ))
+                feature_indices.append(
+                    tuple(self.feature_names.index(name) for name in f)
+                )
             else:
                 feature_indices.append(self.feature_names.index(f))
 
@@ -505,20 +508,18 @@ class PartialDependenceAnalyzer:
             kind=kind,
             subsample=subsample,
             random_state=42,
-            ax=ax
+            ax=ax,
         )
 
         plt.tight_layout()
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches='tight')
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
             logger.info(f"PDP plot saved to {output_path}")
         plt.close()
 
     def compute_pdp_values(
-        self,
-        feature: str,
-        grid_resolution: int = 50
+        self, feature: str, grid_resolution: int = 50
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Compute PDP values for a single feature.
@@ -539,7 +540,7 @@ class PartialDependenceAnalyzer:
             self.X,
             [feature_idx],
             kind="average",
-            grid_resolution=grid_resolution
+            grid_resolution=grid_resolution,
         )
 
         return result["grid_values"][0], result["average"][0]
@@ -558,7 +559,7 @@ class CounterfactualExplainer:
         model: Any,
         X_train: pd.DataFrame,
         continuous_features: List[str],
-        outcome_name: str = "outcome"
+        outcome_name: str = "outcome",
     ):
         if not HAS_DICE:
             raise ImportError("dice-ml required. Install with: pip install dice-ml")
@@ -572,7 +573,7 @@ class CounterfactualExplainer:
         self.dice_data = dice_ml.Data(
             dataframe=X_train,
             continuous_features=continuous_features,
-            outcome_name=outcome_name
+            outcome_name=outcome_name,
         )
 
         # Create DiCE model object
@@ -587,7 +588,7 @@ class CounterfactualExplainer:
         total_CFs: int = 5,
         desired_class: int = 1,
         features_to_vary: Optional[List[str]] = None,
-        permitted_range: Optional[Dict[str, List]] = None
+        permitted_range: Optional[Dict[str, List]] = None,
     ):
         """
         Generate counterfactual explanations for a query instance.
@@ -607,15 +608,13 @@ class CounterfactualExplainer:
             total_CFs=total_CFs,
             desired_class=desired_class,
             features_to_vary=features_to_vary or "all",
-            permitted_range=permitted_range
+            permitted_range=permitted_range,
         )
 
         return cf
 
     def get_counterfactual_summary(
-        self,
-        cf_explanations,
-        query_instance: pd.DataFrame
+        self, cf_explanations, query_instance: pd.DataFrame
     ) -> pd.DataFrame:
         """
         Summarize counterfactual changes.
@@ -654,7 +653,7 @@ class LIMEExplainer:
         self,
         X_train: pd.DataFrame,
         mode: str = "classification",
-        class_names: Optional[List[str]] = None
+        class_names: Optional[List[str]] = None,
     ):
         if not HAS_LIME:
             raise ImportError("lime required. Install with: pip install lime")
@@ -668,7 +667,7 @@ class LIMEExplainer:
             feature_names=self.feature_names,
             class_names=self.class_names,
             mode=mode,
-            random_state=42
+            random_state=42,
         )
 
     def explain_instance(
@@ -676,7 +675,7 @@ class LIMEExplainer:
         model: Any,
         instance: np.ndarray,
         num_features: int = 10,
-        num_samples: int = 5000
+        num_samples: int = 5000,
     ) -> lime.explanation.Explanation:
         """
         Generate LIME explanation for a single instance.
@@ -694,13 +693,12 @@ class LIMEExplainer:
             instance,
             model.predict_proba,
             num_features=num_features,
-            num_samples=num_samples
+            num_samples=num_samples,
         )
         return exp
 
     def get_explanation_df(
-        self,
-        explanation: lime.explanation.Explanation
+        self, explanation: lime.explanation.Explanation
     ) -> pd.DataFrame:
         """Convert LIME explanation to DataFrame."""
         exp_list = explanation.as_list()
@@ -708,9 +706,7 @@ class LIMEExplainer:
 
 
 def compare_explanations(
-    shap_importance: pd.DataFrame,
-    perm_importance: pd.DataFrame,
-    top_n: int = 15
+    shap_importance: pd.DataFrame, perm_importance: pd.DataFrame, top_n: int = 15
 ) -> pd.DataFrame:
     """
     Compare feature importance across different explanation methods.
@@ -725,18 +721,24 @@ def compare_explanations(
     """
     # Normalize importances to 0-1 scale
     shap_imp = shap_importance.head(top_n).copy()
-    shap_imp["shap_normalized"] = shap_imp["mean_abs_shap"] / shap_imp["mean_abs_shap"].max()
+    shap_imp["shap_normalized"] = (
+        shap_imp["mean_abs_shap"] / shap_imp["mean_abs_shap"].max()
+    )
 
     perm_imp = perm_importance.copy()
-    perm_imp["perm_normalized"] = perm_imp["importance_mean"] / perm_imp["importance_mean"].max()
-    perm_imp["perm_normalized"] = perm_imp["perm_normalized"].clip(lower=0)  # Handle negative
+    perm_imp["perm_normalized"] = (
+        perm_imp["importance_mean"] / perm_imp["importance_mean"].max()
+    )
+    perm_imp["perm_normalized"] = perm_imp["perm_normalized"].clip(
+        lower=0
+    )  # Handle negative
 
     # Merge
-    comparison = shap_imp[["feature", "shap_normalized"]].merge(
-        perm_imp[["feature", "perm_normalized"]],
-        on="feature",
-        how="outer"
-    ).fillna(0)
+    comparison = (
+        shap_imp[["feature", "shap_normalized"]]
+        .merge(perm_imp[["feature", "perm_normalized"]], on="feature", how="outer")
+        .fillna(0)
+    )
 
     # Compute agreement score
     comparison["agreement"] = 1 - np.abs(
@@ -758,7 +760,7 @@ def generate_explainability_report(
     y_test: np.ndarray,
     groups: pd.Series,
     output_dir: str,
-    feature_names: Optional[List[str]] = None
+    feature_names: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
     """
     Generate comprehensive explainability report with all methods.
@@ -787,7 +789,9 @@ def generate_explainability_report(
         shap_explainer.compute_shap_values(X_test)
 
         results["shap_importance"] = shap_explainer.get_feature_importance(top_n=20)
-        results["shap_importance"].to_csv(output_dir / "shap_importance.csv", index=False)
+        results["shap_importance"].to_csv(
+            output_dir / "shap_importance.csv", index=False
+        )
 
         # Fairness-aware SHAP
         results["fairness_shap"] = shap_explainer.fairness_aware_shap(X_test, groups)
@@ -796,23 +800,28 @@ def generate_explainability_report(
                 df.to_csv(output_dir / f"shap_importance_{group}.csv", index=False)
 
         # SHAP plots
-        shap_explainer.plot_summary(X_test, output_path=str(output_dir / "shap_summary.png"))
+        shap_explainer.plot_summary(
+            X_test, output_path=str(output_dir / "shap_summary.png")
+        )
 
     # 2. Permutation Importance
     logger.info("Running permutation importance...")
     perm_analyzer = PermutationImportanceAnalyzer(model, X_test, y_test)
     results["perm_importance"] = perm_analyzer.compute_importance()
-    results["perm_importance"].to_csv(output_dir / "permutation_importance.csv", index=False)
+    results["perm_importance"].to_csv(
+        output_dir / "permutation_importance.csv", index=False
+    )
 
     # Bootstrap CI
     results["perm_bootstrap"] = perm_analyzer.bootstrap_importance(n_bootstrap=50)
-    results["perm_bootstrap"].to_csv(output_dir / "permutation_importance_bootstrap.csv", index=False)
+    results["perm_bootstrap"].to_csv(
+        output_dir / "permutation_importance_bootstrap.csv", index=False
+    )
 
     # 3. Compare methods
     if HAS_SHAP:
         results["explanation_comparison"] = compare_explanations(
-            results["shap_importance"],
-            results["perm_importance"]
+            results["shap_importance"], results["perm_importance"]
         )
         results["explanation_comparison"].to_csv(
             output_dir / "explanation_comparison.csv", index=False

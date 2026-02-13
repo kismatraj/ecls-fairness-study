@@ -15,7 +15,7 @@ Temporal scenarios (cumulative):
 
 import pandas as pd
 import numpy as np
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Any
 from dataclasses import dataclass, field
 from pathlib import Path
 import logging
@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class TemporalScenario:
     """Definition of a temporal feature-set scenario."""
+
     name: str
     label: str
     cognitive_features: List[str]
@@ -44,16 +45,17 @@ class TemporalScenario:
 @dataclass
 class TemporalScenarioResult:
     """Results from running one temporal scenario."""
+
     scenario: TemporalScenario
     n_features: int
-    performance_df: pd.DataFrame          # all models' test metrics
+    performance_df: pd.DataFrame  # all models' test metrics
     best_model_name: str
     best_auc: float
-    group_metrics: pd.DataFrame            # FairnessEvaluator summary
-    disparity_table: pd.DataFrame          # FairnessEvaluator disparities
+    group_metrics: pd.DataFrame  # FairnessEvaluator summary
+    disparity_table: pd.DataFrame  # FairnessEvaluator disparities
     fairness_criteria: Dict[str, bool]
-    metrics_with_ci: pd.DataFrame          # bootstrap CI
-    calibration_df: pd.DataFrame           # ECE/MCE by group
+    metrics_with_ci: pd.DataFrame  # bootstrap CI
+    calibration_df: pd.DataFrame  # ECE/MCE by group
     trainer: Any = field(repr=False, default=None)
     y_pred: np.ndarray = field(repr=False, default=None)
     y_prob: np.ndarray = field(repr=False, default=None)
@@ -126,8 +128,12 @@ class TemporalGeneralizationAnalyzer:
                 name="k_complete",
                 label="K Fall + Spring",
                 cognitive_features=[
-                    "X1RTHETK", "X1MTHETK", "X1TCHAPP",
-                    "X2RTHETK", "X2MTHETK", "X2TCHAPP",
+                    "X1RTHETK",
+                    "X1MTHETK",
+                    "X1TCHAPP",
+                    "X2RTHETK",
+                    "X2MTHETK",
+                    "X2TCHAPP",
                 ],
                 description="Full kindergarten year data",
             ),
@@ -135,8 +141,12 @@ class TemporalGeneralizationAnalyzer:
                 name="k_through_1st",
                 label="K + 1st Grade",
                 cognitive_features=[
-                    "X1RTHETK", "X1MTHETK", "X1TCHAPP",
-                    "X2RTHETK", "X2MTHETK", "X2TCHAPP",
+                    "X1RTHETK",
+                    "X1MTHETK",
+                    "X1TCHAPP",
+                    "X2RTHETK",
+                    "X2MTHETK",
+                    "X2TCHAPP",
                     "X4TCHAPP",
                 ],
                 description="Through 1st grade",
@@ -145,8 +155,12 @@ class TemporalGeneralizationAnalyzer:
                 name="k_through_3rd",
                 label="K through 3rd",
                 cognitive_features=[
-                    "X1RTHETK", "X1MTHETK", "X1TCHAPP",
-                    "X2RTHETK", "X2MTHETK", "X2TCHAPP",
+                    "X1RTHETK",
+                    "X1MTHETK",
+                    "X1TCHAPP",
+                    "X2RTHETK",
+                    "X2MTHETK",
+                    "X2TCHAPP",
                     "X4TCHAPP",
                     "X6DCCSSCR",
                 ],
@@ -223,9 +237,7 @@ class TemporalGeneralizationAnalyzer:
             stratify=stratify,
         )
 
-        logger.info(
-            f"  Train: {len(self.train_idx):,}  Test: {len(self.test_idx):,}"
-        )
+        logger.info(f"  Train: {len(self.train_idx):,}  Test: {len(self.test_idx):,}")
         return len(subset)
 
     # ------------------------------------------------------------------
@@ -250,7 +262,9 @@ class TemporalGeneralizationAnalyzer:
         X_test = X.iloc[self.test_idx]
         y_train = self.y.iloc[self.train_idx]
         y_test = self.y.iloc[self.test_idx]
-        groups_test = self.groups.iloc[self.test_idx] if self.groups is not None else None
+        groups_test = (
+            self.groups.iloc[self.test_idx] if self.groups is not None else None
+        )
 
         # Fresh trainer (fresh scaler)
         trainer = ModelTrainer(
@@ -303,9 +317,7 @@ class TemporalGeneralizationAnalyzer:
         metrics_with_ci = ci_analyzer.bootstrap_group_metrics()
 
         # Calibration
-        calib_analyzer = CalibrationFairnessAnalyzer(
-            y_test.values, y_prob, groups_test
-        )
+        calib_analyzer = CalibrationFairnessAnalyzer(y_test.values, y_prob, groups_test)
         calibration_df = calib_analyzer.analyze_calibration_by_group()
 
         result = TemporalScenarioResult(
@@ -363,18 +375,20 @@ class TemporalGeneralizationAnalyzer:
         rows = []
         for sc_name, res in self.results.items():
             best = res.performance_df.loc[res.best_model_name]
-            rows.append({
-                "scenario": sc_name,
-                "scenario_label": res.scenario.label,
-                "n_features": res.n_features,
-                "best_model": res.best_model_name,
-                "auc_roc": best["auc_roc"],
-                "accuracy": best["accuracy"],
-                "f1": best["f1"],
-                "precision": best["precision"],
-                "recall": best["recall"],
-                "brier_score": best["brier_score"],
-            })
+            rows.append(
+                {
+                    "scenario": sc_name,
+                    "scenario_label": res.scenario.label,
+                    "n_features": res.n_features,
+                    "best_model": res.best_model_name,
+                    "auc_roc": best["auc_roc"],
+                    "accuracy": best["accuracy"],
+                    "f1": best["f1"],
+                    "precision": best["precision"],
+                    "recall": best["recall"],
+                    "brier_score": best["brier_score"],
+                }
+            )
         return pd.DataFrame(rows)
 
     def compare_fairness(self) -> pd.DataFrame:

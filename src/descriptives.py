@@ -6,8 +6,7 @@ Generate publication-quality descriptive statistics tables (Table 1).
 """
 
 import pandas as pd
-import numpy as np
-from typing import List, Optional, Dict
+from typing import List, Optional
 from pathlib import Path
 import logging
 
@@ -36,9 +35,16 @@ def generate_table1(
     """
     if continuous_vars is None:
         continuous_vars = [
-            "X1RTHETK", "X2RTHETK", "X1MTHETK", "X2MTHETK",
-            "X6DCCSSCR", "X1TCHAPP", "X2TCHAPP", "X4TCHAPP",
-            "X9RTHETA", "X9MTHETA",
+            "X1RTHETK",
+            "X2RTHETK",
+            "X1MTHETK",
+            "X2MTHETK",
+            "X6DCCSSCR",
+            "X1TCHAPP",
+            "X2TCHAPP",
+            "X4TCHAPP",
+            "X9RTHETA",
+            "X9MTHETA",
         ]
     if categorical_vars is None:
         categorical_vars = ["X_CHSEX_R", "X1SESQ5", "X12LANGST"]
@@ -76,7 +82,9 @@ def generate_table1(
             vals = df.loc[mask, var].dropna()
             row[g] = f"{vals.mean():.2f} ({vals.std():.2f})" if len(vals) > 0 else "—"
         overall = df[var].dropna()
-        row["Overall"] = f"{overall.mean():.2f} ({overall.std():.2f})" if len(overall) > 0 else "—"
+        row["Overall"] = (
+            f"{overall.mean():.2f} ({overall.std():.2f})" if len(overall) > 0 else "—"
+        )
         rows.append(row)
 
         # Missing rate
@@ -89,7 +97,9 @@ def generate_table1(
             row_miss[g] = f"{n_miss} ({pct:.1f}%)" if n_miss > 0 else "0"
         n_miss_all = df[var].isna().sum()
         pct_all = n_miss_all / len(df) * 100
-        row_miss["Overall"] = f"{n_miss_all} ({pct_all:.1f}%)" if n_miss_all > 0 else "0"
+        row_miss["Overall"] = (
+            f"{n_miss_all} ({pct_all:.1f}%)" if n_miss_all > 0 else "0"
+        )
         rows.append(row_miss)
 
     # --- Categorical variables ---
@@ -117,7 +127,7 @@ def generate_table1(
             cat_label = labels.get(cat, str(cat))
             row = {"Variable": vname, "Category": cat_label}
             for g in groups:
-                mask = (df[group_col] == g)
+                mask = df[group_col] == g
                 n_cat = ((df[var] == cat) & mask).sum()
                 n_tot = mask.sum()
                 pct = n_cat / n_tot * 100 if n_tot > 0 else 0
@@ -136,14 +146,15 @@ def generate_table1_latex(
     label: str = "tab:table1",
 ) -> str:
     """Convert Table 1 DataFrame to publication LaTeX."""
-    groups = [c for c in table1_df.columns if c not in ("Variable", "Category", "Overall")]
+    groups = [
+        c for c in table1_df.columns if c not in ("Variable", "Category", "Overall")
+    ]
 
     lines = []
     lines.append("\\begin{table}[htbp]")
     lines.append("\\centering")
     lines.append(f"\\caption{{{caption}}}")
     lines.append(f"\\label{{{label}}}")
-    ncols = len(groups) + 3  # Variable, Category, groups..., Overall
     col_spec = "ll" + "r" * (len(groups) + 1)
     lines.append(f"\\begin{{tabular}}{{{col_spec}}}")
     lines.append("\\toprule")

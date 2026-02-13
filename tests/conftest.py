@@ -11,25 +11,29 @@ def sample_data():
     rng = np.random.RandomState(42)
     n = 500
 
-    df = pd.DataFrame({
-        # Cognitive measures
-        "X1RTHETK": rng.normal(50, 10, n),
-        "X2RTHETK": rng.normal(55, 10, n),
-        "X1MTHETK": rng.normal(50, 10, n),
-        "X2MTHETK": rng.normal(55, 10, n),
-        "X6DCCSSCR": rng.normal(60, 12, n),
-        "X1TCHAPP": rng.uniform(1, 4, n),
-        "X2TCHAPP": rng.uniform(1, 4, n),
-        "X4TCHAPP": rng.uniform(1, 4, n),
-        # Outcomes
-        "X9RTHETA": rng.normal(100, 20, n),
-        "X9MTHETA": rng.normal(100, 20, n),
-        # Demographics
-        "X_CHSEX_R": rng.choice([1, 2], n),
-        "X_RACETH_R": rng.choice([1, 2, 3, 4, 5], n, p=[0.5, 0.12, 0.24, 0.05, 0.09]),
-        "X1SESQ5": rng.choice([1, 2, 3, 4, 5], n),
-        "X12LANGST": rng.choice([1, 2], n, p=[0.8, 0.2]),
-    })
+    df = pd.DataFrame(
+        {
+            # Cognitive measures
+            "X1RTHETK": rng.normal(50, 10, n),
+            "X2RTHETK": rng.normal(55, 10, n),
+            "X1MTHETK": rng.normal(50, 10, n),
+            "X2MTHETK": rng.normal(55, 10, n),
+            "X6DCCSSCR": rng.normal(60, 12, n),
+            "X1TCHAPP": rng.uniform(1, 4, n),
+            "X2TCHAPP": rng.uniform(1, 4, n),
+            "X4TCHAPP": rng.uniform(1, 4, n),
+            # Outcomes
+            "X9RTHETA": rng.normal(100, 20, n),
+            "X9MTHETA": rng.normal(100, 20, n),
+            # Demographics
+            "X_CHSEX_R": rng.choice([1, 2], n),
+            "X_RACETH_R": rng.choice(
+                [1, 2, 3, 4, 5], n, p=[0.5, 0.12, 0.24, 0.05, 0.09]
+            ),
+            "X1SESQ5": rng.choice([1, 2, 3, 4, 5], n),
+            "X12LANGST": rng.choice([1, 2], n, p=[0.8, 0.2]),
+        }
+    )
 
     # Derived variables
     race_map = {1: "White", 2: "Black", 3: "Hispanic", 4: "Asian", 5: "Other"}
@@ -72,7 +76,12 @@ def sample_config():
                 "baseline_cognitive": ["X1RTHETK", "X2RTHETK", "X1MTHETK", "X2MTHETK"],
                 "executive_function": ["X6DCCSSCR"],
                 "approaches_to_learning": ["X1TCHAPP", "X2TCHAPP", "X4TCHAPP"],
-                "child_demographics": ["X_CHSEX_R", "X_RACETH_R", "X1SESQ5", "X12LANGST"],
+                "child_demographics": [
+                    "X_CHSEX_R",
+                    "X_RACETH_R",
+                    "X1SESQ5",
+                    "X12LANGST",
+                ],
             },
         },
         "model": {
@@ -101,8 +110,12 @@ def sample_config():
                     "name": "k_complete",
                     "label": "K Fall + Spring",
                     "features": [
-                        "X1RTHETK", "X1MTHETK", "X1TCHAPP",
-                        "X2RTHETK", "X2MTHETK", "X2TCHAPP",
+                        "X1RTHETK",
+                        "X1MTHETK",
+                        "X1TCHAPP",
+                        "X2RTHETK",
+                        "X2MTHETK",
+                        "X2TCHAPP",
                     ],
                 },
             ],

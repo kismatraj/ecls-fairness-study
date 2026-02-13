@@ -6,8 +6,7 @@ Convert analysis results to publication-ready LaTeX tables.
 """
 
 import pandas as pd
-import numpy as np
-from typing import Optional, List
+from typing import List
 from pathlib import Path
 import logging
 
@@ -96,7 +95,9 @@ def disparity_table_to_latex(
     lines.append(f"\\label{{{label}}}")
     lines.append("\\begin{tabular}{llccccl}")
     lines.append("\\toprule")
-    lines.append("Group & vs & TPR Ratio & TPR Diff & FPR Ratio & FPR Diff & Disp. Impact \\\\")
+    lines.append(
+        "Group & vs & TPR Ratio & TPR Diff & FPR Ratio & FPR Diff & Disp. Impact \\\\"
+    )
     lines.append("\\midrule")
 
     for _, row in df.iterrows():
@@ -126,7 +127,9 @@ def temporal_summary_to_latex(
     lines.append(f"\\label{{{label}}}")
     lines.append("\\begin{tabular}{llccccc}")
     lines.append("\\toprule")
-    lines.append("Scenario & Best Model & Features & AUC-ROC & Accuracy & F1 & Brier \\\\")
+    lines.append(
+        "Scenario & Best Model & Features & AUC-ROC & Accuracy & F1 & Brier \\\\"
+    )
     lines.append("\\midrule")
 
     for _, row in df.iterrows():
@@ -187,11 +190,31 @@ def generate_all_latex_tables(tables_dir: str) -> List[str]:
     saved = []
 
     converters = {
-        "model_performance.csv": (model_performance_to_latex, "model_performance.tex", {"index_col": "model"}),
-        "fairness_metrics_with_ci.csv": (fairness_metrics_to_latex, "fairness_metrics_with_ci.tex", {}),
-        "fairness_disparities.csv": (disparity_table_to_latex, "fairness_disparities.tex", {}),
-        "temporal_best_model_summary.csv": (temporal_summary_to_latex, "temporal_best_model_summary.tex", {}),
-        "calibration_fairness.csv": (calibration_to_latex, "calibration_fairness.tex", {}),
+        "model_performance.csv": (
+            model_performance_to_latex,
+            "model_performance.tex",
+            {"index_col": "model"},
+        ),
+        "fairness_metrics_with_ci.csv": (
+            fairness_metrics_to_latex,
+            "fairness_metrics_with_ci.tex",
+            {},
+        ),
+        "fairness_disparities.csv": (
+            disparity_table_to_latex,
+            "fairness_disparities.tex",
+            {},
+        ),
+        "temporal_best_model_summary.csv": (
+            temporal_summary_to_latex,
+            "temporal_best_model_summary.tex",
+            {},
+        ),
+        "calibration_fairness.csv": (
+            calibration_to_latex,
+            "calibration_fairness.tex",
+            {},
+        ),
     }
 
     for csv_name, (converter_fn, tex_name, read_kwargs) in converters.items():

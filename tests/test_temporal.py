@@ -1,8 +1,6 @@
 """Tests for temporal generalization module."""
 
 import pandas as pd
-import numpy as np
-import pytest
 
 from src.temporal import (
     TemporalScenario,
@@ -11,9 +9,7 @@ from src.temporal import (
 
 
 def test_scenario_dataclass():
-    sc = TemporalScenario(
-        name="test", label="Test", cognitive_features=["X1RTHETK"]
-    )
+    sc = TemporalScenario(name="test", label="Test", cognitive_features=["X1RTHETK"])
     assert sc.name == "test"
     assert len(sc.cognitive_features) == 1
 

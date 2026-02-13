@@ -7,8 +7,7 @@ and outcome definitions.
 """
 
 import pandas as pd
-import numpy as np
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 from pathlib import Path
 import logging
 
@@ -63,7 +62,8 @@ class SensitivityAnalyzer:
 
         if model_names is None:
             model_names = [
-                name for name, cfg in self.config["model"]["algorithms"].items()
+                name
+                for name, cfg in self.config["model"]["algorithms"].items()
                 if cfg.get("enabled", True)
             ]
 
@@ -103,7 +103,10 @@ class SensitivityAnalyzer:
 
             # Fairness
             evaluator = FairnessEvaluator(
-                y_test.values, y_pred, y_prob, groups_test,
+                y_test.values,
+                y_pred,
+                y_prob,
+                groups_test,
                 reference_group=ref_group,
             )
             evaluator.compute_all_group_metrics()
@@ -144,16 +147,18 @@ class SensitivityAnalyzer:
         rows = []
         for pct, res in sorted(self.results.items()):
             best = res["performance_df"].loc[res["best_model"]]
-            rows.append({
-                "percentile": pct,
-                "prevalence": f"{res['prevalence']:.1%}",
-                "best_model": res["best_model"],
-                "auc_roc": best["auc_roc"],
-                "accuracy": best["accuracy"],
-                "f1": best["f1"],
-                "recall": best["recall"],
-                "precision": best["precision"],
-            })
+            rows.append(
+                {
+                    "percentile": pct,
+                    "prevalence": f"{res['prevalence']:.1%}",
+                    "best_model": res["best_model"],
+                    "auc_roc": best["auc_roc"],
+                    "accuracy": best["accuracy"],
+                    "f1": best["f1"],
+                    "recall": best["recall"],
+                    "precision": best["precision"],
+                }
+            )
         return pd.DataFrame(rows)
 
     def compare_fairness(self) -> pd.DataFrame:
@@ -236,7 +241,8 @@ class OutcomeComparisonAnalyzer:
 
         if model_names is None:
             model_names = [
-                name for name, cfg in self.config["model"]["algorithms"].items()
+                name
+                for name, cfg in self.config["model"]["algorithms"].items()
                 if cfg.get("enabled", True)
             ]
 
@@ -267,7 +273,10 @@ class OutcomeComparisonAnalyzer:
         y_pred, y_prob = trainer.get_predictions(best_model, X_test)
 
         evaluator = FairnessEvaluator(
-            y_test.values, y_pred, y_prob, groups_test,
+            y_test.values,
+            y_pred,
+            y_prob,
+            groups_test,
             reference_group=ref_group,
         )
         evaluator.compute_all_group_metrics()
@@ -309,14 +318,16 @@ class OutcomeComparisonAnalyzer:
         rows = []
         for name, res in self.results.items():
             best = res["performance_df"].loc[res["best_model"]]
-            rows.append({
-                "outcome": name,
-                "best_model": res["best_model"],
-                "auc_roc": best["auc_roc"],
-                "accuracy": best["accuracy"],
-                "f1": best["f1"],
-                "recall": best["recall"],
-            })
+            rows.append(
+                {
+                    "outcome": name,
+                    "best_model": res["best_model"],
+                    "auc_roc": best["auc_roc"],
+                    "accuracy": best["accuracy"],
+                    "f1": best["f1"],
+                    "recall": best["recall"],
+                }
+            )
         return pd.DataFrame(rows)
 
     def compare_fairness(self) -> pd.DataFrame:

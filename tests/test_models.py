@@ -1,8 +1,6 @@
 """Tests for models module."""
 
-import pandas as pd
 import numpy as np
-import pytest
 
 from src.models import ModelTrainer, get_feature_importance
 

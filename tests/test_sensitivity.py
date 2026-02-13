@@ -1,7 +1,5 @@
 """Tests for sensitivity analysis module."""
 
-import pandas as pd
-import numpy as np
 import pytest
 
 from src.sensitivity import SensitivityAnalyzer, OutcomeComparisonAnalyzer
@@ -24,9 +22,7 @@ def test_sensitivity_analyzer_init(sensitivity_config):
 
 
 def test_sensitivity_run_threshold(sample_data, sensitivity_config):
-    analyzer = SensitivityAnalyzer(
-        sensitivity_config, percentiles=[20, 25]
-    )
+    analyzer = SensitivityAnalyzer(sensitivity_config, percentiles=[20, 25])
     results = analyzer.run_threshold_sensitivity(
         sample_data,
         outcome_var="X9RTHETA",
@@ -40,9 +36,7 @@ def test_sensitivity_run_threshold(sample_data, sensitivity_config):
 
 
 def test_sensitivity_compare_performance(sample_data, sensitivity_config):
-    analyzer = SensitivityAnalyzer(
-        sensitivity_config, percentiles=[20, 25]
-    )
+    analyzer = SensitivityAnalyzer(sensitivity_config, percentiles=[20, 25])
     analyzer.run_threshold_sensitivity(
         sample_data,
         outcome_var="X9RTHETA",
@@ -56,9 +50,7 @@ def test_sensitivity_compare_performance(sample_data, sensitivity_config):
 
 
 def test_sensitivity_compare_criteria(sample_data, sensitivity_config):
-    analyzer = SensitivityAnalyzer(
-        sensitivity_config, percentiles=[20, 25]
-    )
+    analyzer = SensitivityAnalyzer(sensitivity_config, percentiles=[20, 25])
     analyzer.run_threshold_sensitivity(
         sample_data,
         outcome_var="X9RTHETA",
@@ -71,9 +63,7 @@ def test_sensitivity_compare_criteria(sample_data, sensitivity_config):
 
 
 def test_sensitivity_save_results(sample_data, sensitivity_config, tmp_path):
-    analyzer = SensitivityAnalyzer(
-        sensitivity_config, percentiles=[25]
-    )
+    analyzer = SensitivityAnalyzer(sensitivity_config, percentiles=[25])
     analyzer.run_threshold_sensitivity(
         sample_data,
         outcome_var="X9RTHETA",
@@ -107,11 +97,15 @@ def test_outcome_comparison_run(sample_data, sensitivity_config):
 def test_outcome_comparison_compare(sample_data, sensitivity_config):
     analyzer = OutcomeComparisonAnalyzer(sensitivity_config)
     analyzer.run_outcome(
-        sample_data, "reading", "X9RTHETA",
+        sample_data,
+        "reading",
+        "X9RTHETA",
         model_names=["logistic_regression"],
     )
     analyzer.run_outcome(
-        sample_data, "math", "X9MTHETA",
+        sample_data,
+        "math",
+        "X9MTHETA",
         model_names=["logistic_regression"],
     )
     perf = analyzer.compare_performance()

@@ -1,7 +1,6 @@
 """Tests for explainability module."""
 
 import pandas as pd
-import numpy as np
 import pytest
 from sklearn.linear_model import LogisticRegression
 
@@ -51,14 +50,18 @@ def test_bootstrap_importance(trained_model):
 
 
 def test_compare_explanations():
-    shap_df = pd.DataFrame({
-        "feature": ["A", "B", "C"],
-        "mean_abs_shap": [0.5, 0.3, 0.1],
-    })
-    perm_df = pd.DataFrame({
-        "feature": ["A", "B", "C"],
-        "importance_mean": [0.4, 0.35, 0.05],
-    })
+    shap_df = pd.DataFrame(
+        {
+            "feature": ["A", "B", "C"],
+            "mean_abs_shap": [0.5, 0.3, 0.1],
+        }
+    )
+    perm_df = pd.DataFrame(
+        {
+            "feature": ["A", "B", "C"],
+            "importance_mean": [0.4, 0.35, 0.05],
+        }
+    )
     result = compare_explanations(shap_df, perm_df, top_n=3)
     assert "shap_normalized" in result.columns
     assert "perm_normalized" in result.columns
@@ -71,6 +74,7 @@ def test_compare_explanations():
 @pytest.mark.skipif(not HAS_SHAP, reason="shap not installed")
 def test_shap_explainer(trained_model):
     from src.explainability import SHAPExplainer
+
     model, X, y = trained_model
 
     explainer = SHAPExplainer(model, X, explainer_type="linear")
@@ -85,8 +89,9 @@ def test_shap_explainer(trained_model):
 @pytest.mark.skipif(not HAS_SHAP, reason="shap not installed")
 def test_fairness_aware_shap(trained_model, sample_data):
     from src.explainability import SHAPExplainer
+
     model, X, y = trained_model
-    groups = sample_data["race_ethnicity"].iloc[:len(X)]
+    groups = sample_data["race_ethnicity"].iloc[: len(X)]
 
     explainer = SHAPExplainer(model, X, explainer_type="linear")
     explainer.compute_shap_values(X)
