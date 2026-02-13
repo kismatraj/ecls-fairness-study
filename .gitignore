@@ -5,8 +5,9 @@ data/raw/
 *.dta
 *.sas7bdat
 
-# Processed data (optional - may want to track)
-# data/processed/
+# Processed data
+data/processed/*.parquet
+data/processed/*.yaml
 
 # Python
 __pycache__/
@@ -65,3 +66,7 @@ htmlcov/
 # Secrets
 .env
 *.env
+
+# Session logs
+*.txt
+!requirements.txt

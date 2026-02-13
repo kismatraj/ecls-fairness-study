@@ -1,16 +1,29 @@
 # ECLS-K:2011 Algorithmic Fairness Study
 
-**Analyzing temporal generalization and algorithmic fairness of machine learning models for predicting cognitive development in children.**
+**A multi-dimensional fairness audit of machine learning models predicting cognitive development in children.**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
 
-This project examines whether machine learning models for predicting children's cognitive outcomes:
-1. **Generalize temporally** - Do models trained on early elementary data (K-2nd) accurately predict later outcomes (3rd-5th grade)?
-2. **Perform equitably** - Do models show similar accuracy across race/ethnicity, socioeconomic status, and language groups?
-3. **Can be improved** - Does post-hoc threshold adjustment reduce demographic disparities?
+This project conducts a comprehensive, multi-dimensional fairness audit of predictive models trained on early childhood data (kindergarten through 2nd grade) to predict 5th-grade academic risk. Using the ECLS-K:2011 nationally representative longitudinal study (N = 9,104), we examine:
+
+1. **Model performance** across 7 ML algorithms, including 3 state-of-the-art gradient boosting methods
+2. **Fairness disparities** with bootstrap confidence intervals, calibration error analysis, and intersectional (race x SES) assessment
+3. **Explainability** via SHAP values and permutation importance with fairness-aware group-level analysis
+4. **Temporal generalization** across 4 developmental windows (K fall through 3rd grade)
+5. **Sensitivity analysis** of fairness findings to at-risk threshold choice
+6. **Bias mitigation** via post-hoc threshold optimization
+
+## Key Findings
+
+- **Classical models match SOTA**: Elastic Net (AUC=0.848) matched or exceeded LightGBM, CatBoost, and HistGradientBoosting
+- **Significant fairness disparities**: Hispanic students identified at 2.5x the rate of White students (non-overlapping bootstrap CIs)
+- **Calibration unfairness**: Black students experienced 3.35x higher calibration error than White students
+- **Intersectional invisibility**: High-SES Black students had 0% TPR -- the model operates as a "poverty detector"
+- **Temporal paradox**: More longitudinal data improved accuracy but did not resolve fairness disparities
+- **Threshold fragility**: Only 1 of 4 at-risk thresholds passed equal opportunity criteria
 
 ## Data Source
 
@@ -24,7 +37,7 @@ This project examines whether machine learning models for predicting children's 
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/yourusername/ecls-fairness-study.git
+git clone https://github.com/kismatraj/ecls-fairness-study.git
 cd ecls-fairness-study
 
 # Create virtual environment
@@ -52,6 +65,17 @@ python scripts/run_pipeline.py --config config.yaml
 python scripts/run_pipeline.py --step data_prep
 python scripts/run_pipeline.py --step train_models
 python scripts/run_pipeline.py --step fairness_analysis
+python scripts/run_pipeline.py --step figures
+python scripts/run_pipeline.py --step descriptives
+python scripts/run_pipeline.py --step latex_tables
+python scripts/run_pipeline.py --step sensitivity
+python scripts/run_pipeline.py --step math_outcome
+```
+
+### 4. Run Tests
+
+```bash
+pytest
 ```
 
 ## Project Structure
@@ -61,28 +85,73 @@ ecls-fairness-study/
 ├── CLAUDE.md              # Instructions for Claude Code
 ├── README.md              # This file
 ├── requirements.txt       # Python dependencies
-├── config.yaml           # Configuration settings
+├── config.yaml            # Configuration settings
 │
 ├── data/
-│   ├── raw/              # Original ECLS data (gitignored)
-│   └── processed/        # Cleaned datasets
+│   ├── raw/               # Original ECLS data (gitignored)
+│   └── processed/         # Cleaned datasets
 │
 ├── src/
-│   ├── data_loader.py    # Data loading and preprocessing
-│   ├── models.py         # ML model training
-│   ├── fairness.py       # Fairness metrics and mitigation
-│   └── visualization.py  # Plotting functions
+│   ├── __init__.py         # Package init
+│   ├── data_loader.py      # Data loading and preprocessing
+│   ├── models.py           # ML model training (7 algorithms)
+│   ├── fairness.py         # Fairness metrics, CI, calibration, intersectional
+│   ├── explainability.py   # SHAP, permutation importance, PDP, LIME
+│   ├── visualization.py    # Publication-quality figures
+│   ├── temporal.py         # Temporal generalization analysis
+│   ├── descriptives.py     # Table 1 generation
+│   ├── latex_tables.py     # LaTeX table generation
+│   └── sensitivity.py      # Threshold sensitivity & outcome comparison
 │
 ├── scripts/
-│   └── run_pipeline.py   # Main execution script
+│   └── run_pipeline.py     # Main execution script
 │
-├── notebooks/            # Jupyter notebooks for exploration
+├── paper/
+│   └── main.tex            # Manuscript (LaTeX)
+│
+├── tests/                  # Test suite (71 tests)
+│   ├── conftest.py
+│   ├── test_data_loader.py
+│   ├── test_models.py
+│   ├── test_fairness.py
+│   ├── test_temporal.py
+│   ├── test_descriptives.py
+│   ├── test_visualization.py
+│   ├── test_latex_tables.py
+│   ├── test_sensitivity.py
+│   └── test_explainability.py
 │
 └── results/
-    ├── models/           # Saved model files
-    ├── figures/          # Publication figures
-    └── tables/           # Results tables
+    ├── models/             # Saved .joblib models
+    ├── figures/            # Publication figures (PNG, 300 DPI)
+    └── tables/             # Results tables (CSV + LaTeX)
 ```
+
+## ML Algorithms
+
+| Algorithm | Type | AUC |
+|-----------|------|-----|
+| Elastic Net | Classical (regularized linear) | 0.848 |
+| Logistic Regression | Classical (linear) | 0.847 |
+| CatBoost | SOTA gradient boosting | 0.846 |
+| Random Forest | Classical (ensemble) | 0.841 |
+| XGBoost | Gradient boosting | 0.840 |
+| HistGradientBoosting | SOTA gradient boosting | 0.839 |
+| LightGBM | SOTA gradient boosting | 0.837 |
+
+## Fairness Analysis
+
+### Metrics
+- **Group fairness**: TPR, FPR, PPV parity with bootstrap 95% CIs (500 iterations)
+- **Calibration fairness**: ECE and MCE by demographic group
+- **Intersectional fairness**: Race x SES quintile subgroup analysis
+- **Criteria**: Equal opportunity, equalized odds, statistical parity (0.80 threshold)
+
+### Explainability
+- SHAP values (global and local feature attribution)
+- Permutation importance with bootstrap CIs
+- Fairness-aware SHAP (importance stratified by demographic group)
+- SHAP vs. permutation importance agreement analysis
 
 ## Key Variables
 
@@ -96,48 +165,48 @@ ecls-fairness-study/
 - `X12LANGST` - Home language (English, Non-English)
 
 ### Predictors
-- Baseline cognitive scores (K-2nd grade)
+- Baseline cognitive scores (K-2nd grade reading and math theta)
 - Executive function measures
 - Teacher-rated approaches to learning
 - Demographic variables
 
-## Methods
+## Output Files
 
-### Models
-- Logistic Regression
-- Elastic Net
-- Random Forest
-- XGBoost
+### Figures (9 main text + supplementary)
+- `model_comparison.png` - Performance across all 7 models
+- `shap_summary.png` - SHAP beeswarm plot
+- `fairness_tpr_with_ci.png` - TPR by group with confidence intervals
+- `calibration_error_comparison.png` - ECE/MCE by group
+- `intersectional_fairness_heatmap.png` - Race x SES TPR heatmap
+- `temporal_performance_trend.png` - AUC across developmental windows
+- `temporal_disparity_heatmap.png` - TPR ratios across scenarios
+- `roc_curves_by_group.png` - ROC curves by demographic group
+- `calibration_curves_by_group.png` - Calibration curves by group
 
-### Fairness Metrics
-- True Positive Rate (TPR) parity
-- False Positive Rate (FPR) parity
-- Positive Predictive Value (PPV) parity
-- Disparate Impact Ratio
+### Tables (CSV + LaTeX)
+- `model_performance` - 7-model comparison
+- `fairness_metrics_with_ci` - Group fairness with bootstrap CIs
+- `fairness_disparities` - Disparity ratios vs. White reference
+- `calibration_fairness` - ECE/MCE by group
+- `temporal_best_model_summary` - Performance across temporal scenarios
+- `sensitivity_criteria` - Fairness pass/fail by threshold
+- `table1_descriptives` - Sample characteristics
 
-### Bias Mitigation
-- Post-processing threshold adjustment to equalize TPR across groups
+## Configuration
 
-## Expected Outputs
-
-### Tables
-1. Sample characteristics by demographic group
-2. Model performance metrics (AUC, accuracy, sensitivity)
-3. Fairness metrics by group
-4. Pre/post mitigation comparison
-
-### Figures
-1. ROC curves by demographic group
-2. Calibration curves by group
-3. Feature importance
-4. Fairness-accuracy tradeoff
+All settings in `config.yaml`:
+- Data paths and variable lists
+- Model hyperparameter grids (7 algorithms)
+- Fairness thresholds and bootstrap settings
+- Temporal scenario definitions
+- Explainability method settings
 
 ## Citation
 
 If you use this code, please cite:
 
 ```
-[Your citation here]
+[Citation pending publication]
 ```
 
 ## License
@@ -146,5 +215,6 @@ MIT License - see LICENSE file for details.
 
 ## Acknowledgments
 
-- Data: National Center for Education Statistics (NCES)
+- Data: National Center for Education Statistics (NCES), ECLS-K:2011
 - Fairness metrics: [Fairlearn](https://fairlearn.org/)
+- Explainability: [SHAP](https://github.com/slundberg/shap)
