@@ -73,6 +73,9 @@ from src.fairness import (
 )
 from src.visualization import create_all_figures, create_all_figures_2025
 from src.temporal import TemporalGeneralizationAnalyzer
+from src.descriptives import save_table1
+from src.latex_tables import generate_all_latex_tables
+from src.sensitivity import SensitivityAnalyzer, OutcomeComparisonAnalyzer
 
 # 2025 State-of-the-Art imports
 try:
@@ -589,6 +592,68 @@ def step_temporal_analysis(config: dict, df: pd.DataFrame) -> dict:
     return temporal_results
 
 
+def step_descriptives(config: dict, df: pd.DataFrame) -> None:
+    """Step 6: Generate descriptive statistics (Table 1)."""
+    logger.info("=" * 60)
+    logger.info("STEP 6: DESCRIPTIVE STATISTICS (TABLE 1)")
+    logger.info("=" * 60)
+
+    tables_path = Path(config['paths']['tables'])
+    outcome_col = f"{config['variables']['outcomes']['reading']}_at_risk"
+    saved = save_table1(df, str(tables_path), outcome_col=outcome_col)
+    logger.info(f"Table 1 saved: {len(saved)} files")
+
+
+def step_latex_tables(config: dict) -> None:
+    """Step 7: Generate LaTeX tables from existing CSV results."""
+    logger.info("=" * 60)
+    logger.info("STEP 7: LATEX TABLE GENERATION")
+    logger.info("=" * 60)
+
+    tables_path = str(config['paths']['tables'])
+    saved = generate_all_latex_tables(tables_path)
+    logger.info(f"Generated {len(saved)} LaTeX tables")
+
+
+def step_sensitivity_analysis(config: dict, df: pd.DataFrame) -> dict:
+    """
+    Step 8: Sensitivity Analysis
+
+    Run pipeline across different at-risk thresholds.
+    """
+    logger.info("=" * 60)
+    logger.info("STEP 8: SENSITIVITY ANALYSIS")
+    logger.info("=" * 60)
+
+    tables_path = Path(config['paths']['tables'])
+
+    analyzer = SensitivityAnalyzer(config, percentiles=[10, 20, 25, 30])
+    outcome_var = config['variables']['outcomes']['reading']
+    analyzer.run_threshold_sensitivity(df, outcome_var=outcome_var)
+    saved = analyzer.save_results(str(tables_path))
+    logger.info(f"Sensitivity analysis: {len(saved)} tables saved")
+    return {"analyzer": analyzer}
+
+
+def step_math_outcome(config: dict, df: pd.DataFrame) -> dict:
+    """
+    Step 9: Math Outcome Analysis
+
+    Run pipeline for math outcome and compare with reading.
+    """
+    logger.info("=" * 60)
+    logger.info("STEP 9: MATH OUTCOME ANALYSIS")
+    logger.info("=" * 60)
+
+    tables_path = Path(config['paths']['tables'])
+
+    comparator = OutcomeComparisonAnalyzer(config)
+    comparator.run_all_outcomes(df)
+    saved = comparator.save_results(str(tables_path))
+    logger.info(f"Outcome comparison: {len(saved)} tables saved")
+    return {"comparator": comparator}
+
+
 def step_generate_figures(
     config: dict,
     model_results: dict,
@@ -656,6 +721,18 @@ def run_full_pipeline(config_path: str):
     # 2025: Temporal Generalization Analysis
     temporal_results = step_temporal_analysis(config, df)
 
+    # Descriptive statistics (Table 1)
+    step_descriptives(config, df)
+
+    # Sensitivity analysis
+    sensitivity_results = step_sensitivity_analysis(config, df)
+
+    # Math outcome comparison
+    math_results = step_math_outcome(config, df)
+
+    # LaTeX tables
+    step_latex_tables(config)
+
     # 2025: Enhanced Figures
     step_generate_figures(config, model_results, fairness_results, explainability_results)
 
@@ -668,7 +745,9 @@ def run_full_pipeline(config_path: str):
         'model_results': model_results,
         'explainability_results': explainability_results,
         'fairness_results': fairness_results,
-        'temporal_results': temporal_results
+        'temporal_results': temporal_results,
+        'sensitivity_results': sensitivity_results,
+        'math_results': math_results
     }
 
 
@@ -681,7 +760,11 @@ def main():
     )
     parser.add_argument(
         '--step', '-s',
-        choices=['data_prep', 'train_models', 'fairness_analysis', 'figures', 'temporal_analysis', 'all'],
+        choices=[
+            'data_prep', 'train_models', 'fairness_analysis', 'figures',
+            'temporal_analysis', 'descriptives', 'latex_tables',
+            'sensitivity', 'math_outcome', 'all'
+        ],
         default='all',
         help='Pipeline step to run'
     )
@@ -699,6 +782,17 @@ def main():
             elif args.step == 'temporal_analysis':
                 df = step_data_prep(config)
                 step_temporal_analysis(config, df)
+            elif args.step == 'descriptives':
+                df = step_data_prep(config)
+                step_descriptives(config, df)
+            elif args.step == 'latex_tables':
+                step_latex_tables(config)
+            elif args.step == 'sensitivity':
+                df = step_data_prep(config)
+                step_sensitivity_analysis(config, df)
+            elif args.step == 'math_outcome':
+                df = step_data_prep(config)
+                step_math_outcome(config, df)
             else:
                 logger.info("For individual steps after data_prep, use notebooks or run 'all'")
                 

@@ -47,6 +47,10 @@ from .temporal import (
     TemporalGeneralizationAnalyzer
 )
 
+from .descriptives import generate_table1, save_table1
+from .latex_tables import generate_all_latex_tables
+from .sensitivity import SensitivityAnalyzer, OutcomeComparisonAnalyzer
+
 from .visualization import (
     plot_roc_curves_by_group,
     plot_calibration_curves_by_group,
@@ -72,7 +76,7 @@ try:
         generate_explainability_report
     )
     HAS_EXPLAINABILITY = True
-except ImportError:
+except (ImportError, OSError):
     HAS_EXPLAINABILITY = False
 
 
@@ -113,6 +117,13 @@ __all__ = [
     'TemporalScenario',
     'TemporalScenarioResult',
     'TemporalGeneralizationAnalyzer',
+    # Descriptives & LaTeX
+    'generate_table1',
+    'save_table1',
+    'generate_all_latex_tables',
+    # Sensitivity
+    'SensitivityAnalyzer',
+    'OutcomeComparisonAnalyzer',
     # Explainability (conditional)
     'HAS_EXPLAINABILITY'
 ]

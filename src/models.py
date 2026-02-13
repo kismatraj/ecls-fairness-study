@@ -37,13 +37,13 @@ from sklearn.metrics import (
 try:
     import xgboost as xgb
     HAS_XGBOOST = True
-except ImportError:
+except (ImportError, OSError):
     HAS_XGBOOST = False
 
 try:
     import lightgbm as lgb
     HAS_LIGHTGBM = True
-except ImportError:
+except (ImportError, OSError):
     HAS_LIGHTGBM = False
 
 try:
@@ -97,19 +97,19 @@ try:
             return self._model.predict_proba(X)
 
     HAS_CATBOOST = True
-except ImportError:
+except (ImportError, OSError):
     HAS_CATBOOST = False
 
 try:
     from tabpfn import TabPFNClassifier
     HAS_TABPFN = True
-except ImportError:
+except (ImportError, OSError):
     HAS_TABPFN = False
 
 try:
     from sklearn.ensemble import HistGradientBoostingClassifier
     HAS_HISTGB = True
-except ImportError:
+except (ImportError, OSError):
     HAS_HISTGB = False
 
 logger = logging.getLogger(__name__)
@@ -129,12 +129,14 @@ class ModelTrainer:
         self,
         random_state: int = 42,
         test_size: float = 0.3,
-        cv_folds: int = 5
+        cv_folds: int = 5,
+        sample_weights: Optional[np.ndarray] = None
     ):
         self.random_state = random_state
         self.test_size = test_size
         self.cv_folds = cv_folds
-        
+        self.sample_weights = sample_weights
+
         self.models = {}
         self.results = {}
         self.best_model = None
@@ -146,11 +148,11 @@ class ModelTrainer:
             "logistic_regression": {
                 "model": LogisticRegression(
                     random_state=self.random_state,
-                    max_iter=1000
+                    max_iter=1000,
+                    l1_ratio=0
                 ),
                 "params": {
-                    "C": [0.01, 0.1, 1.0, 10.0],
-                    "penalty": ["l2"]
+                    "C": [0.01, 0.1, 1.0, 10.0]
                 }
             },
             "elastic_net": {
@@ -291,45 +293,56 @@ class ModelTrainer:
         X_train: pd.DataFrame,
         y_train: pd.Series,
         param_grid: Optional[Dict] = None,
-        scale_features: bool = True
+        scale_features: bool = True,
+        sample_weight: Optional[np.ndarray] = None
     ) -> Tuple[Any, Dict]:
         """
         Train a single model with hyperparameter tuning.
-        
+
         Args:
             model_name: Name of model to train
             X_train: Training features
             y_train: Training target
             param_grid: Hyperparameter grid (None = use defaults)
             scale_features: Whether to standardize features
-        
+            sample_weight: Optional sample weights for training
+
         Returns:
             Tuple of (trained model, CV results)
         """
         configs = self.get_model_configs()
-        
+
         if model_name not in configs:
             raise ValueError(f"Unknown model: {model_name}")
-        
+
         config = configs[model_name]
         model = config["model"]
         params = param_grid or config["params"]
-        
+
         # Scale features
         if scale_features:
             X_scaled = self.scaler.fit_transform(X_train)
         else:
             X_scaled = X_train.values
-        
+
         # Grid search with CV
         cv = StratifiedKFold(
             n_splits=self.cv_folds,
             shuffle=True,
             random_state=self.random_state
         )
-        
+
         logger.info(f"Training {model_name} with {self.cv_folds}-fold CV...")
-        
+
+        # Use sample weights if provided
+        sw = sample_weight if sample_weight is not None else self.sample_weights
+        fit_params = {}
+        if sw is not None:
+            # Align weights with training indices
+            if len(sw) == len(X_train):
+                fit_params["sample_weight"] = sw
+                logger.info(f"  Using sample weights (sum={sw.sum():.0f})")
+
         grid_search = GridSearchCV(
             model,
             params,
@@ -338,56 +351,60 @@ class ModelTrainer:
             n_jobs=-1,
             verbose=0
         )
-        
-        grid_search.fit(X_scaled, y_train)
-        
+
+        grid_search.fit(X_scaled, y_train, **fit_params)
+
         best_model = grid_search.best_estimator_
-        
+
         cv_results = {
             "best_params": grid_search.best_params_,
             "best_cv_score": grid_search.best_score_,
             "cv_scores": grid_search.cv_results_["mean_test_score"]
         }
-        
+
         logger.info(f"  Best AUC: {cv_results['best_cv_score']:.4f}")
         logger.info(f"  Best params: {cv_results['best_params']}")
-        
+
         self.models[model_name] = best_model
-        
+
         return best_model, cv_results
     
     def train_all_models(
         self,
         X_train: pd.DataFrame,
         y_train: pd.Series,
-        model_names: Optional[List[str]] = None
+        model_names: Optional[List[str]] = None,
+        sample_weight: Optional[np.ndarray] = None
     ) -> Dict[str, Dict]:
         """
         Train all specified models.
-        
+
         Args:
             X_train: Training features
             y_train: Training target
             model_names: List of models to train (None = all)
-        
+            sample_weight: Optional sample weights for training
+
         Returns:
             Dictionary of results for each model
         """
         configs = self.get_model_configs()
-        
+
         if model_names is None:
             model_names = list(configs.keys())
-        
+
         all_results = {}
-        
+
         for name in model_names:
             try:
-                model, results = self.train_model(name, X_train, y_train)
+                model, results = self.train_model(
+                    name, X_train, y_train, sample_weight=sample_weight
+                )
                 all_results[name] = results
             except Exception as e:
                 logger.error(f"Failed to train {name}: {e}")
                 continue
-        
+
         return all_results
     
     def evaluate_model(

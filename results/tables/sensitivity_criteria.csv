@@ -1,0 +1,5 @@
+percentile,prevalence,equal_opportunity,equalized_odds,statistical_parity
+10,6.3%,FAIL,FAIL,FAIL
+20,12.6%,FAIL,FAIL,FAIL
+25,15.7%,PASS,FAIL,PASS
+30,18.9%,FAIL,FAIL,FAIL

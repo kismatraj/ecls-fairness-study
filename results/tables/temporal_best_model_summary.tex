@@ -1,0 +1,15 @@
+\begin{table}[htbp]
+\centering
+\caption{Best Model Performance Across Temporal Scenarios}
+\label{tab:temporal_summary}
+\begin{tabular}{llccccc}
+\toprule
+Scenario & Best Model & Features & AUC-ROC & Accuracy & F1 & Brier \\
+\midrule
+K Fall Only & Logistic Regression & 7 & 0.799 & 0.837 & 0.343 & 0.119 \\
+K Fall + Spring & Logistic Regression & 10 & 0.822 & 0.844 & 0.372 & 0.113 \\
+K + 1st Grade & Logistic Regression & 11 & 0.829 & 0.845 & 0.395 & 0.112 \\
+K through 3rd & Logistic Regression & 12 & 0.831 & 0.843 & 0.386 & 0.112 \\
+\bottomrule
+\end{tabular}
+\end{table}

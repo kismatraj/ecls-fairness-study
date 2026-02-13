@@ -1,0 +1,9 @@
+outcome,Group,vs,TPR Ratio,TPR Diff,FPR Ratio,FPR Diff,Disparate Impact
+reading,Asian,White,4.661,+0.589,0.000,-0.011,No
+reading,Black,White,1.823,+0.132,8.587,+0.082,No
+reading,Hispanic,White,2.445,+0.233,5.855,+0.053,No
+reading,Other,White,1.611,+0.098,0.465,-0.006,No
+math,Asian,White,3.841,+0.740,4.681,+0.087,No
+math,Black,White,1.243,+0.063,6.795,+0.138,No
+math,Hispanic,White,2.028,+0.268,3.890,+0.069,No
+math,Other,White,0.240,-0.198,1.008,+0.000,Yes
