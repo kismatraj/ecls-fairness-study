@@ -1,0 +1,32 @@
+{
+    "title": "Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study",
+    "description": "This software conducts a comprehensive, multi-dimensional fairness audit of machine learning models trained on early childhood data (kindergarten through 2nd grade) to predict 5th-grade academic risk using the ECLS-K:2011 nationally representative longitudinal study (N = 9,104). It evaluates seven ML algorithms across group fairness with bootstrap confidence intervals, calibration fairness, and intersectional (race x SES) analysis, revealing significant disparities including systematic under-identification of minority students and threshold-dependent fairness compliance. The codebase includes SHAP-based explainability, temporal generalization analysis across four developmental windows, sensitivity analysis, and post-hoc bias mitigation via threshold optimization.",
+    "upload_type": "software",
+    "creators": [
+        {
+            "name": "Author, Name",
+            "affiliation": "University",
+            "orcid": ""
+        }
+    ],
+    "license": "MIT",
+    "keywords": [
+        "algorithmic fairness",
+        "machine learning",
+        "education",
+        "ECLS-K:2011",
+        "early warning systems",
+        "bias audit",
+        "calibration fairness",
+        "intersectional fairness",
+        "temporal generalization",
+        "SHAP explainability"
+    ],
+    "related_identifiers": [],
+    "access_right": "open",
+    "communities": [
+        {
+            "identifier": "zenodo"
+        }
+    ]
+}

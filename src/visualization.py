@@ -18,36 +18,154 @@ from sklearn.calibration import calibration_curve
 
 logger = logging.getLogger(__name__)
 
-# Set style
-plt.style.use("seaborn-v0_8-whitegrid")
-sns.set_palette("colorblind")
+# ============================================================================
+# Nature/Science publication style constants
+# ============================================================================
 
-# Color palette for demographic groups
+# Nature column widths (inches)
+FIG_SINGLE = 3.5  # 89mm single column
+FIG_ONE_HALF = 4.72  # 120mm 1.5 column
+FIG_DOUBLE = 7.2  # 183mm double column
+
+# Colorblind-safe palette (Wong 2011, Nature standard)
 GROUP_COLORS = {
-    "White": "#1f77b4",
-    "Black": "#ff7f0e",
-    "Hispanic": "#2ca02c",
-    "Asian": "#d62728",
-    "Other": "#9467bd",
+    "White": "#0072B2",
+    "Black": "#D55E00",
+    "Hispanic": "#009E73",
+    "Asian": "#E69F00",
+    "Other": "#CC79A7",
+}
+
+METRIC_COLORS = {
+    "auc_roc": "#0072B2",
+    "accuracy": "#009E73",
+    "f1": "#D55E00",
+}
+
+TEMPORAL_COLORS = ["#BFD3E6", "#6BAED6", "#2171B5", "#08306B"]
+
+# ECLS variable codes → human-readable labels
+FEATURE_LABELS = {
+    "X1RTHETK": "Reading (K fall)",
+    "X2RTHETK": "Reading (K spring)",
+    "X1MTHETK": "Math (K fall)",
+    "X2MTHETK": "Math (K spring)",
+    "X9RTHETA": "Reading (5th grade)",
+    "X9MTHETA": "Math (5th grade)",
+    "X1TCHAPP": "Approaches to learning (K fall)",
+    "X2TCHAPP": "Approaches to learning (K spring)",
+    "X4TCHAPP": "Approaches to learning (1st grade)",
+    "X6DCCSSCR": "Executive function (3rd grade)",
+    "X_RACETH_R": "Race/ethnicity",
+    "X_CHSEX_R": "Child sex",
+    "X1SESQ5": "SES quintile",
+    "X12LANGST": "Home language",
+}
+
+MODEL_LABELS = {
+    "logistic_regression": "Logistic Reg.",
+    "elastic_net": "Elastic Net",
+    "random_forest": "Random Forest",
+    "xgboost": "XGBoost",
+    "lightgbm": "LightGBM",
+    "catboost": "CatBoost",
+    "hist_gradient_boosting": "Hist. Grad. Boost.",
+}
+
+SES_LABELS = {1: "Q1 (lowest)", 2: "Q2", 3: "Q3", 4: "Q4 (highest)"}
+
+METRIC_DISPLAY = {
+    "auc_roc": "AUC-ROC",
+    "accuracy": "Accuracy",
+    "f1": "F1",
+    "AUC_ROC": "AUC-ROC",
+    "ACCURACY": "Accuracy",
+    "F1": "F1",
+}
+
+FAIRNESS_METRIC_LABELS = {
+    "tpr": "True positive rate",
+    "fpr": "False positive rate",
+    "ppv": "Positive predictive value",
+    "accuracy": "Accuracy",
+    "TPR": "True positive rate",
+    "FPR": "False positive rate",
+    "PPV": "Positive predictive value",
 }
 
 
+def _map_feature_name(name: str) -> str:
+    """Map ECLS variable code to readable label."""
+    return FEATURE_LABELS.get(name, name)
+
+
+def _map_feature_names(names) -> list:
+    """Map a list of feature names to readable labels."""
+    return [_map_feature_name(n) for n in names]
+
+
+def _map_model_name(name: str) -> str:
+    """Map internal model name to formatted label."""
+    return MODEL_LABELS.get(name, name.replace("_", " ").title())
+
+
+def _save_figure(fig, save_path: str, dpi: int = 600):
+    """Save figure as PDF (publication) and PNG (preview)."""
+    path = Path(save_path)
+    pdf_path = path.with_suffix(".pdf")
+    fig.savefig(pdf_path, dpi=dpi, bbox_inches="tight", pad_inches=0.02)
+    png_path = path.with_suffix(".png")
+    fig.savefig(png_path, dpi=300, bbox_inches="tight", pad_inches=0.02)
+    logger.info(f"Figure saved: {pdf_path}, {png_path}")
+
+
 def set_publication_style():
-    """Set matplotlib parameters for publication figures."""
+    """Set matplotlib parameters for Nature/Science publication figures."""
+    plt.style.use("default")
     plt.rcParams.update(
         {
-            "font.size": 11,
-            "axes.titlesize": 12,
-            "axes.labelsize": 11,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
-            "legend.fontsize": 10,
-            "figure.titlesize": 13,
-            "figure.dpi": 100,
-            "savefig.dpi": 300,
+            # Font: Nature requires sans-serif, 5-8pt
+            "font.family": "sans-serif",
+            "font.sans-serif": ["Arial", "Helvetica", "DejaVu Sans"],
+            "font.size": 7,
+            "axes.titlesize": 8,
+            "axes.labelsize": 7,
+            "xtick.labelsize": 6,
+            "ytick.labelsize": 6,
+            "legend.fontsize": 6,
+            "legend.title_fontsize": 7,
+            "figure.titlesize": 8,
+            # Spines
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.linewidth": 0.5,
+            "xtick.major.width": 0.5,
+            "ytick.major.width": 0.5,
+            "xtick.major.size": 3,
+            "ytick.major.size": 3,
+            # No grid by default
+            "axes.grid": False,
+            # Line weights
+            "lines.linewidth": 1.0,
+            "lines.markersize": 4,
+            # Output
+            "figure.dpi": 150,
+            "savefig.dpi": 600,
             "savefig.bbox": "tight",
+            "savefig.pad_inches": 0.02,
+            "savefig.format": "pdf",
+            # Math
+            "mathtext.default": "regular",
+            # Legend
+            "legend.frameon": False,
+            "legend.borderpad": 0.3,
+            "legend.handlelength": 1.5,
         }
     )
+
+
+# Apply publication style at import time
+set_publication_style()
 
 
 def plot_roc_curves_by_group(
@@ -72,10 +190,10 @@ def plot_roc_curves_by_group(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(8, 7))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 3.2))
 
     # Plot diagonal
-    ax.plot([0, 1], [0, 1], "k--", lw=1.5, label="Random (AUC=0.50)")
+    ax.plot([0, 1], [0, 1], ls="--", lw=0.5, color="#AAAAAA")
 
     # Plot ROC for each group (filter out NaN)
     unique_groups = sorted([g for g in groups.unique() if pd.notna(g)])
@@ -90,20 +208,18 @@ def plot_roc_curves_by_group(
         roc_auc = auc(fpr, tpr)
 
         color = GROUP_COLORS.get(group, None)
-        ax.plot(fpr, tpr, color=color, lw=2, label=f"{group} (AUC={roc_auc:.3f})")
+        ax.plot(fpr, tpr, color=color, lw=1.0, label=f"{group} ({roc_auc:.2f})")
 
     ax.set_xlim([0.0, 1.0])
-    ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
-    ax.set_title(title)
-    ax.legend(loc="lower right")
+    ax.set_ylim([0.0, 1.0])
+    ax.set_xlabel("False positive rate")
+    ax.set_ylabel("True positive rate")
+    ax.legend(loc="lower right", fontsize=6)
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -132,10 +248,10 @@ def plot_calibration_curves_by_group(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(8, 7))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 3.2))
 
     # Perfect calibration line
-    ax.plot([0, 1], [0, 1], "k--", lw=1.5, label="Perfect calibration")
+    ax.plot([0, 1], [0, 1], ls="--", lw=0.5, color="#AAAAAA")
 
     unique_groups = sorted([g for g in groups.unique() if pd.notna(g)])
 
@@ -155,23 +271,21 @@ def plot_calibration_curves_by_group(
             prob_true,
             marker="o",
             color=color,
-            lw=2,
-            markersize=6,
+            lw=1.0,
+            markersize=3,
             label=group,
         )
 
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.0])
-    ax.set_xlabel("Mean Predicted Probability")
-    ax.set_ylabel("Fraction of Positives")
-    ax.set_title(title)
-    ax.legend(loc="upper left")
+    ax.set_xlabel("Predicted probability")
+    ax.set_ylabel("Observed frequency")
+    ax.legend(loc="upper left", fontsize=6)
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -199,7 +313,8 @@ def plot_fairness_metrics_comparison(
     n_metrics = len(metric_cols)
     n_groups = len(metrics_df)  # noqa: F841
 
-    fig, axes = plt.subplots(1, n_metrics, figsize=(4 * n_metrics, 5))
+    w = min(FIG_SINGLE * n_metrics, FIG_DOUBLE)
+    fig, axes = plt.subplots(1, n_metrics, figsize=(w, 2.8))
 
     if n_metrics == 1:
         axes = [axes]
@@ -210,13 +325,13 @@ def plot_fairness_metrics_comparison(
 
         colors = [GROUP_COLORS.get(g, "#808080") for g in groups]
 
-        bars = ax.bar(groups, values, color=colors, edgecolor="black", linewidth=0.5)
+        bars = ax.bar(groups, values, color=colors, edgecolor="none")
 
-        ax.set_ylabel(col.upper())
+        label = FAIRNESS_METRIC_LABELS.get(col, col.upper())
+        ax.set_ylabel(label)
         ax.set_ylim([0, 1])
         ax.tick_params(axis="x", rotation=45)
 
-        # Add value labels
         for bar, val in zip(bars, values):
             ax.text(
                 bar.get_x() + bar.get_width() / 2,
@@ -224,15 +339,13 @@ def plot_fairness_metrics_comparison(
                 f"{val:.2f}",
                 ha="center",
                 va="bottom",
-                fontsize=9,
+                fontsize=5.5,
             )
 
-    fig.suptitle(title, fontsize=13)
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -259,45 +372,35 @@ def plot_disparity_ratios(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 2.8))
 
     # Extract ratio columns
     ratio_cols = [c for c in disparity_df.columns if "Ratio" in c]
     groups = disparity_df["Group"].values
 
     x = np.arange(len(groups))
-    width = 0.2
+    width = 0.18
 
     for i, col in enumerate(ratio_cols):
         values = disparity_df[col].str.replace(",", "").astype(float).values
         offset = (i - len(ratio_cols) / 2 + 0.5) * width
 
-        bars = ax.bar(  # noqa: F841
-            x + offset, values, width, label=col, edgecolor="black", linewidth=0.5
-        )
+        ax.bar(x + offset, values, width, label=col, edgecolor="none")
 
-    # Add threshold line
-    ax.axhline(
-        y=threshold,
-        color="red",
-        linestyle="--",
-        lw=2,
-        label=f"{threshold:.0%} threshold",
-    )
-    ax.axhline(y=1.0, color="gray", linestyle="-", lw=1)
+    ax.axhline(y=threshold, color="#D55E00", ls="--", lw=0.8,
+               label=f"{threshold:.0%} threshold")
+    ax.axhline(y=1.0, color="#AAAAAA", ls="-", lw=0.5)
 
-    ax.set_ylabel("Ratio (vs. Reference)")
-    ax.set_title(f"{title}\n(Reference: {reference_group})")
+    ax.set_ylabel("Ratio (vs. reference)")
     ax.set_xticks(x)
     ax.set_xticklabels(groups, rotation=45)
-    ax.legend(loc="lower right")
+    ax.legend(loc="lower right", fontsize=5)
     ax.set_ylim([0, 1.5])
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -322,22 +425,23 @@ def plot_feature_importance(
     """
     set_publication_style()
 
-    # Get top N
+    # Get top N and filter zero-importance features
     df = importance_df.head(top_n).copy()
+    df = df[df["importance"] > 0]
     df = df.sort_values("importance", ascending=True)
+    df["feature"] = df["feature"].map(_map_feature_name)
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 3.5))
 
-    ax.barh(df["feature"], df["importance"], color="steelblue", edgecolor="black")
+    ax.barh(df["feature"], df["importance"], color="#2171B5", edgecolor="none",
+            height=0.6)
 
-    ax.set_xlabel("Importance")
-    ax.set_title(title)
+    ax.set_xlabel("Feature importance")
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -362,54 +466,46 @@ def plot_before_after_comparison(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 2.8))
 
     groups = comparison_df["Group"].values
     before = comparison_df[f"{metric} Before"].str.replace(",", "").astype(float).values
     after = comparison_df[f"{metric} After"].str.replace(",", "").astype(float).values
 
     x = np.arange(len(groups))
-    width = 0.35
+    width = 0.3
 
     bars1 = ax.bar(
-        x - width / 2, before, width, label="Before", color="#ff7f7f", edgecolor="black"
+        x - width / 2, before, width, label="Before", color="#D55E00",
+        edgecolor="none", alpha=0.7
     )
     bars2 = ax.bar(
-        x + width / 2, after, width, label="After", color="#7fbf7f", edgecolor="black"
+        x + width / 2, after, width, label="After", color="#009E73",
+        edgecolor="none", alpha=0.7
     )
 
-    ax.set_ylabel(metric)
-    ax.set_title(title)
+    label = FAIRNESS_METRIC_LABELS.get(metric, metric)
+    ax.set_ylabel(label)
     ax.set_xticks(x)
     ax.set_xticklabels(groups)
-    ax.legend()
+    ax.legend(fontsize=6)
     ax.set_ylim([0, 1])
 
-    # Add value labels
     for bar, val in zip(bars1, before):
         ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.02,
-            f"{val:.2f}",
-            ha="center",
-            va="bottom",
-            fontsize=9,
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+            f"{val:.2f}", ha="center", va="bottom", fontsize=5.5,
         )
     for bar, val in zip(bars2, after):
         ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.02,
-            f"{val:.2f}",
-            ha="center",
-            va="bottom",
-            fontsize=9,
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+            f"{val:.2f}", ha="center", va="bottom", fontsize=5.5,
         )
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -487,7 +583,7 @@ def plot_fairness_with_ci(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 2.8))
 
     groups = metrics_df["Group"].values
     values = metrics_df[metric].values
@@ -497,43 +593,36 @@ def plot_fairness_with_ci(
     x = np.arange(len(groups))
     colors = [GROUP_COLORS.get(g, "#808080") for g in groups]
 
-    # Plot bars
-    bars = ax.bar(x, values, color=colors, edgecolor="black", linewidth=0.5, alpha=0.8)
+    bars = ax.bar(x, values, color=colors, edgecolor="none")
 
-    # Plot error bars (confidence intervals)
     ax.errorbar(
-        x,
-        values,
+        x, values,
         yerr=[values - ci_lower, ci_upper - values],
-        fmt="none",
-        ecolor="black",
-        capsize=5,
-        capthick=2,
-        elinewidth=2,
+        fmt="none", ecolor="#333333",
+        capsize=3, capthick=0.8, elinewidth=0.8,
     )
 
-    ax.set_ylabel(metric)
-    ax.set_title(title)
+    label = FAIRNESS_METRIC_LABELS.get(metric, metric)
+    ax.set_ylabel(label)
     ax.set_xticks(x)
-    ax.set_xticklabels(groups, rotation=45)
-    ax.set_ylim([0, 1])
+    ax.set_xticklabels(groups)
 
-    # Add value labels
-    for bar, val, ci_l, ci_u in zip(bars, values, ci_lower, ci_upper):
+    # Auto-scale y-axis to data with padding
+    y_max = max(ci_upper) * 1.15
+    ax.set_ylim([0, min(y_max, 1.0)])
+
+    for bar, val, ci_u in zip(bars, values, ci_upper):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
-            ci_u + 0.02,
-            f"{val:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=9,
+            ci_u + 0.01,
+            f"{val:.2f}",
+            ha="center", va="bottom", fontsize=5.5,
         )
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -570,11 +659,13 @@ def plot_intersectional_heatmap(
             df["Attr1"] = parts[0]
             df["Attr2"] = parts[1] if parts.shape[1] > 1 else "All"
 
+            # Filter out "None" race category
+            df = df[df["Attr1"] != "None"]
+
             pivot = df.pivot_table(
                 values=metric, index="Attr1", columns="Attr2", aggfunc="first"
             )
         else:
-            # Single attribute - just show bar chart
             return plot_fairness_metrics_comparison(
                 df, metric_cols=[metric], title=title, save_path=save_path
             )
@@ -582,41 +673,44 @@ def plot_intersectional_heatmap(
         logger.warning("No Subgroup column found")
         return None
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    # Map SES column labels
+    new_cols = []
+    for c in pivot.columns:
+        try:
+            new_cols.append(SES_LABELS.get(int(c), str(c)))
+        except (ValueError, TypeError):
+            new_cols.append(str(c))
+    pivot.columns = new_cols
 
-    # Create heatmap
-    im = ax.imshow(pivot.values, cmap="RdYlGn", aspect="auto", vmin=0, vmax=1)
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 3.0))
 
-    # Add colorbar
-    cbar = ax.figure.colorbar(im, ax=ax)
-    cbar.ax.set_ylabel(metric, rotation=-90, va="bottom")
+    im = ax.imshow(pivot.values, cmap="RdYlGn", aspect="auto", vmin=0, vmax=0.55)
 
-    # Set ticks
+    cbar = fig.colorbar(im, ax=ax, shrink=0.8)
+    cbar.ax.tick_params(labelsize=5)
+    cbar.set_label(FAIRNESS_METRIC_LABELS.get(metric, metric), fontsize=6)
+
     ax.set_xticks(np.arange(len(pivot.columns)))
     ax.set_yticks(np.arange(len(pivot.index)))
-    ax.set_xticklabels(pivot.columns, rotation=45, ha="right")
+    ax.set_xticklabels(pivot.columns)
     ax.set_yticklabels(pivot.index)
+    ax.set_xlabel("SES quintile")
+    ax.set_ylabel("Race/ethnicity")
 
-    # Add value annotations
     for i in range(len(pivot.index)):
         for j in range(len(pivot.columns)):
             val = pivot.values[i, j]
             if not np.isnan(val):
-                text = ax.text(  # noqa: F841
-                    j,
-                    i,
-                    f"{val:.3f}",
-                    ha="center",
-                    va="center",
-                    color="white" if val < 0.5 else "black",
+                ax.text(
+                    j, i, f"{val:.2f}",
+                    ha="center", va="center", fontsize=6,
+                    color="white" if val < 0.25 else "black",
                 )
 
-    ax.set_title(title)
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -639,68 +733,44 @@ def plot_calibration_error_comparison(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 2.8))
 
     groups = calibration_df["Group"].values
     ece = calibration_df["ECE"].values
     mce = calibration_df["MCE"].values
 
     x = np.arange(len(groups))
-    width = 0.35
-
-    colors_ece = [GROUP_COLORS.get(g, "#808080") for g in groups]
+    width = 0.3
 
     bars1 = ax.bar(
-        x - width / 2,
-        ece,
-        width,
-        label="ECE",
-        color=colors_ece,
-        edgecolor="black",
-        alpha=0.8,
+        x - width / 2, ece, width,
+        label="ECE", color="#0072B2", edgecolor="none",
     )
     bars2 = ax.bar(
-        x + width / 2,
-        mce,
-        width,
-        label="MCE",
-        color=colors_ece,
-        edgecolor="black",
-        alpha=0.5,
-        hatch="//",
+        x + width / 2, mce, width,
+        label="MCE", color="#D55E00", edgecolor="none",
     )
 
-    ax.set_ylabel("Calibration Error")
-    ax.set_title(title)
+    ax.set_ylabel("Calibration error")
     ax.set_xticks(x)
-    ax.set_xticklabels(groups, rotation=45)
-    ax.legend()
+    ax.set_xticklabels(groups)
+    ax.legend(fontsize=6)
 
-    # Add value labels
     for bar, val in zip(bars1, ece):
         ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.005,
-            f"{val:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=8,
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
+            f"{val:.2f}", ha="center", va="bottom", fontsize=5.5,
         )
     for bar, val in zip(bars2, mce):
         ax.text(
-            bar.get_x() + bar.get_width() / 2,
-            bar.get_height() + 0.005,
-            f"{val:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=8,
+            bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.005,
+            f"{val:.2f}", ha="center", va="bottom", fontsize=5.5,
         )
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -724,41 +794,34 @@ def plot_explanation_comparison(
     set_publication_style()
 
     df = comparison_df.head(15).copy()
+    # Filter zero-importance features
+    df = df[(df["shap_normalized"] > 0) | (df["perm_normalized"] > 0)]
+    df["feature"] = df["feature"].map(_map_feature_name)
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 3.5))
 
     x = np.arange(len(df))
-    width = 0.35
+    width = 0.3
 
-    bars1 = ax.barh(  # noqa: F841
-        x - width / 2,
-        df["shap_normalized"],
-        width,
-        label="SHAP",
-        color="#2ca02c",
-        edgecolor="black",
+    ax.barh(
+        x - width / 2, df["shap_normalized"], width,
+        label="SHAP", color="#009E73", edgecolor="none",
     )
-    bars2 = ax.barh(  # noqa: F841
-        x + width / 2,
-        df["perm_normalized"],
-        width,
-        label="Permutation",
-        color="#1f77b4",
-        edgecolor="black",
+    ax.barh(
+        x + width / 2, df["perm_normalized"], width,
+        label="Permutation", color="#0072B2", edgecolor="none",
     )
 
-    ax.set_xlabel("Normalized Importance")
-    ax.set_title(title)
+    ax.set_xlabel("Normalized importance")
     ax.set_yticks(x)
     ax.set_yticklabels(df["feature"])
-    ax.legend(loc="lower right")
-    ax.set_xlim([0, 1.1])
+    ax.legend(loc="lower right", fontsize=6)
+    ax.set_xlim([0, 1.05])
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -783,8 +846,9 @@ def plot_shap_importance_by_group(
     """
     set_publication_style()
 
-    # Get groups (exclude 'differential_importance')
-    groups = [g for g in fairness_shap.keys() if g != "differential_importance"]
+    # Get groups (exclude 'differential_importance' and NaN-like)
+    groups = [g for g in fairness_shap.keys()
+              if g != "differential_importance" and str(g).lower() not in ("nan", "none")]
 
     if len(groups) == 0:
         logger.warning("No groups found in fairness_shap")
@@ -793,6 +857,9 @@ def plot_shap_importance_by_group(
     # Get top features from first group
     first_group = groups[0]
     top_features = fairness_shap[first_group].head(top_n)["feature"].tolist()
+    # Filter out zero-importance features
+    top_features = [f for f in top_features
+                    if fairness_shap[first_group].set_index("feature").loc[f, "mean_abs_shap"] > 0]
 
     # Prepare data
     data = []
@@ -802,32 +869,33 @@ def plot_shap_importance_by_group(
             if feat in df.index:
                 data.append(
                     {
-                        "feature": feat,
+                        "feature": _map_feature_name(feat),
                         "group": group,
                         "importance": df.loc[feat, "mean_abs_shap"],
                     }
                 )
 
     plot_df = pd.DataFrame(data)
+    mapped_features = [_map_feature_name(f) for f in top_features]
 
-    fig, ax = plt.subplots(figsize=(14, 8))
+    fig, ax = plt.subplots(figsize=(FIG_DOUBLE, 4.0))
 
-    # Create grouped bar chart
     pivot = plot_df.pivot(index="feature", columns="group", values="importance")
-    pivot = pivot.reindex(top_features)
+    pivot = pivot.reindex(mapped_features)
 
-    # Plot
-    pivot.plot(kind="barh", ax=ax, width=0.8, edgecolor="black", linewidth=0.5)
+    # Use GROUP_COLORS for each group column
+    bar_colors = [GROUP_COLORS.get(g, "#808080") for g in pivot.columns]
+    pivot.plot(kind="barh", ax=ax, width=0.7, edgecolor="none", color=bar_colors)
 
-    ax.set_xlabel("Mean |SHAP Value|")
-    ax.set_title(title)
-    ax.legend(title="Group", bbox_to_anchor=(1.02, 1), loc="upper left")
+    ax.set_xlabel("Mean |SHAP value|")
+    ax.set_ylabel("")
+    ax.legend(title="Race/ethnicity", bbox_to_anchor=(1.02, 1), loc="upper left",
+              fontsize=6, title_fontsize=6)
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -852,50 +920,33 @@ def plot_model_comparison(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(12, 6))
+    fig, ax = plt.subplots(figsize=(FIG_DOUBLE, 3.0))
 
     models = results_df.index.tolist()
+    model_labels = [_map_model_name(m) for m in models]
     x = np.arange(len(models))
-    width = 0.25
-
-    colors = plt.cm.Set2(np.linspace(0, 1, len(metrics)))
+    width = 0.18
 
     for i, metric in enumerate(metrics):
         values = results_df[metric].values
         offset = (i - len(metrics) / 2 + 0.5) * width
-        bars = ax.bar(
-            x + offset,
-            values,
-            width,
-            label=metric.upper(),
-            color=colors[i],
-            edgecolor="black",
+        color = METRIC_COLORS.get(metric, f"C{i}")
+        label = METRIC_DISPLAY.get(metric, metric.upper())
+        ax.bar(
+            x + offset, values, width,
+            label=label, color=color, edgecolor="none",
         )
 
-        # Add value labels
-        for bar, val in zip(bars, values):
-            ax.text(
-                bar.get_x() + bar.get_width() / 2,
-                bar.get_height() + 0.01,
-                f"{val:.3f}",
-                ha="center",
-                va="bottom",
-                fontsize=8,
-                rotation=90,
-            )
-
     ax.set_ylabel("Score")
-    ax.set_title(title)
     ax.set_xticks(x)
-    ax.set_xticklabels(models, rotation=45, ha="right")
-    ax.legend(loc="lower right")
-    ax.set_ylim([0, 1.1])
+    ax.set_xticklabels(model_labels, rotation=35, ha="right")
+    ax.legend(loc="upper right", fontsize=6)
+    ax.set_ylim([0.3, 0.92])
 
     plt.tight_layout()
 
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
 
     return fig
 
@@ -919,49 +970,34 @@ def plot_temporal_performance_trend(
         save_path: Path to save figure
     """
     set_publication_style()
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 2.8))
 
     x = np.arange(len(best_model_df))
     labels = best_model_df["scenario_label"].values
 
-    for metric, marker, color in [
-        ("auc_roc", "o", "#1f77b4"),
-        ("accuracy", "s", "#2ca02c"),
-        ("f1", "^", "#ff7f0e"),
+    for metric, marker, color_key in [
+        ("auc_roc", "o", "auc_roc"),
+        ("accuracy", "s", "accuracy"),
+        ("f1", "^", "f1"),
     ]:
         if metric in best_model_df.columns:
             vals = best_model_df[metric].values
+            label = METRIC_DISPLAY.get(metric, metric.upper())
             ax.plot(
-                x,
-                vals,
-                marker=marker,
-                color=color,
-                lw=2,
-                markersize=8,
-                label=metric.upper(),
+                x, vals, marker=marker, color=METRIC_COLORS.get(color_key, f"C0"),
+                lw=1.0, markersize=4, label=label,
             )
-            for xi, v in zip(x, vals):
-                ax.annotate(
-                    f"{v:.3f}",
-                    (xi, v),
-                    textcoords="offset points",
-                    xytext=(0, 10),
-                    ha="center",
-                    fontsize=9,
-                )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=25, ha="right")
+    ax.set_xticklabels(labels, rotation=20, ha="right")
     ax.set_ylabel("Score")
-    ax.set_title(title)
-    ax.legend(loc="lower right")
-    ax.set_ylim([0, 1.0])
-    ax.grid(True, alpha=0.3)
+    ax.legend(loc="lower right", fontsize=6)
+    ax.set_ylim([0.3, 0.9])
+    ax.yaxis.grid(True, alpha=0.15, linewidth=0.3)
 
     plt.tight_layout()
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
     return fig
 
 
@@ -982,10 +1018,7 @@ def plot_temporal_fairness_trend(
         save_path: Path to save figure
     """
     set_publication_style()
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    if title is None:
-        title = f"{metric} by Group Across Temporal Scenarios"
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 3.0))
 
     scenario_labels = fairness_df["scenario_label"].unique()
     x = np.arange(len(scenario_labels))
@@ -998,25 +1031,25 @@ def plot_temporal_fairness_trend(
         gdf = gdf.sort_values("x")
 
         color = GROUP_COLORS.get(group, None)
-        ax.plot(gdf["x"], gdf[metric], marker="o", lw=2, color=color, label=group)
+        ax.plot(gdf["x"], gdf[metric], marker="o", lw=1.0, markersize=3,
+                color=color, label=group)
 
         ci_lo = f"{metric}_CI_lower"
         ci_hi = f"{metric}_CI_upper"
         if ci_lo in gdf.columns and ci_hi in gdf.columns:
-            ax.fill_between(gdf["x"], gdf[ci_lo], gdf[ci_hi], alpha=0.15, color=color)
+            ax.fill_between(gdf["x"], gdf[ci_lo], gdf[ci_hi], alpha=0.12, color=color)
 
     ax.set_xticks(x)
-    ax.set_xticklabels(scenario_labels, rotation=25, ha="right")
-    ax.set_ylabel(metric)
-    ax.set_title(title)
-    ax.legend(title="Group", loc="best")
+    ax.set_xticklabels(scenario_labels, rotation=15, ha="right")
+    label = FAIRNESS_METRIC_LABELS.get(metric, metric)
+    ax.set_ylabel(label)
+    ax.legend(title="Race/ethnicity", loc="best", fontsize=5, title_fontsize=6)
     ax.set_ylim(bottom=0)
-    ax.grid(True, alpha=0.3)
+    ax.yaxis.grid(True, alpha=0.15, linewidth=0.3)
 
     plt.tight_layout()
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
     return fig
 
 
@@ -1046,14 +1079,18 @@ def plot_temporal_disparity_heatmap(
     ordered = disparity_df["scenario_label"].unique()
     pivot = pivot[[c for c in ordered if c in pivot.columns]]
 
-    fig, ax = plt.subplots(figsize=(10, 5))
-    im = ax.imshow(pivot.values, cmap="RdYlGn", aspect="auto", vmin=0.5, vmax=3.0)
-    cbar = fig.colorbar(im, ax=ax)
-    cbar.ax.set_ylabel("TPR Ratio (vs White)", rotation=-90, va="bottom")
+    fig, ax = plt.subplots(figsize=(FIG_ONE_HALF, 2.5))
+
+    from matplotlib.colors import TwoSlopeNorm
+    norm = TwoSlopeNorm(vcenter=1.0, vmin=0.4, vmax=3.5)
+    im = ax.imshow(pivot.values, cmap="RdBu_r", aspect="auto", norm=norm)
+    cbar = fig.colorbar(im, ax=ax, shrink=0.8)
+    cbar.ax.tick_params(labelsize=5)
+    cbar.set_label("TPR ratio (vs. White)", fontsize=6)
 
     ax.set_xticks(np.arange(len(pivot.columns)))
     ax.set_yticks(np.arange(len(pivot.index)))
-    ax.set_xticklabels(pivot.columns, rotation=25, ha="right")
+    ax.set_xticklabels(pivot.columns, rotation=15, ha="right")
     ax.set_yticklabels(pivot.index)
 
     for i in range(len(pivot.index)):
@@ -1061,20 +1098,14 @@ def plot_temporal_disparity_heatmap(
             val = pivot.values[i, j]
             if not np.isnan(val):
                 ax.text(
-                    j,
-                    i,
-                    f"{val:.2f}",
-                    ha="center",
-                    va="center",
-                    color="white" if val < 1.0 else "black",
-                    fontsize=10,
+                    j, i, f"{val:.2f}",
+                    ha="center", va="center", fontsize=6,
+                    color="white" if val < 0.7 else "black",
                 )
 
-    ax.set_title(title)
     plt.tight_layout()
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
     return fig
 
 
@@ -1102,32 +1133,30 @@ def plot_temporal_fairness_gap(
         gaps.append({"scenario_label": label, "gap": gap})
     gap_df = pd.DataFrame(gaps)
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(FIG_SINGLE, 2.8))
     x = np.arange(len(gap_df))
-    colors = plt.cm.Blues(np.linspace(0.4, 0.9, len(gap_df)))
+    n = len(gap_df)
+    colors = TEMPORAL_COLORS[:n] if n <= len(TEMPORAL_COLORS) else \
+        [TEMPORAL_COLORS[int(i * (len(TEMPORAL_COLORS) - 1) / (n - 1))] for i in range(n)]
 
-    bars = ax.bar(x, gap_df["gap"], color=colors, edgecolor="black", linewidth=0.5)
+    bars = ax.bar(x, gap_df["gap"], color=colors, edgecolor="none")
     for bar, val in zip(bars, gap_df["gap"]):
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 0.005,
-            f"{val:.3f}",
-            ha="center",
-            va="bottom",
-            fontsize=10,
+            f"{val:.2f}",
+            ha="center", va="bottom", fontsize=5.5,
         )
 
     ax.set_xticks(x)
-    ax.set_xticklabels(gap_df["scenario_label"], rotation=25, ha="right")
-    ax.set_ylabel(f"Max {metric} Gap (max - min across groups)")
-    ax.set_title(title)
+    ax.set_xticklabels(gap_df["scenario_label"], rotation=20, ha="right")
+    label = FAIRNESS_METRIC_LABELS.get(metric, metric)
+    ax.set_ylabel(f"Maximum {label.lower()} gap")
     ax.set_ylim(bottom=0)
-    ax.grid(True, axis="y", alpha=0.3)
 
     plt.tight_layout()
     if save_path:
-        fig.savefig(save_path, dpi=300, bbox_inches="tight")
-        logger.info(f"Figure saved to {save_path}")
+        _save_figure(fig, save_path)
     return fig
 
 

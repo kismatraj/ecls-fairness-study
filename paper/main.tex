@@ -1,27 +1,15 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[Afour,sageh,times,doublespace]{sagej}
 
-% Packages
-\usepackage[utf8]{inputenc}
-\usepackage{lmodern}  % Use Latin Modern fonts instead of EC fonts
-\usepackage[T1]{fontenc}
+% Additional packages (not loaded by sagej.cls)
 \usepackage{amsmath,amssymb}
-\usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage[margin=1in]{geometry}
-\usepackage{setspace}
-\usepackage{natbib}
-\usepackage{hyperref}
-\usepackage{xcolor}
 \usepackage{float}
 \usepackage{array}
 \usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{hyperref}
 
-% Formatting
-\doublespacing
-\emergencystretch=1em
 \hypersetup{
     colorlinks=true,
     linkcolor=blue,
@@ -29,31 +17,27 @@
     urlcolor=blue
 }
 
-% Title
-\title{\textbf{Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study}}
+\emergencystretch=1em
 
-\author{
-    Research Analysis Report\\
-    \textit{Machine Learning for Educational Equity}
-}
+\runninghead{Algorithmic Fairness in Early Childhood Risk Prediction}
 
-\date{February 2026}
+\title{Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study}
+
+% Anonymized for double-blind review
+\author{[Removed for double-blind review]}
+\affiliation{[Removed for double-blind review]}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-\noindent
-Machine learning models are increasingly deployed in educational settings to identify students at risk of academic difficulties, yet concerns about algorithmic fairness remain underexplored in longitudinal educational contexts. This study conducts a multi-dimensional fairness audit of predictive models trained on early childhood data (kindergarten through 2nd grade) to predict 5th-grade academic risk using the Early Childhood Longitudinal Study, Kindergarten Class of 2010-11 (ECLS-K:2011) public-use data (N = 9,104). We trained and evaluated seven machine learning algorithms---including logistic regression, elastic net, random forest, XGBoost, and three state-of-the-art gradient boosting methods (LightGBM, CatBoost, HistGradientBoosting)---and employed SHAP-based explainability, bootstrap confidence intervals, calibration analysis, and intersectional fairness assessment. Our best-performing model (elastic net, AUC = 0.848) slightly outperformed all three modern boosting methods, suggesting that algorithmic sophistication does not substitute for equitable design. Bootstrap confidence intervals confirmed statistically significant true positive rate disparities: Hispanic students (TPR = 0.393 [0.326, 0.459]) were identified at more than twice the rate of White students (TPR = 0.160 [0.113, 0.206]). Calibration analysis revealed that Black students experienced expected calibration error 3.35 times higher than White students. Intersectional analysis (race $\times$ SES) uncovered that high-SES Black students were completely invisible to the model (TPR = 0\%), suggesting the model operates primarily as a poverty detector. Temporal generalization analysis across four developmental windows showed that additional longitudinal data improved accuracy (AUC 0.799 to 0.831) but failed to resolve fairness disparities. Sensitivity analysis demonstrated that fairness compliance was threshold-dependent, with only the 25th percentile definition meeting equal opportunity criteria. These findings argue for comprehensive, multi-dimensional fairness auditing as a prerequisite for deploying algorithmic systems in education.
-
-\vspace{0.5cm}
-\noindent\textbf{Keywords:} algorithmic fairness, machine learning, educational prediction, SHAP explainability, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011, bias mitigation
+Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a multi-dimensional fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 ($N = 9{,}104$). Classical regularized models (elastic net, AUC = 0.848) matched or exceeded state-of-the-art gradient boosting methods. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Intersectional analysis revealed that high-SES Black students were completely invisible to the model (TPR = 0\%), suggesting it operates as a poverty detector. Temporal generalization showed that additional data improved accuracy but failed to resolve fairness disparities. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
 \end{abstract}
 
-\newpage
-\tableofcontents
-\newpage
+\begin{keywords}
+Algorithmic fairness, machine learning, educational prediction, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011
+\end{keywords}
 
 %==============================================================================
 \section{Introduction}
@@ -301,7 +285,7 @@ We implemented \textbf{threshold optimization} as a post-processing bias mitigat
 
 Table \ref{tab:sample} presents the demographic characteristics of the analytic sample.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Sample Characteristics (N = 18,151)}
 \label{tab:sample}
@@ -334,7 +318,7 @@ Table \ref{tab:sample} presents the demographic characteristics of the analytic 
 \quad Not At-Risk & 15,294 & 84.3 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 The sample is demographically diverse, with substantial representation of historically underserved groups. Approximately 15.7\% of children were classified as at-risk in reading by 5th grade.
 
@@ -342,7 +326,7 @@ The sample is demographically diverse, with substantial representation of histor
 
 Table \ref{tab:performance} presents the predictive performance of all seven models on the held-out test set (N = 2,732).
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Model Performance on Test Set}
 \label{tab:performance}
@@ -359,16 +343,16 @@ Hist Gradient Boosting & 0.839 & 0.846 & 0.623 & 0.298 & 0.403 & 0.109 \\
 LightGBM & 0.837 & 0.846 & 0.629 & 0.291 & 0.398 & 0.110 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 All seven models achieved similar performance (Figure \ref{fig:model_comparison}), with AUC values ranging from 0.837 (LightGBM) to 0.848 (Elastic Net). The two classical regularized linear models (Elastic Net: 0.848; Logistic Regression: 0.847) achieved the highest discrimination, while the three state-of-the-art gradient boosting methods performed comparably but slightly lower (CatBoost: 0.846; HistGradientBoosting: 0.839; LightGBM: 0.837). CatBoost achieved the highest recall (0.308) and F1 score (0.421), making it the most effective at identifying at-risk students at the default threshold. The negligible AUC range across algorithms (0.011) suggests the performance ceiling is determined by the available features rather than algorithmic sophistication. The elastic net model was selected for subsequent fairness analysis based on its highest AUC.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/model_comparison.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/model_comparison.pdf}
 \caption{Performance Comparison Across All Seven Models. AUC values ranged from 0.837 to 0.848, with classical regularized models matching or exceeding state-of-the-art gradient boosting methods.}
 \label{fig:model_comparison}
-\end{figure}
+\end{figure*}
 
 \subsection{Explainability Analysis}
 
@@ -376,7 +360,7 @@ All seven models achieved similar performance (Figure \ref{fig:model_comparison}
 
 Table \ref{tab:features} presents feature importance from three complementary methods: SHAP values, elastic net coefficients, and permutation importance with bootstrap confidence intervals.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Feature Importance: SHAP, Elastic Net Coefficients, and Permutation Importance}
 \label{tab:features}
@@ -395,16 +379,16 @@ Fall K Reading (X1RTHETK) & 0.000 & 0.038 & 0.000 \\
 Child Sex, Race, Language, ATL (K) & 0.000 & 0.000 & 0.000 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Spring kindergarten math (X2MTHETK) was the dominant predictor across all methods (Figure \ref{fig:shap}), with mean $|$SHAP$|$ = 0.410, accounting for approximately 34\% of total SHAP importance. SHAP and permutation importance rankings showed high agreement (mean agreement = 0.87), with both methods identifying the same top-5 features. Notably, race/ethnicity, home language, child sex, and early approaches-to-learning measures received zero importance across all methods, confirming that elastic net regularization effectively excluded these features from the final model.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/shap_summary.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/shap_summary.pdf}
 \caption{SHAP Summary Plot (Beeswarm). Each point represents one prediction. Color indicates feature value (red = high, blue = low). Spring K math score shows the widest spread, indicating it is the strongest predictor with clear directionality.}
 \label{fig:shap}
-\end{figure}
+\end{figure*}
 
 \subsubsection{Fairness-Aware SHAP}
 
@@ -416,7 +400,7 @@ We computed SHAP values separately for each racial/ethnic group to detect differ
 
 Table \ref{tab:fairness} presents performance metrics by racial/ethnic group with bootstrap 95\% confidence intervals.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Model Performance by Race/Ethnicity with 95\% Bootstrap Confidence Intervals}
 \label{tab:fairness}
@@ -431,24 +415,24 @@ Other & 225 & 0.258 [0.074, 0.445] & 0.005 [0.000, 0.015] & 0.871 [0.571, 1.000]
 Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Bootstrap confidence intervals enable formal statistical comparison of inter-group differences (Figure \ref{fig:tpr_ci}). The Hispanic TPR of 0.393 [0.326, 0.459] was significantly higher than the White TPR of 0.160 [0.113, 0.206], with non-overlapping confidence intervals ($p < 0.05$). The Black-White TPR difference (0.296 vs. 0.160) showed partially overlapping CIs, suggesting a marginally significant difference. The model detected at-risk Hispanic students at 2.5 times the rate of at-risk White students.
 
 False positive rate disparities were also substantial: Black students experienced an FPR of 0.095 [0.052, 0.133], compared to 0.011 [0.006, 0.017] for White students---approximately 8.6 times higher. This means non-at-risk Black children were far more likely to be incorrectly flagged. ROC curves by group (Figure \ref{fig:roc}) and calibration curves (Figure \ref{fig:calibration}) further illustrate these differential performance patterns.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/fairness_tpr_with_ci.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/fairness_tpr_with_ci.pdf}
 \caption{True Positive Rate by Racial/Ethnic Group with 95\% Bootstrap Confidence Intervals. Non-overlapping intervals between Hispanic and White groups confirm statistically significant TPR disparities.}
 \label{fig:tpr_ci}
-\end{figure}
+\end{figure*}
 
 \subsubsection{Disparity Analysis}
 
 Table \ref{tab:disparity} presents formal disparity metrics comparing each group to the White reference group.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Fairness Disparity Metrics (Reference: White)}
 \label{tab:disparity}
@@ -462,7 +446,7 @@ Black & 1.851 & +0.136 & 8.494 & +0.084 & No \\
 Other & 1.611 & +0.098 & 0.477 & $-$0.006 & No \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 \textbf{Fairness Criteria Assessment:}
 
@@ -476,7 +460,7 @@ Other & 1.611 & +0.098 & 0.477 & $-$0.006 & No \\
 
 Table \ref{tab:calibration} presents calibration metrics by demographic group.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Calibration Error by Demographic Group}
 \label{tab:calibration}
@@ -490,22 +474,22 @@ Other & 225 & 0.051 & 0.940 & 0.090 & 2.31 \\
 Black & 300 & 0.074 & 0.456 & 0.162 & \textbf{3.35} \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Calibration fairness analysis revealed substantial disparities (Figure \ref{fig:calibration_error}). Black students experienced an ECE of 0.074, 3.35 times higher than White students (0.022), indicating that predicted risk probabilities for Black students were systematically miscalibrated. The Maximum Calibration Error for Black students (MCE = 0.456) was 4.1 times the White MCE (0.112), indicating severe miscalibration in certain probability ranges. These calibration disparities mean that even when the model makes the correct binary classification, the confidence levels are less reliable for minority students---a critical concern when practitioners use predicted probabilities to prioritize intervention resources.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/calibration_error_comparison.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/calibration_error_comparison.pdf}
 \caption{Expected and Maximum Calibration Error by Demographic Group. Black students experience calibration error 3.35 times higher than the White reference group.}
 \label{fig:calibration_error}
-\end{figure}
+\end{figure*}
 
 \subsubsection{Intersectional Fairness}
 
 Table \ref{tab:intersectional} presents fairness metrics for selected race $\times$ SES subgroups, revealing patterns invisible in single-attribute analysis.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Intersectional Fairness: Selected Race $\times$ SES Subgroups}
 \label{tab:intersectional}
@@ -529,38 +513,38 @@ Hispanic Q4 & 62 & 16.1\% & 0.200 & 0.019 & 0.855 \\
 Black Q4 & 42 & 14.3\% & \textbf{0.000} & 0.056 & 0.810 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 The most striking finding was the complete failure to identify at-risk Black students in the 4th SES quintile (TPR = 0\%, N = 42), as shown in Figure \ref{fig:intersectional}. Despite a 14.3\% prevalence of academic risk in this subgroup, the model flagged none of these students. This pattern of ``intersectional invisibility'' extended to other high-SES minority subgroups: Hispanic Q4 achieved only 20\% TPR. In contrast, low-SES students across all racial groups had relatively high TPRs (0.400 to 0.481), consistent with the model's reliance on SES as a predictor.
 
 The intersectional pattern reveals that the model effectively operates as a \textit{poverty detector}: it identifies at-risk students primarily through socioeconomic signals, missing those whose risk arises from other factors. This is particularly consequential for minority students from relatively advantaged backgrounds, whose academic risk may stem from factors not captured by SES alone.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/intersectional_fairness_heatmap.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/intersectional_fairness_heatmap.pdf}
 \caption{Intersectional Fairness Heatmap: TPR by Race $\times$ SES Quintile. The model completely fails to identify at-risk Black students in the 4th SES quintile (TPR = 0\%), revealing that it operates primarily as a poverty detector.}
 \label{fig:intersectional}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.8\textwidth]{../results/figures/roc_curves_by_group.png}
+\includegraphics[width=0.8\textwidth]{../results/figures/roc_curves_by_group.pdf}
 \caption{ROC Curves by Racial/Ethnic Group}
 \label{fig:roc}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.8\textwidth]{../results/figures/calibration_curves_by_group.png}
+\includegraphics[width=0.8\textwidth]{../results/figures/calibration_curves_by_group.pdf}
 \caption{Calibration Curves by Racial/Ethnic Group. Deviation from the diagonal indicates miscalibration.}
 \label{fig:calibration}
-\end{figure}
+\end{figure*}
 
 \subsection{Temporal Generalization}
 
 Table \ref{tab:temporal} presents model performance across four temporal scenarios with progressively more features.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Best Model Performance Across Temporal Scenarios}
 \label{tab:temporal}
@@ -574,31 +558,31 @@ K + 1st Grade & Logistic Reg. & 11 & 0.829 & 0.845 & 0.395 & 0.112 \\
 K through 3rd & Logistic Reg. & 12 & 0.831 & 0.843 & 0.386 & 0.112 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Logistic regression was the best-performing model across all four temporal scenarios (Figure \ref{fig:temporal_performance}), reinforcing the finding that classical methods are sufficient for this prediction task. AUC improved from 0.799 (K fall only) to 0.831 (K through 3rd grade), a meaningful gain of 0.032 AUC points. However, returns diminished rapidly: the largest gain came from adding spring kindergarten scores (+0.023 AUC), while adding 1st through 3rd grade data contributed only +0.009.
 
 Critically, while overall accuracy improved with more data, fairness disparities did not narrow proportionally (Figure \ref{fig:temporal_disparity}). The Hispanic-White TPR gap remained substantial across all scenarios, and calibration disparities persisted. This ``temporal paradox''---where additional data improves accuracy without resolving fairness---challenges the assumption that more longitudinal information will naturally produce equitable predictions.
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/temporal_performance_trend.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/temporal_performance_trend.pdf}
 \caption{Model Performance Across Temporal Scenarios. AUC improves from 0.799 (K fall only) to 0.831 (K through 3rd grade), with diminishing returns after spring kindergarten.}
 \label{fig:temporal_performance}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[H]
+\begin{figure*}[ht!]
 \centering
-\includegraphics[width=0.85\textwidth]{../results/figures/temporal_disparity_heatmap.png}
+\includegraphics[width=0.85\textwidth]{../results/figures/temporal_disparity_heatmap.pdf}
 \caption{Temporal Disparity Heatmap: TPR Ratios Across Developmental Windows. Fairness disparities persist across all temporal scenarios, indicating that additional data does not resolve equity concerns.}
 \label{fig:temporal_disparity}
-\end{figure}
+\end{figure*}
 
 \subsection{Sensitivity Analysis}
 
 Table \ref{tab:sensitivity} presents fairness criteria compliance across four at-risk threshold definitions.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Fairness Criteria by At-Risk Threshold Definition}
 \label{tab:sensitivity}
@@ -612,7 +596,7 @@ Table \ref{tab:sensitivity} presents fairness criteria compliance across four at
 30th & 18.9\% & FAIL & FAIL & FAIL \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Sensitivity analysis revealed that fairness findings were highly dependent on the threshold definition. The 25th percentile was the only threshold at which the model passed equal opportunity and statistical parity criteria. At all other thresholds---including the nearby 20th and 30th percentiles---the model failed all three fairness criteria. This fragility underscores that fairness assessments cannot be divorced from the operationalization of the outcome, and that claims of fairness compliance are contingent on specific analytical choices.
 
@@ -624,7 +608,7 @@ As a secondary analysis, we compared reading and math outcomes. Math prediction 
 
 We applied threshold optimization to equalize TPR across groups, targeting the overall model TPR of 0.283. Table \ref{tab:mitigation} presents the results.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Bias Mitigation Results (Threshold Optimization)}
 \label{tab:mitigation}
@@ -639,7 +623,7 @@ Asian & 0.760 & 0.250 & $-$0.510 & 0.875 & 0.625 & $-$0.250 \\
 Other & 0.258 & 0.296 & +0.038 & 0.902 & 0.884 & $-$0.018 \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 Threshold optimization successfully equalized TPR across the major demographic groups (White, Black, Hispanic, Other all achieving TPR $\approx$ 0.29). However, this came at a cost: Hispanic students experienced reduced sensitivity ($-$0.098), and Asian students experienced a substantial drop in both TPR and accuracy, though the small sample size (N = 8) limits interpretation. The group-specific thresholds ranged from 0.367 (White) to 0.649 (Asian), indicating that predictions for different groups required different decision boundaries to achieve equitable outcomes.
 
@@ -742,11 +726,45 @@ Our multi-dimensional fairness audit---spanning group-level metrics with bootstr
 These findings argue for comprehensive, multi-dimensional fairness auditing as a prerequisite for deploying algorithmic systems in education. The era of single-metric fairness assessment is insufficient. As predictive analytics become increasingly prevalent in K-12 settings, researchers and practitioners must adopt the tools and frameworks demonstrated here---SHAP explainability, bootstrap uncertainty quantification, calibration analysis, and intersectional auditing---to ensure these systems work equitably for all students, regardless of demographic background.
 
 %==============================================================================
+% Ethics Statement
+%==============================================================================
+
+\section*{Ethics Statement}
+
+This study uses the Early Childhood Longitudinal Study, Kindergarten Class of 2010--11 (ECLS-K:2011) public-use data file, which is freely available from the National Center for Education Statistics (NCES) without restricted-use license or institutional review board (IRB) approval. All data are fully de-identified by NCES prior to public release; no individual students, families, or schools can be identified. Because this research involves secondary analysis of existing de-identified public-use data, it is exempt from IRB review under 45 CFR 46.104(d)(4). No participants were contacted or recruited for this study.
+
+We acknowledge that predictive models for educational risk carry ethical implications beyond technical performance. Our fairness audit is intended to inform responsible development and deployment practices---not to endorse the use of any particular model in high-stakes educational decision-making without further validation, stakeholder engagement, and ongoing monitoring.
+
+%==============================================================================
+% Data and Code Availability
+%==============================================================================
+
+\section*{Data and Code Availability}
+
+The ECLS-K:2011 public-use data file is freely available from the National Center for Education Statistics at \url{https://nces.ed.gov/ecls/dataproducts.asp}. All analysis code, configuration files, and scripts to reproduce the results reported in this paper are available at [GitHub repository URL]. A permanent archival copy of the code is deposited at [Zenodo DOI]. The repository includes a complete pipeline (\texttt{scripts/run\_pipeline.py}) that reproduces all results, figures, and tables from the raw ECLS data file.
+
+%==============================================================================
+% Acknowledgments
+%==============================================================================
+
+\section*{Acknowledgments}
+
+[Removed for double-blind review.]
+
+%==============================================================================
+% Conflict of Interest
+%==============================================================================
+
+\section*{Conflict of Interest}
+
+The authors declare no competing interests.
+
+%==============================================================================
 % References
 %==============================================================================
 
 \newpage
-\bibliographystyle{apalike}
+\bibliographystyle{SageH}
 \begin{thebibliography}{99}
 
 \bibitem[Aguiar et al., 2015]{aguiar2015engagement}
@@ -899,7 +917,7 @@ Cross-validation AUC scores ranged from 0.832 to 0.842 across folds, indicating 
 
 Table \ref{tab:missing} presents missing data rates for key variables.
 
-\begin{table}[H]
+\begin{table*}[ht!]
 \centering
 \caption{Missing Data Rates}
 \label{tab:missing}
@@ -916,19 +934,13 @@ Home Language & 2,106 & 11.6\% \\
 Spring K Reading & 965 & 5.3\% \\
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 
 The high rate of missing outcome data (37\%) reflects sample attrition over the longitudinal study. Children who remained in the study through 5th grade may differ systematically from those who dropped out.
 
 \newpage
 \section{Supplementary Results}
 
-\subsection{Outcome Comparison: Reading vs. Math}
-
-Math prediction (AUC = 0.867, Logistic Regression) outperformed reading prediction (AUC = 0.848, Elastic Net). Both outcomes showed higher TPR for Hispanic and Black students relative to White students. Math prediction uniquely showed disparate impact for the Other racial group (TPR ratio = 0.24 vs.\ White). Full fairness metrics by outcome are available in the project repository (\texttt{results/\allowbreak tables/\allowbreak outcome\_fairness\_comparison.csv}).
-
-\subsection{Supplementary Figures}
-
-Additional visualizations supporting the main analyses---including FPR and PPV by group with confidence intervals, SHAP importance stratified by racial group, SHAP vs. permutation importance comparison, and temporal fairness trend plots---are available in the project repository (\texttt{results/figures/}).
+All supplementary figures, tables, and the full math outcome comparison are provided in the Online Supplementary Materials document, which includes: PPV by group with confidence intervals (Figure S1); SHAP vs.\ permutation importance comparison (Figure S2, Table S1); SHAP importance by racial/ethnic group (Figure S3); temporal fairness trends (Figures S4--S6); permutation importance with bootstrap CIs (Table S2); calibration error across temporal scenarios (Table S3); detailed sensitivity analysis (Table S4); temporal fairness group-level metrics (Table S5); and reading vs.\ math outcome comparison (Tables S6--S8).
 
 \end{document}

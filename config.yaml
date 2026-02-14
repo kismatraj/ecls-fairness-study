@@ -257,6 +257,6 @@ temporal:
 
 # Output Configuration
 output:
-  figure_format: "png"
-  figure_dpi: 300
+  figure_format: "pdf"
+  figure_dpi: 600
   table_formats: ["csv", "latex"]

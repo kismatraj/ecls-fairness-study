@@ -296,26 +296,33 @@ class SHAPExplainer:
         return results
 
     def plot_summary(
-        self, X: pd.DataFrame, max_display: int = 15, output_path: Optional[str] = None
+        self, X: pd.DataFrame, max_display: int = 10, output_path: Optional[str] = None
     ) -> None:
-        """Generate SHAP summary plot."""
+        """Generate SHAP summary plot (Nature/Science style)."""
         import matplotlib.pyplot as plt
+        from src.visualization import set_publication_style, _map_feature_names, _save_figure, FIG_SINGLE
 
         if self.shap_values is None:
             self.compute_shap_values(X)
 
-        plt.figure(figsize=(10, 8))
+        set_publication_style()
+        mapped_names = _map_feature_names(self.feature_names)
+
+        plt.figure(figsize=(FIG_SINGLE, 4.0))
         shap.summary_plot(
             self.shap_values,
             X,
-            feature_names=self.feature_names,
+            feature_names=mapped_names,
             max_display=max_display,
             show=False,
+            plot_size=None,
         )
+        ax = plt.gca()
+        ax.set_xlabel("SHAP value")
+        ax.set_title("")
 
         if output_path:
-            plt.savefig(output_path, dpi=300, bbox_inches="tight")
-            logger.info(f"SHAP summary plot saved to {output_path}")
+            _save_figure(plt.gcf(), output_path)
         plt.close()
 
     def plot_dependence(
