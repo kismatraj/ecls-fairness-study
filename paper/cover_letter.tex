@@ -1,0 +1,42 @@
+\documentclass[12pt,a4paper]{letter}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,urlcolor=blue}
+
+\signature{{[Author Name]}\\{[Department]}\\{[University]}}
+\address{{[Author Name]}\\{[Department]}\\{[University]}\\{[City, State ZIP]}\\{[email@university.edu]}}
+\date{\today}
+
+\begin{document}
+
+\begin{letter}{Editor-in-Chief\\AERA Open\\American Educational Research Association}
+
+\opening{Dear Editor,}
+
+We are pleased to submit our manuscript, ``Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study,'' for consideration as a regular article in \textit{AERA Open}.
+
+\textbf{Summary.} This study conducts a comprehensive, multi-dimensional fairness audit of machine learning models that use early childhood data to predict 5th-grade academic risk. Using the nationally representative ECLS-K:2011 public-use data ($N = 9{,}104$), we trained seven algorithms---including three state-of-the-art gradient boosting methods---and evaluated them across group fairness, calibration fairness, intersectional fairness, and temporal generalization.
+
+\textbf{Key findings and contributions.} Three results are especially noteworthy:
+
+\begin{enumerate}
+    \item \textit{The ``poverty detector'' problem.} Intersectional analysis (race $\times$ SES) revealed that high-SES Black students were completely invisible to the model (TPR = 0\%), despite a 14\% at-risk prevalence in this subgroup. The model identifies risk primarily through socioeconomic signals, systematically missing minority students whose difficulties arise from non-poverty-related factors. This finding would not emerge from standard single-attribute fairness audits.
+
+    \item \textit{The temporal paradox.} Additional longitudinal data (kindergarten through 3rd grade) improved overall accuracy but failed to resolve---and in some cases worsened---fairness disparities across racial/ethnic groups. This challenges the common assumption that more data naturally produces fairer predictions.
+
+    \item \textit{Threshold fragility.} Fairness compliance was achieved at only one of four tested at-risk thresholds, demonstrating that fairness claims are contingent on specific analytical choices rather than inherent model properties.
+\end{enumerate}
+
+\textbf{Significance for AERA Open's readership.} As predictive analytics become increasingly prevalent in K--12 settings, this work provides both a methodological framework and empirical evidence for why comprehensive fairness auditing---spanning group metrics with uncertainty quantification, calibration analysis, intersectional subgroup assessment, and temporal stability---should be a prerequisite for deployment. The finding that classical regularized models match state-of-the-art methods also carries practical implications: schools need not adopt complex algorithms to achieve competitive prediction, but no algorithm resolves the underlying equity challenges.
+
+\textbf{Fit with AERA Open.} This manuscript addresses a timely intersection of educational research, quantitative methods, and equity---core concerns for AERA's readership. The work is empirical, uses rigorous methods on nationally representative data, and yields actionable implications for researchers, practitioners, and policymakers considering algorithmic tools in education.
+
+\textbf{Manuscript details.} The manuscript is approximately 8,000 words with 11 figures and 10 tables in the main text, plus an Online Supplementary Materials document with 6 additional figures and 8 tables. All analyses use freely available public-use data and fully reproducible open-source code. This manuscript has not been published or submitted elsewhere.
+
+We appreciate your consideration and look forward to your response.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}
