@@ -46,6 +46,12 @@ from .temporal import (
 from .descriptives import generate_table1, save_table1
 from .latex_tables import generate_all_latex_tables
 from .sensitivity import SensitivityAnalyzer, OutcomeComparisonAnalyzer
+from .missing_data import (
+    AttritionAnalyzer,
+    MICEAnalyzer,
+    IPWAnalyzer,
+    run_missing_data_analysis,
+)
 
 from .visualization import (
     plot_roc_curves_by_group,
@@ -121,6 +127,11 @@ __all__ = [
     # Sensitivity
     "SensitivityAnalyzer",
     "OutcomeComparisonAnalyzer",
+    # Missing data
+    "AttritionAnalyzer",
+    "MICEAnalyzer",
+    "IPWAnalyzer",
+    "run_missing_data_analysis",
     # Explainability (conditional)
     "HAS_EXPLAINABILITY",
 ]

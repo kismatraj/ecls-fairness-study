@@ -1,0 +1,17 @@
+Metric,Group,Unweighted,IPW_Weighted,Difference
+AUC-ROC,Overall,0.8477,0.8478,0.0
+TPR,Asian,0.75,0.75,0.0
+FPR,Asian,0.0,0.0,0.0
+PPV,Asian,1.0,1.0,0.0
+TPR,Black,0.293,0.293,0.0
+FPR,Black,0.102,0.093,-0.009
+PPV,Black,0.489,0.512,0.023
+TPR,Hispanic,0.41,0.388,-0.022
+FPR,Hispanic,0.073,0.064,-0.009
+PPV,Hispanic,0.701,0.717,0.016
+TPR,Other,0.259,0.259,0.0
+FPR,Other,0.01,0.005,-0.005
+PPV,Other,0.778,0.875,0.097
+TPR,White,0.172,0.161,-0.011
+FPR,White,0.012,0.011,-0.001
+PPV,White,0.667,0.667,0.0

@@ -255,6 +255,38 @@ temporal:
         - "X4TCHAPP"
         - "X6DCCSSCR"
 
+# Missing Data Sensitivity Analysis
+missing_data:
+  enabled: true
+
+  # Attrition analysis
+  attrition:
+    significance_level: 0.05
+    smd_threshold: 0.20  # Cohen's d threshold for meaningful difference
+
+  # Multiple Imputation (MICE via IterativeImputer)
+  mice:
+    enabled: true
+    n_imputations: 10
+    max_iter: 10
+    model_for_comparison: "elastic_net"
+
+  # Inverse Probability Weighting
+  ipw:
+    enabled: true
+    weight_cap_percentile: 99
+    stabilize: true
+    model_for_comparison: "elastic_net"
+
+  # Variables for predicting completeness (low missingness)
+  ipw_predictors:
+    - "X_RACETH_R"
+    - "X_CHSEX_R"
+    - "X1SESQ5"
+    - "X1RTHETK"
+    - "X1MTHETK"
+    - "X12LANGST"
+
 # Output Configuration
 output:
   figure_format: "pdf"

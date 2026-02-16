@@ -1,0 +1,16 @@
+Variable,Category,Completer_N,Completer_Pct,Dropout_N,Dropout_Pct
+race_ethnicity,Asian,33,0.4,352,3.9
+race_ethnicity,Black,1001,11.0,1395,15.4
+race_ethnicity,Hispanic,2097,23.0,2110,23.3
+race_ethnicity,Other,712,7.8,1116,12.3
+race_ethnicity,White,4858,53.4,3630,40.0
+ses_category,Q1 (Lowest),1598,17.6,1626,17.9
+ses_category,Q2,1795,19.7,1419,15.6
+ses_category,Q3,1811,19.9,1406,15.5
+ses_category,Q4,1945,21.4,1282,14.1
+ses_category,Q5 (Highest),1955,21.5,1251,13.8
+X_CHSEX_R,1.0,4625,50.8,4663,51.4
+X_CHSEX_R,2.0,4479,49.2,4368,48.2
+X12LANGST,1.0,1487,16.3,1454,16.0
+X12LANGST,2.0,7509,82.5,5417,59.7
+X12LANGST,3.0,108,1.2,70,0.8

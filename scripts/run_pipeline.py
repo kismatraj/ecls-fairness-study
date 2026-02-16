@@ -76,6 +76,7 @@ from src.temporal import TemporalGeneralizationAnalyzer
 from src.descriptives import save_table1
 from src.latex_tables import generate_all_latex_tables
 from src.sensitivity import SensitivityAnalyzer, OutcomeComparisonAnalyzer
+from src.missing_data import run_missing_data_analysis
 
 # 2025 State-of-the-Art imports
 try:
@@ -113,10 +114,28 @@ def step_data_prep(config: dict) -> pd.DataFrame:
     # Check for existing processed data
     processed_file = processed_path / "analytic_sample.parquet"
 
+    full_sample_file = processed_path / "full_sample.parquet"
+
     if processed_file.exists():
         logger.info(f"Loading existing processed data from {processed_file}")
         df = pd.read_parquet(processed_file)
         logger.info(f"Loaded {len(df):,} records")
+
+        # Ensure full sample exists for missing data analysis
+        if not full_sample_file.exists():
+            extracted_file = processed_path / "ecls_extracted.parquet"
+            if extracted_file.exists():
+                logger.info("Creating full sample for missing data analysis...")
+                df_raw = pd.read_parquet(extracted_file)
+                df_raw = handle_missing_values(df_raw, config['data']['missing_codes'])
+                df_raw = create_race_variable(df_raw, config['variables']['demographics']['race'])
+                df_raw = create_ses_variable(df_raw, config['variables']['demographics']['ses'])
+                percentile = config['variables']['at_risk_percentile']
+                for name, col in config['variables']['outcomes'].items():
+                    df_raw = create_at_risk_indicator(df_raw, col, percentile)
+                df_raw.to_parquet(full_sample_file)
+                logger.info(f"Saved full sample to {full_sample_file} ({len(df_raw):,} rows)")
+
         return df
 
     # Check for extracted parquet (from ASCII parsing)
@@ -154,19 +173,24 @@ def step_data_prep(config: dict) -> pd.DataFrame:
         logger.info(f"Creating at-risk indicator for {name}...")
         df = create_at_risk_indicator(df, col, percentile)
     
+    # Save full sample (before analytic filtering) for missing data analysis
+    full_sample_file = processed_path / "full_sample.parquet"
+    df.to_parquet(full_sample_file)
+    logger.info(f"Saved full sample to {full_sample_file} ({len(df):,} rows)")
+
     # Create analytic sample
     outcome_col = f"{config['variables']['outcomes']['reading']}_at_risk"
     df, stats = create_analytic_sample(df, vars['predictors'], outcome_col)
-    
+
     # Save processed data
     df.to_parquet(processed_file)
     logger.info(f"Saved processed data to {processed_file}")
-    
+
     # Save sample statistics
     stats_file = processed_path / "sample_stats.yaml"
     with open(stats_file, 'w') as f:
         yaml.dump(stats, f)
-    
+
     return df
 
 
@@ -654,6 +678,77 @@ def step_math_outcome(config: dict, df: pd.DataFrame) -> dict:
     return {"comparator": comparator}
 
 
+def step_missing_data_analysis(
+    config: dict,
+    df_full: pd.DataFrame,
+    df: pd.DataFrame,
+    model_results: dict,
+) -> dict:
+    """
+    Step 10: Missing Data Sensitivity Analysis
+
+    Assess potential selection bias from complete-case analysis
+    via attrition comparison, MICE, and IPW.
+    """
+    logger.info("=" * 60)
+    logger.info("STEP 10: MISSING DATA SENSITIVITY ANALYSIS")
+    logger.info("=" * 60)
+
+    missing_cfg = config.get("missing_data", {})
+    if not missing_cfg.get("enabled", True):
+        logger.info("Missing data analysis disabled in config. Skipping.")
+        return {}
+
+    tables_path = Path(config['paths']['tables'])
+
+    # Extract complete-case results for comparison
+    cc_results = None
+    if model_results:
+        # Get AUC from the results DataFrame
+        results_df = model_results.get("results_df")
+        best_name = model_results.get("best_model_name")
+        cc_auc = None
+        if results_df is not None and best_name:
+            cc_auc = results_df.loc[best_name, "auc_roc"]
+
+        # Get group-level fairness metrics from the best model
+        cc_fairness = None
+        ref_group = config.get("fairness", {}).get("reference_groups", {}).get("race", "White")
+        y_test = model_results.get("y_test")
+        y_pred = model_results.get("y_pred")
+        y_prob = model_results.get("y_prob")
+        groups_test = model_results.get("groups_test")
+        if y_test is not None and y_pred is not None:
+            from src.fairness import FairnessEvaluator
+            ev = FairnessEvaluator(
+                y_test.values, y_pred, y_prob, groups_test,
+                reference_group=ref_group,
+            )
+            ev.compute_all_group_metrics()
+            cc_fairness = ev.get_summary_table()
+
+        cc_results = {
+            "auc_roc": cc_auc,
+            "group_metrics": cc_fairness,
+        }
+
+    results = run_missing_data_analysis(
+        config=config,
+        df_full=df_full,
+        df_analytic=df,
+        complete_case_results=cc_results,
+    )
+
+    # Save tables
+    for name, table in results.get("tables", {}).items():
+        if isinstance(table, pd.DataFrame) and len(table) > 0:
+            path = tables_path / f"missing_data_{name}.csv"
+            table.to_csv(path, index=False)
+            logger.info(f"Saved {path}")
+
+    return results
+
+
 def step_generate_figures(
     config: dict,
     model_results: dict,
@@ -710,6 +805,11 @@ def run_full_pipeline(config_path: str):
 
     # Run pipeline
     df = step_data_prep(config)
+
+    # Load full sample for missing data analysis
+    full_sample_file = Path(config['paths']['processed_data']) / "full_sample.parquet"
+    df_full = pd.read_parquet(full_sample_file) if full_sample_file.exists() else df
+
     model_results = step_train_models(config, df)
 
     # 2025: Explainability Analysis (SHAP, Permutation Importance)
@@ -730,6 +830,9 @@ def run_full_pipeline(config_path: str):
     # Math outcome comparison
     math_results = step_math_outcome(config, df)
 
+    # Missing data sensitivity analysis
+    missing_data_results = step_missing_data_analysis(config, df_full, df, model_results)
+
     # LaTeX tables
     step_latex_tables(config)
 
@@ -747,7 +850,8 @@ def run_full_pipeline(config_path: str):
         'fairness_results': fairness_results,
         'temporal_results': temporal_results,
         'sensitivity_results': sensitivity_results,
-        'math_results': math_results
+        'math_results': math_results,
+        'missing_data_results': missing_data_results,
     }
 
 
@@ -763,7 +867,7 @@ def main():
         choices=[
             'data_prep', 'train_models', 'fairness_analysis', 'figures',
             'temporal_analysis', 'descriptives', 'latex_tables',
-            'sensitivity', 'math_outcome', 'all'
+            'sensitivity', 'math_outcome', 'missing_data_analysis', 'all'
         ],
         default='all',
         help='Pipeline step to run'
@@ -793,6 +897,12 @@ def main():
             elif args.step == 'math_outcome':
                 df = step_data_prep(config)
                 step_math_outcome(config, df)
+            elif args.step == 'missing_data_analysis':
+                df = step_data_prep(config)
+                full_sample_file = Path(config['paths']['processed_data']) / "full_sample.parquet"
+                df_full = pd.read_parquet(full_sample_file) if full_sample_file.exists() else df
+                model_results = step_train_models(config, df)
+                step_missing_data_analysis(config, df_full, df, model_results)
             else:
                 logger.info("For individual steps after data_prep, use notebooks or run 'all'")
                 

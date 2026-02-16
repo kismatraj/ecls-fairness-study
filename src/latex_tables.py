@@ -176,6 +176,86 @@ def calibration_to_latex(
     return "\n".join(lines)
 
 
+def attrition_comparison_to_latex(
+    df: pd.DataFrame,
+    caption: str = "Baseline Characteristics: Completers vs.\\ Dropouts",
+    label: str = "tab:attrition",
+) -> str:
+    """Convert attrition comparison table to LaTeX."""
+    lines = []
+    lines.append("\\begin{table}[htbp]")
+    lines.append("\\centering")
+    lines.append("\\small")
+    lines.append(f"\\caption{{{caption}}}")
+    lines.append(f"\\label{{{label}}}")
+    lines.append("\\begin{tabular}{lrrrrrc}")
+    lines.append("\\toprule")
+    lines.append(
+        "Variable & Completer $M$ & Completer $SD$ & "
+        "Dropout $M$ & Dropout $SD$ & Cohen's $d$ / Cram\\'er's $V$ & $p$ \\\\"
+    )
+    lines.append("\\midrule")
+
+    for _, row in df.iterrows():
+        var = row["Variable"].replace("_", "\\_")
+        if row["Type"] == "continuous":
+            line = (
+                f"{var} & {row['Completer_Mean']:.2f} & {row['Completer_SD']:.2f} & "
+                f"{row['Dropout_Mean']:.2f} & {row['Dropout_SD']:.2f} & "
+                f"{row['Cohens_d']:.3f} & {row['p_value']:.4f} \\\\"
+            )
+        else:
+            line = (
+                f"{var} & \\multicolumn{{2}}{{c}}{{N={int(row['Completer_N']):,}}} & "
+                f"\\multicolumn{{2}}{{c}}{{N={int(row['Dropout_N']):,}}} & "
+                f"{row['Cohens_d']:.3f} & {row['p_value']:.4f} \\\\"
+            )
+        lines.append(line)
+
+    lines.append("\\bottomrule")
+    lines.append("\\end{tabular}")
+    lines.append(
+        "\\begin{tablenotes}\\footnotesize "
+        "\\item Effect size is Cohen's $d$ for continuous variables and "
+        "Cram\\'er's $V$ for categorical variables."
+        "\\end{tablenotes}"
+    )
+    lines.append("\\end{table}")
+    return "\n".join(lines)
+
+
+def mice_comparison_to_latex(
+    df: pd.DataFrame,
+    caption: str = "Comparison of Complete-Case and MICE-Imputed Results",
+    label: str = "tab:mice_comparison",
+) -> str:
+    """Convert MICE vs complete-case comparison to LaTeX."""
+    lines = []
+    lines.append("\\begin{table}[htbp]")
+    lines.append("\\centering")
+    lines.append(f"\\caption{{{caption}}}")
+    lines.append(f"\\label{{{label}}}")
+    lines.append("\\begin{tabular}{llcccc}")
+    lines.append("\\toprule")
+    lines.append(
+        "Metric & Group & Complete-Case & MICE Pooled & SE & Difference \\\\"
+    )
+    lines.append("\\midrule")
+
+    for _, row in df.iterrows():
+        line = (
+            f"{row['Metric']} & {row['Group']} & "
+            f"{row['Complete_Case']:.3f} & {row['MICE_Pooled']:.3f} & "
+            f"{row['MICE_SE']:.3f} & {row['Difference']:+.3f} \\\\"
+        )
+        lines.append(line)
+
+    lines.append("\\bottomrule")
+    lines.append("\\end{tabular}")
+    lines.append("\\end{table}")
+    return "\n".join(lines)
+
+
 def generate_all_latex_tables(tables_dir: str) -> List[str]:
     """
     Read existing CSV results and generate LaTeX versions.
@@ -213,6 +293,16 @@ def generate_all_latex_tables(tables_dir: str) -> List[str]:
         "calibration_fairness.csv": (
             calibration_to_latex,
             "calibration_fairness.tex",
+            {},
+        ),
+        "missing_data_attrition_comparison.csv": (
+            attrition_comparison_to_latex,
+            "missing_data_attrition_comparison.tex",
+            {},
+        ),
+        "missing_data_mice_vs_complete_case.csv": (
+            mice_comparison_to_latex,
+            "missing_data_mice_comparison.tex",
             {},
         ),
     }
