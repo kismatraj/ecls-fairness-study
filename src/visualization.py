@@ -1068,13 +1068,14 @@ def plot_temporal_disparity_heatmap(
     set_publication_style()
 
     df = disparity_df.copy()
-    # Convert TPR Ratio from string to float if needed
-    if df["TPR Ratio"].dtype == object:
-        df["TPR Ratio"] = df["TPR Ratio"].str.replace(",", "").astype(float)
+    # Convert TPR Ratio to numeric, coercing any non-numeric values to NaN
+    df["TPR Ratio"] = pd.to_numeric(df["TPR Ratio"], errors="coerce")
 
     pivot = df.pivot_table(
         values="TPR Ratio", index="Group", columns="scenario_label", aggfunc="first"
     )
+    # Ensure float dtype for imshow
+    pivot = pivot.astype(float)
     # Reorder columns by scenario order
     ordered = disparity_df["scenario_label"].unique()
     pivot = pivot[[c for c in ordered if c in pivot.columns]]
