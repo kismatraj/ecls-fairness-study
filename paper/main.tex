@@ -32,7 +32,7 @@
 \maketitle
 
 \begin{abstract}
-Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive policy audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 ($N = 9{,}104$; sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three state-of-the-art gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Intersectional analysis suggested the model may function as a poverty detector, failing to identify at-risk high-SES Black students (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases), though small cell sizes warrant cautious interpretation and replication. We identify a ``temporal fairness paradox'': additional longitudinal data improved accuracy but failed to resolve fairness disparities. Multiple imputation sensitivity analyses on the full sample confirmed that complete-case results are conservative---fairness disparities were larger when attrition-related bias was addressed. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
+Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive policy audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 ($N = 9{,}104$; sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three state-of-the-art gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Intersectional analysis suggested the model may function as a poverty detector, failing to identify at-risk high-SES Black students (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases), though small cell sizes warrant cautious interpretation and replication. We identify a ``temporal fairness paradox'': additional longitudinal data improved accuracy but failed to resolve fairness disparities. Multiple imputation sensitivity analyses on the full sample confirmed that differential performance persists after correcting for attrition, with substantially higher absolute detection rates across all groups. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
 \end{abstract}
 
 \begin{keywords}
@@ -43,21 +43,11 @@ Algorithmic fairness, machine learning, educational prediction, calibration fair
 \section{Introduction}
 %==============================================================================
 
-The application of machine learning (ML) in educational settings has grown substantially over the past decade, with predictive models increasingly used to identify students at risk of academic failure, dropout, or other adverse outcomes \citep{baker2014educational}. These early warning systems (EWS) promise to enable timely interventions that could improve educational trajectories, particularly for disadvantaged students. However, the deployment of algorithmic decision-making tools in education raises critical questions about fairness and equity.
+Thousands of school districts now use machine learning to flag students at risk of academic failure, and the practice is accelerating \citep{baker2014educational}. The premise is intuitive: identify struggling students early, intervene before they fall behind, close achievement gaps. Yet a critical assumption underlying these early warning systems (EWS) has gone largely untested---that the algorithms work equitably across the demographic groups they are meant to serve.
 
-Algorithmic fairness---the study of how automated systems may systematically advantage or disadvantage particular groups---has emerged as a central concern in machine learning research \citep{mehrabi2021survey}. In educational contexts, unfair algorithms could perpetuate or amplify existing inequities by systematically under-identifying at-risk students from certain demographic groups or by disproportionately flagging students from marginalized communities for intervention. Recent work has highlighted the importance of examining not only group-level fairness metrics but also calibration equity, intersectional disparities, and the stability of fairness properties across analytical choices \citep{barocas2019fairness}.
+There are reasons to doubt this assumption. Algorithmic fairness research has shown that predictive systems can systematically advantage some groups while disadvantaging others \citep{mehrabi2021survey}, and that fairness itself is multi-dimensional: a model may satisfy one equity criterion while violating others \citep{chouldechova2017fair, barocas2019fairness}. In educational settings, the stakes are high. An algorithm that under-identifies at-risk minority students denies them timely support; one that over-flags them wastes resources and may stigmatize. Yet few studies have examined whether EWS perform equitably in longitudinal contexts, across multiple fairness dimensions simultaneously, or using the modern toolkit of calibration analysis, intersectional auditing, and uncertainty quantification.
 
-This study addresses five primary research questions:
-
-\begin{enumerate}
-    \item \textbf{RQ1:} How accurately can early childhood cognitive and behavioral measures predict 5th-grade academic risk, and do state-of-the-art gradient boosting methods (LightGBM, CatBoost, HistGradientBoosting) outperform classical approaches?
-    \item \textbf{RQ2:} Do predictive models exhibit differential performance across racial/ethnic and socioeconomic groups, as assessed by group-level metrics with bootstrap confidence intervals, calibration error, and intersectional (race $\times$ SES) analysis?
-    \item \textbf{RQ3:} How do model predictions vary across demographic groups at the feature level, as revealed by SHAP-based explainability analysis?
-    \item \textbf{RQ4:} Do fairness disparities change as models incorporate data from additional developmental time windows (temporal generalization)?
-    \item \textbf{RQ5:} Can post-hoc bias mitigation strategies reduce fairness disparities, and how sensitive are fairness findings to the choice of at-risk threshold?
-\end{enumerate}
-
-We leverage the Early Childhood Longitudinal Study, Kindergarten Class of 2010-11 (ECLS-K:2011), a nationally representative longitudinal study that followed children from kindergarten entry through 5th grade. This dataset provides a unique opportunity to examine both the predictive validity and fairness properties of models that use early childhood data to forecast later academic outcomes.
+This study fills that gap through a comprehensive policy audit. Using the nationally representative ECLS-K:2011 longitudinal study, which followed approximately 18,000 children from kindergarten through 5th grade, we ask whether seven machine learning algorithms---spanning classical regularized models and state-of-the-art gradient boosting---can predict 5th-grade academic risk from early childhood data, and whether they do so equitably. We examine predictive accuracy and its convergence across algorithms; group-level fairness with bootstrap uncertainty quantification; calibration equity and intersectional (race $\times$ SES) disparities; temporal generalization across four developmental windows from kindergarten through 3rd grade; sensitivity to the choice of at-risk threshold; and the consequences and ethical implications of post-hoc bias mitigation.
 
 \subsection{Contributions}
 
@@ -72,7 +62,7 @@ This study makes several contributions to the literature on algorithmic fairness
     \item We introduce calibration fairness and intersectional (race $\times$ SES) analysis to educational prediction, revealing suggestive patterns of under-identification of high-SES minority students that warrant replication with larger samples.\looseness=-1
     \item We identify a \textit{temporal fairness paradox}: additional longitudinal data from kindergarten through 3rd grade improves accuracy but fails to resolve---and in some cases worsens---fairness disparities. To our knowledge, this is the first empirical demonstration that more data does not naturally produce fairer educational predictions.
     \item We demonstrate the fragility of fairness assessments by showing that compliance with equal opportunity criteria depends critically on the choice of at-risk threshold.
-    \item We conduct missing data sensitivity analyses (multiple imputation and inverse probability weighting) showing that complete-case results are conservative: fairness disparities are \textit{larger} in the full imputed sample, strengthening the primary conclusions.
+    \item We conduct missing data sensitivity analyses (multiple imputation and inverse probability weighting) confirming that the pattern of differential performance persists after correcting for attrition, with substantially higher absolute detection rates in the full imputed sample.
 \end{itemize}
 
 %==============================================================================
@@ -87,24 +77,9 @@ Research has demonstrated that ML-based EWS can achieve reasonable predictive ac
 
 \subsection{Algorithmic Fairness}
 
-The machine learning fairness literature has developed numerous formal definitions of fairness, which can be broadly categorized into three families \citep{verma2018fairness}:
+The machine learning fairness literature has developed numerous formal definitions, broadly organized into three families \citep{verma2018fairness}. \textit{Group fairness} criteria---including demographic parity (equal positive prediction rates), equal opportunity (equal true positive rates), and equalized odds (equal TPR and FPR)---require that some statistical measure be equalized across protected groups. \textit{Individual fairness} requires that similar individuals receive similar predictions regardless of group membership \citep{dwork2012fairness}. \textit{Counterfactual fairness} asks whether predictions would change if a person's protected attribute were different. Crucially, \citet{chouldechova2017fair} and \citet{kleinberg2016inherent} proved that these criteria are mathematically incompatible when base rates differ across groups---a condition that holds in virtually every educational setting.
 
-\textbf{Group fairness} criteria require that some statistical measure be equal across protected groups. Key definitions include:
-\begin{itemize}
-    \item \textit{Demographic parity} (statistical parity): The proportion of positive predictions should be equal across groups.
-    \item \textit{Equal opportunity}: True positive rates should be equal across groups.
-    \item \textit{Equalized odds}: Both true positive rates and false positive rates should be equal across groups.
-\end{itemize}
-
-\textbf{Individual fairness} requires that similar individuals receive similar predictions, regardless of group membership \citep{dwork2012fairness}.
-
-\textbf{Counterfactual fairness} asks whether an individual's prediction would change if their protected attribute were different.
-
-Importantly, researchers have proven that certain fairness criteria are mathematically incompatible, meaning it is generally impossible to satisfy all criteria simultaneously \citep{chouldechova2017fair, kleinberg2016inherent}.
-
-\textbf{Calibration fairness} extends group fairness by examining whether predicted probabilities are equally reliable across groups. A model that is well-calibrated for one group but poorly calibrated for another may produce predictions that appear confident but are systematically misleading for certain populations \citep{pleiss2017calibration}. Expected Calibration Error (ECE) and Maximum Calibration Error (MCE) quantify the degree of miscalibration.
-
-\textbf{Intersectional fairness} recognizes that examining single protected attributes in isolation may miss compounding disadvantages experienced by individuals at the intersection of multiple marginalized identities \citep{crenshaw1989demarginalizing, buolamwini2018gender}. Auditing fairness for subgroups defined by race $\times$ SES $\times$ gender can reveal disparities invisible to single-attribute analysis \citep{kearns2018preventing}.
+Two extensions of group fairness are particularly relevant to educational prediction. \textit{Calibration fairness} examines whether predicted probabilities are equally reliable across groups: a model well-calibrated for one group but miscalibrated for another produces confidence levels that systematically mislead practitioners for certain populations \citep{pleiss2017calibration}. Expected Calibration Error (ECE) and Maximum Calibration Error (MCE) quantify this distortion. \textit{Intersectional fairness} recognizes that examining single protected attributes in isolation can miss compounding disadvantages at the intersection of multiple identities \citep{crenshaw1989demarginalizing, buolamwini2018gender}. A model that appears fair by race and fair by SES may still fail catastrophically for specific race-by-SES subgroups \citep{kearns2018preventing}.
 
 \subsection{Explainability and Fairness}
 
@@ -337,7 +312,7 @@ Table \ref{tab:sample} presents the demographic characteristics of the analytic 
 \end{tabular}
 \end{table*}
 
-The sample is demographically diverse, with substantial representation of historically underserved groups. Approximately 15.7\% of children were classified as at-risk in reading by 5th grade.
+The sample reflects the demographic diversity of the U.S.\ school-age population. Of the 18,151 children meeting inclusion criteria, 15.7\% were classified as at-risk in reading by 5th grade, providing adequate prevalence for model training.
 
 \subsection{Model Performance}
 
@@ -440,7 +415,7 @@ Bootstrap confidence intervals enable formal statistical comparison of inter-gro
 
 We emphasize that the Asian subgroup ($N = 8$, CI: 0.250--1.000) is too small for any meaningful inference; its extreme TPR of 0.760 and perfect PPV are essentially uninformative and should not be interpreted as evidence of model performance for Asian students. Similarly, the Other subgroup ($N = 225$, but only $\approx$27 at-risk) yields wide confidence intervals (TPR CI: 0.074--0.445) that render point estimates exploratory at best.
 
-False positive rate disparities were also substantial: Black students experienced an FPR of 0.095 [0.052, 0.133], compared to 0.011 [0.006, 0.017] for White students---approximately 8.6 times higher. This means non-at-risk Black children were far more likely to be incorrectly flagged. ROC curves by group (Figure \ref{fig:roc}) and calibration curves (Figure \ref{fig:calibration}) further illustrate these differential performance patterns.
+False positive rate disparities were also substantial: Black students experienced an FPR of 0.095 [0.052, 0.133], compared to 0.011 [0.006, 0.017] for White students---8.5 times higher. This means non-at-risk Black children were far more likely to be incorrectly flagged. ROC curves by group (Figure \ref{fig:roc}) and calibration curves (Figure \ref{fig:calibration}) further illustrate these differential performance patterns.
 
 \begin{figure*}[ht!]
 \centering
@@ -563,7 +538,7 @@ The intersectional pattern is consistent with a plausible working hypothesis tha
 
 \subsection{Temporal Generalization}
 
-Table \ref{tab:temporal} presents model performance across four temporal scenarios with progressively more features.
+Given the fairness disparities documented above, a natural question is whether incorporating more developmental data resolves them. Table \ref{tab:temporal} presents model performance across four temporal scenarios with progressively more features.
 
 \begin{table*}[ht!]
 \centering
@@ -601,7 +576,7 @@ Critically, while overall accuracy improved with more data, fairness disparities
 
 \subsection{Sensitivity Analysis}
 
-Table \ref{tab:sensitivity} presents fairness criteria compliance across four at-risk threshold definitions.
+A critical question is whether the fairness findings above are artifacts of the specific threshold used to define ``at-risk.'' Table \ref{tab:sensitivity} presents fairness criteria compliance across four at-risk threshold definitions.
 
 \begin{table*}[ht!]
 \centering
@@ -629,7 +604,7 @@ Study completers differed systematically from dropouts on all baseline cognitive
 
 \subsubsection{Multiple Imputation Results}
 
-MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). More importantly, the imputed-sample analysis revealed \textit{larger} fairness disparities than the complete-case analysis. Black TPR increased from 0.293 to 0.530 (difference = +0.237); Hispanic TPR from 0.410 to 0.552 (+0.142); White TPR from 0.172 to 0.374 (+0.202). The Hispanic-White TPR ratio remained elevated (1.48 in the imputed sample vs.\ 2.46 in complete-case), and the Black-White ratio increased (1.42 vs.\ 1.85). These results confirm that the complete-case analysis is conservative: the attrition-corrected estimates show that fairness disparities persist and may be larger in the full population.
+MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). All groups showed substantially higher TPR in the imputed sample---Black TPR increased from 0.29 to 0.53 (+0.24); Hispanic from 0.41 to 0.55 (+0.14); White from 0.17 to 0.37 (+0.20)---indicating that attrition disproportionately removed detectable at-risk students from the analytic sample. TPR ratios moved toward parity (Hispanic-White: 2.46 $\rightarrow$ 1.48; Black-White: 1.83 $\rightarrow$ 1.42), though the absolute Black-White TPR gap increased slightly (0.16 vs.\ 0.13 in complete-case). The fundamental pattern of differential performance across racial groups persisted in the full imputed sample, confirming that the primary findings are robust to attrition correction.
 
 \subsubsection{IPW Results}
 
@@ -670,31 +645,17 @@ These results illustrate two fundamental problems with naive post-hoc equalizati
 
 \subsection{Summary of Findings}
 
-This study conducted a multi-dimensional fairness audit of machine learning models that use early childhood data to predict 5th-grade academic risk. Our key findings include:
+The central finding of this study is that fairness failures in early childhood risk prediction are structural, not algorithmic. Seven models---spanning classical regularized methods and state-of-the-art gradient boosting---converged on nearly identical performance (AUC range = 0.011) and exhibited the same pattern of differential performance across racial groups. This convergence is itself the evidence: when every algorithm fails in the same way, the source of inequity lies in the features and outcome definitions, not in any particular model architecture \citep{grinsztajn2022tree}.
 
-\begin{enumerate}
-    \item \textbf{Classical models match state-of-the-art methods:} Among seven algorithms tested---including three 2025 gradient boosting variants---classical regularized models (Elastic Net: AUC = 0.848; Logistic Regression: AUC = 0.847) matched or exceeded LightGBM (0.837), CatBoost (0.846), and HistGradientBoosting (0.839). This is consistent with recent findings that tree-based methods do not universally dominate on tabular data \citep{grinsztajn2022tree} and suggests that algorithmic sophistication does not substitute for equitable design.
+The dimensions of that inequity are multiple and compounding. The model detected at-risk Hispanic students at more than double the rate of White students, a gap confirmed as statistically significant by non-overlapping bootstrap confidence intervals. Black students faced 8.5 times higher false positive rates, meaning non-at-risk Black children were far more likely to be incorrectly flagged. Beyond classification accuracy, Black students experienced calibration error over threefold higher than White students (ECE = 0.074 vs.\ 0.022)---a distinct form of algorithmic harm in which the model's confidence levels become unreliable for specific populations \citep{pleiss2017calibration}. Intersectional analysis revealed a suggestive pattern consistent with the model operating as a poverty detector, though key subgroup estimates (e.g., Black Q4: TPR = 0\%, $N = 42$, $p = 0.41$) rest on cell sizes too small for definitive conclusions.
 
-    \item \textbf{Statistically significant fairness disparities:} Bootstrap confidence intervals confirmed that the Hispanic-White TPR gap (0.233) is statistically significant, with non-overlapping 95\% CIs. The model detected at-risk Hispanic students at 2.5 times the rate of White students, while generating 8.5 times higher false positives for Black students.
+Two additional findings challenge common assumptions about prediction systems. The \textit{temporal fairness paradox}---that additional longitudinal data improved accuracy (AUC 0.799 to 0.831) without resolving fairness disparities---undermines the expectation that more information naturally produces more equitable predictions. And the fragility of fairness assessments across thresholds (compliance at only one of four tested thresholds) reveals that claims of fairness are inseparable from the policy choices embedded in outcome definitions.
 
-    \item \textbf{Severe calibration unfairness:} Black students experienced calibration error 3.35 times higher than White students (ECE = 0.074 vs. 0.022). This means that when the model predicts a Black student has, say, a 40\% probability of being at-risk, the actual probability may be substantially different. Calibration unfairness represents a distinct dimension of algorithmic harm beyond classification error rates.
-
-    \item \textbf{Intersectional patterns consistent with poverty detection:} The model identified no at-risk Black students in the 4th SES quintile (TPR = 0\%, $N = 42$, $\approx$6 at-risk), though this cell size precludes definitive conclusions ($p = 0.41$). This suggestive pattern of ``intersectional invisibility,'' combined with the strong SES gradient visible across all groups, is consistent with a model that operates primarily through socioeconomic signals---a hypothesis that warrants replication with larger intersectional samples.
-
-    \item \textbf{Temporal fairness paradox:} Additional longitudinal data improved accuracy (AUC 0.799 to 0.831) but failed to resolve---and in some cases worsened---fairness disparities. This \textit{temporal fairness paradox} challenges the assumption that more data naturally produces fairer predictions.
-
-    \item \textbf{Threshold fragility:} Fairness compliance was achieved at only one of four tested thresholds (25th percentile), revealing that claims of fairness are contingent on specific analytical choices.
-
-    \item \textbf{Mitigation raises ethical red flags:} Threshold optimization achieved equitable TPR across groups but \textit{reduced} identification of at-risk Hispanic students to match the lower White detection rate. Naive post-hoc equalization can harm the very groups it intends to help, and group-specific thresholds constitute race-conscious classification with legal implications.
-
-    \item \textbf{Missing data strengthens conclusions:} Multiple imputation on the full sample ($N = 18{,}151$) yielded higher TPR disparities (Black MICE TPR = 0.530 vs.\ complete-case 0.293; Hispanic 0.552 vs.\ 0.410) and similar AUC (0.864 vs.\ 0.848), confirming that complete-case estimates are conservative. Inverse probability weighting produced nearly identical results to unweighted analysis (AUC = 0.848).
-\end{enumerate}
-
-The convergence of seven algorithms on nearly identical performance (AUC range of 0.011) shifts the locus of the fairness problem from the model to the data. When classical logistic regression, elastic net, random forest, XGBoost, LightGBM, CatBoost, and HistGradientBoosting all produce equivalent predictions with equivalent fairness failures, the implication is clear: the source of inequity is structural, embedded in the features and outcome definitions, not in any particular algorithmic choice. This finding argues against the common hope that switching to a more sophisticated algorithm will resolve fairness concerns.
+Attempts to mitigate these disparities post hoc created new problems. Threshold optimization equalized TPR across groups but did so by \textit{reducing} identification of at-risk Hispanic students to match the lower White detection rate---harming the very group it intended to help. This outcome, a direct consequence of the impossibility results of \citet{chouldechova2017fair}, underscores that group-specific thresholds raise both practical and legal concerns as a form of race-conscious classification. Finally, MICE sensitivity analysis on the full sample ($N = 18{,}151$) confirmed that the pattern of differential performance persists after correcting for attrition, with all groups showing substantially higher absolute detection rates. IPW produced nearly identical results to unweighted analysis, ruling out selection bias as an explanation for the observed fairness patterns.
 
 \subsection{Interpreting Fairness Disparities}
 
-The observed fairness disparities require careful interpretation. Several factors may contribute:
+The fairness disparities documented above demand explanation. Why does a model that excludes race as a predictor nonetheless produce racially differential outcomes? Several interacting mechanisms are at work.
 
 \textbf{Differential base rates:} At-risk prevalence was substantially higher among Black (25.0\%) and Hispanic (29.4\%) students compared to White students (11.9\%). When base rates differ, even a well-calibrated model will exhibit different error rates across groups \citep{chouldechova2017fair}.
 
@@ -702,23 +663,15 @@ The observed fairness disparities require careful interpretation. Several factor
 
 \textbf{Structural inequities:} The patterns in the data reflect historical and ongoing structural inequities in educational opportunity. Children from disadvantaged backgrounds may show weaker early signals not because of inherent ability, but because of differential access to high-quality early childhood education.
 
-\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the third-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The MICE analysis on the full sample strengthens this interpretation: when attrition-related selection bias is addressed, the SES-driven disparities become \textit{more} pronounced, not less, suggesting that complete-case analysis understates the degree to which socioeconomic signals dominate the model's behavior.
+\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the third-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The MICE analysis on the full sample reinforces this interpretation: when attrition-related selection bias is addressed, the pattern of differential performance persists, and all groups show substantially higher absolute detection rates---indicating that attrition selectively removed the very students the model would have flagged.
 
 \textbf{Calibration and trust:} Calibration unfairness is particularly consequential because practitioners rely on predicted probabilities, not just binary classifications, to prioritize interventions. If a school counselor sees that two students both have a 30\% predicted risk, they may allocate resources equally---but if the model is poorly calibrated for Black students, these probability estimates carry unequal information content \citep{pleiss2017calibration}.
 
 \subsection{Implications for Educational Practice}
 
-Our findings have important implications for the deployment of predictive analytics in K-12 education:
+The most immediate practical implication is that single-metric fairness assessments are dangerously insufficient. Our model simultaneously passed equal opportunity, failed equalized odds, exhibited severe calibration disparities, and showed intersectional blind spots---a combination that would not be detected by the standard practice of checking one or two fairness criteria before deployment. Intersectional auditing is particularly critical: the suggestive pattern that high-SES Black students may be systematically under-identified would be invisible to any analysis examining race or SES in isolation \citep{buolamwini2018gender, kearns2018preventing}. Schools adopting algorithmic EWS should require comprehensive, multi-dimensional fairness audits as a deployment prerequisite.
 
-\textbf{Multi-dimensional fairness audits are essential:} Standard single-metric fairness assessments are insufficient. Our model passed equal opportunity while failing equalized odds, showed severe calibration disparities, and exhibited intersectional blind spots. A comprehensive audit examining group fairness, calibration, and intersectional subgroups is necessary before deployment.
-
-\textbf{Intersectional auditing is necessary:} Standard fairness audits examining single protected attributes miss compounding disadvantages. Our finding that high-SES Black students are completely invisible to the model would not have been detected by a race-only or SES-only analysis \citep{buolamwini2018gender, kearns2018preventing}.
-
-\textbf{Context and threshold choice matter:} The sensitivity of fairness to threshold choice means that the definition of ``at-risk'' is not merely a technical parameter---it is a policy decision with fairness implications that should involve stakeholder input. Different thresholds serve different populations, and no single threshold produces equitable outcomes across all metrics.
-
-\textbf{Temporal deployment trade-offs:} Our temporal analysis suggests that the optimal prediction window involves a trade-off. Earlier predictions (kindergarten only) enable earlier intervention but with lower accuracy. Later predictions (through 3rd grade) improve accuracy but narrow the intervention window and may actually worsen fairness gaps.
-
-\textbf{Human oversight remains critical:} Predictive models should inform, not replace, human judgment. Educators and counselors should understand model limitations and exercise discretion in interpreting predictions, particularly for demographic subgroups where the model is poorly calibrated.
+The sensitivity of fairness to threshold choice carries a deeper lesson: ``at-risk'' is not a technical parameter but a policy decision with equity consequences that should involve stakeholder input. Similarly, the temporal fairness paradox implies a genuine trade-off in prediction timing. Earlier predictions (kindergarten) enable earlier intervention but with lower accuracy; later predictions (through 3rd grade) improve accuracy but narrow the intervention window and may worsen fairness gaps. These are not engineering problems with technical solutions---they are value judgments that require deliberation among educators, families, and policymakers. Predictive models should inform, not replace, human judgment, particularly for demographic subgroups where the model is poorly calibrated.
 
 \subsection{Generalizability to Post-Pandemic Contexts}
 
@@ -731,7 +684,7 @@ This study has several limitations:
 \begin{itemize}
     \item \textbf{Public-use data constraints:} The public-use ECLS-K:2011 file has some variables suppressed or top-coded to protect confidentiality, potentially limiting predictive power.
 
-    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) produced \textit{larger} fairness disparities (Black TPR increased from 0.293 to 0.530; Hispanic from 0.410 to 0.552), confirming that complete-case estimates are conservative. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
+    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) showed substantially higher absolute TPR for all groups (Black: 0.29 $\rightarrow$ 0.53; Hispanic: 0.41 $\rightarrow$ 0.55; White: 0.17 $\rightarrow$ 0.37), with TPR ratios moving toward parity but the pattern of differential performance persisting. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
 
     \item \textbf{Single pre-pandemic cohort:} The ECLS-K:2011 followed a single cohort (2010--2016) that preceded the COVID-19 pandemic. Post-pandemic learning losses were substantial and sharply stratified by race and SES \citep{fahle2023learning}, suggesting that the SES-achievement gradient underlying our findings has likely steepened. Models trained on pre-pandemic data would face distributional shift when applied to contemporary cohorts. Future audits should test cross-cohort generalization across the pre-/post-pandemic boundary.
 
@@ -764,11 +717,9 @@ Several directions for future research emerge from this study:
 \section{Conclusion}
 %==============================================================================
 
-This study provides evidence that fairness failures in educational risk prediction are properties of the prediction task itself, not artifacts of model architecture. Seven algorithms---including three state-of-the-art gradient boosting methods---converged on nearly identical performance (AUC range = 0.011) and exhibited the same pattern of fairness disparities. When every algorithm fails in the same way, the source of inequity is structural: embedded in the features, outcome definitions, and social stratification that shapes the training data.
+When seven algorithms converge on nearly identical performance and exhibit the same pattern of fairness failures, the conclusion is clear: the source of inequity in educational risk prediction is structural, not algorithmic. No amount of algorithmic sophistication will resolve disparities that are embedded in the features, outcome definitions, and social stratification that shape the training data. The \textit{temporal fairness paradox}---that more data improves accuracy without resolving fairness---reinforces this conclusion.
 
-Our multi-dimensional fairness audit---spanning group-level metrics with bootstrap confidence intervals, calibration error analysis, intersectional subgroup assessment, temporal generalization, sensitivity analysis, and missing data robustness checks---reveals that no single fairness assessment captures the full picture. The model passes equal opportunity at the 25th percentile but fails at all other thresholds. It fails calibration fairness, with Black students experiencing 3.35 times higher calibration error. Intersectional analysis suggests it may function as a poverty detector, though small cell sizes require cautious interpretation ($N = 42$ for Black Q4, $p = 0.41$). The \textit{temporal fairness paradox}---that additional data improves accuracy without resolving fairness---challenges a central assumption of longitudinal prediction systems.
-
-These findings argue for comprehensive, multi-dimensional fairness auditing as a prerequisite for deploying algorithmic systems in education. The convergence of seven algorithms on equivalent fairness failures shifts the policy conversation from algorithmic choice to data equity and institutional reform. As predictive analytics become increasingly prevalent in K-12 settings, researchers and practitioners must adopt the tools and frameworks demonstrated here---SHAP explainability, bootstrap uncertainty quantification, calibration analysis, and intersectional auditing---to ensure these systems serve all students equitably.
+These findings carry a practical imperative. As predictive analytics become standard in K-12 settings, multi-dimensional fairness auditing must become a deployment prerequisite. The tools exist---bootstrap uncertainty quantification, calibration analysis, intersectional auditing, SHAP explainability---but they must be used together, not in isolation. A model that passes one fairness criterion may fail others catastrophically. The policy conversation must shift from ``which algorithm?'' to ``what data, what definitions, and what institutional practices produce these disparities?'' Only then can early warning systems fulfill their promise of helping every student, not just those the data makes easy to see.
 
 %==============================================================================
 % Ethics Statement
@@ -856,7 +807,7 @@ Cross-validation AUC scores ranged from 0.832 to 0.842 across folds, indicating 
 
 \subsection{Missing Data}
 
-Table \ref{tab:missing} presents missing data rates for key variables. See Section 3.7 for the full missing data sensitivity analysis methodology and Section 4.6 for results.
+Table \ref{tab:missing} presents missing data rates for key variables. See Section 3.8 for the full missing data sensitivity analysis methodology and Section 4.7 for results.
 
 \begin{table*}[ht!]
 \centering
@@ -877,7 +828,7 @@ Spring K Reading & 965 & 5.3\% \\
 \end{tabular}
 \end{table*}
 
-The high rate of missing outcome data (37\%) reflects sample attrition over the longitudinal study. As documented in Section 4.6, completers differed systematically from dropouts on all baseline cognitive variables (Cohen's $d = 0.22$--$0.30$), with White students over-represented among completers. MICE and IPW sensitivity analyses confirmed that complete-case fairness estimates are conservative.
+The high rate of missing outcome data (37\%) reflects sample attrition over the longitudinal study. As documented in Section 4.7, completers differed systematically from dropouts on all baseline cognitive variables (Cohen's $d = 0.22$--$0.30$), with White students over-represented among completers. MICE and IPW sensitivity analyses confirmed that the pattern of differential performance persists after correcting for attrition.
 
 \newpage
 \section{Supplementary Results}
