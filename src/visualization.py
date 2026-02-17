@@ -902,12 +902,16 @@ def plot_shap_importance_by_group(
 
 def plot_model_comparison(
     results_df: pd.DataFrame,
-    metrics: List[str] = ["auc_roc", "accuracy", "f1"],
+    metrics: List[str] = ["auc_roc", "accuracy", "precision", "recall", "f1", "brier_score"],
     title: str = "Model Performance Comparison",
     save_path: Optional[str] = None,
 ) -> plt.Figure:
     """
-    Plot comparison of multiple models across metrics.
+    Multi-panel dot plot comparing models across metrics with zoomed axes.
+
+    Each metric gets its own panel with an axis range that reveals
+    inter-model differences, solving the problem of bar charts where
+    similar values (e.g., AUC 0.837--0.848) appear identical.
 
     Args:
         results_df: DataFrame with model as index and metrics as columns
@@ -920,30 +924,106 @@ def plot_model_comparison(
     """
     set_publication_style()
 
-    fig, ax = plt.subplots(figsize=(FIG_DOUBLE, 3.0))
+    # Filter to metrics actually present in the data
+    metrics = [m for m in metrics if m in results_df.columns]
+    n_metrics = len(metrics)
 
+    # Display names and colors for the extended metric set
+    display_names = {
+        "auc_roc": "AUC-ROC", "accuracy": "Accuracy", "precision": "Precision",
+        "recall": "Recall", "f1": "F1", "brier_score": "Brier Score",
+    }
+    panel_colors = {
+        "auc_roc": "#0072B2", "accuracy": "#009E73", "precision": "#56B4E9",
+        "recall": "#E69F00", "f1": "#D55E00", "brier_score": "#CC79A7",
+    }
+
+    # Sort models by AUC descending for consistent ordering
+    if "auc_roc" in results_df.columns:
+        results_df = results_df.sort_values("auc_roc", ascending=True)
     models = results_df.index.tolist()
     model_labels = [_map_model_name(m) for m in models]
-    x = np.arange(len(models))
-    width = 0.18
 
-    for i, metric in enumerate(metrics):
+    # Classify models: classical (open marker) vs boosting (filled marker)
+    classical = {"logistic_regression", "elastic_net", "random_forest"}
+    markers = ["o" if m in classical else "D" for m in models]
+    y = np.arange(len(models))
+
+    # Layout: 2 rows x 3 cols (or adjust for fewer metrics)
+    n_cols = min(3, n_metrics)
+    n_rows = int(np.ceil(n_metrics / n_cols))
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(FIG_DOUBLE, 1.6 * n_rows),
+        sharey=True,
+    )
+    axes = np.atleast_2d(axes)
+
+    for idx, metric in enumerate(metrics):
+        row, col = divmod(idx, n_cols)
+        ax = axes[row, col]
         values = results_df[metric].values
-        offset = (i - len(metrics) / 2 + 0.5) * width
-        color = METRIC_COLORS.get(metric, f"C{i}")
-        label = METRIC_DISPLAY.get(metric, metric.upper())
-        ax.bar(
-            x + offset, values, width,
-            label=label, color=color, edgecolor="none",
-        )
+        color = panel_colors.get(metric, "#333333")
 
-    ax.set_ylabel("Score")
-    ax.set_xticks(x)
-    ax.set_xticklabels(model_labels, rotation=35, ha="right")
-    ax.legend(loc="upper right", fontsize=6)
-    ax.set_ylim([0.3, 0.92])
+        # Plot each model as a dot
+        for j, (val, mk) in enumerate(zip(values, markers)):
+            fc = color if mk == "D" else "white"
+            ax.plot(
+                val, y[j], marker=mk, color=color, markerfacecolor=fc,
+                markeredgewidth=0.8, markersize=5, zorder=3,
+            )
 
-    plt.tight_layout()
+        # Thin horizontal reference lines connecting dots to axis
+        for j, val in enumerate(values):
+            ax.hlines(y[j], ax.get_xlim()[0] if ax.get_xlim()[0] != 0 else values.min(), val,
+                       color="#CCCCCC", linewidth=0.4, zorder=1)
+
+        # Zoom the x-axis: pad 30% of range on each side (minimum 0.005)
+        v_min, v_max = values.min(), values.max()
+        v_range = max(v_max - v_min, 0.005)
+        pad = v_range * 0.5
+        ax.set_xlim(v_min - pad, v_max + pad)
+
+        # Light vertical grid for readability
+        ax.xaxis.grid(True, linewidth=0.3, alpha=0.5)
+        ax.set_axisbelow(True)
+
+        # Labels
+        label = display_names.get(metric, metric.upper())
+        ax.set_title(label, fontsize=7, fontweight="bold", color=color)
+        ax.set_yticks(y)
+        if col == 0:
+            ax.set_yticklabels(model_labels, fontsize=6)
+        ax.tick_params(axis="x", labelsize=5.5)
+
+        # Annotate values next to dots
+        for j, val in enumerate(values):
+            fmt = f"{val:.3f}" if metric != "brier_score" else f"{val:.4f}"
+            ax.annotate(
+                fmt, (val, y[j]), textcoords="offset points",
+                xytext=(6, 0), fontsize=4.5, va="center", color="#444444",
+            )
+
+    # Hide unused panels
+    for idx in range(n_metrics, n_rows * n_cols):
+        row, col = divmod(idx, n_cols)
+        axes[row, col].set_visible(False)
+
+    # Add legend for marker shapes
+    from matplotlib.lines import Line2D
+    legend_elements = [
+        Line2D([0], [0], marker="o", color="#555555", markerfacecolor="white",
+               markeredgewidth=0.8, markersize=5, linestyle="None", label="Classical"),
+        Line2D([0], [0], marker="D", color="#555555", markerfacecolor="#555555",
+               markeredgewidth=0.8, markersize=4, linestyle="None", label="Gradient Boosting"),
+    ]
+    fig.legend(
+        handles=legend_elements, loc="lower center",
+        ncol=2, fontsize=6, frameon=False,
+        bbox_to_anchor=(0.5, -0.02),
+    )
+
+    plt.tight_layout(rect=[0, 0.04, 1, 1])
 
     if save_path:
         _save_figure(fig, save_path)
