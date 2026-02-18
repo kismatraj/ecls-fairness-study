@@ -20,7 +20,10 @@
 
 \emergencystretch=1em
 
-\runninghead{Algorithmic Fairness in Early Childhood Risk Prediction}
+\def\journalname{AERA Open}
+\def\volumeyear{2026}
+
+\runninghead{Algorithmic Fairness in Early Childhood Prediction}
 
 \title{Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study}
 
@@ -734,28 +737,22 @@ This study uses the Early Childhood Longitudinal Study, Kindergarten Class of 20
 We acknowledge that predictive models for educational risk carry ethical implications beyond technical performance. Our fairness audit is intended to inform responsible development and deployment practices---not to endorse the use of any particular model in high-stakes educational decision-making without further validation, stakeholder engagement, and ongoing monitoring.
 
 %==============================================================================
-% Data and Code Availability
-%==============================================================================
-
-\section*{Data and Code Availability}
-
-The ECLS-K:2011 public-use data file is freely available from the National Center for Education Statistics at \url{https://nces.ed.gov/ecls/dataproducts.asp}. All analysis code, configuration files, and scripts to reproduce the results reported in this paper are available at [GitHub repository URL]. A permanent archival copy of the code is deposited at [Zenodo DOI]. The repository includes a complete pipeline (\texttt{scripts/run\_pipeline.py}) that reproduces all results, figures, and tables from the raw ECLS data file.
-
-%==============================================================================
 % Acknowledgments
 %==============================================================================
 
-\section*{Acknowledgments}
-
-[Removed for double-blind review.]
+\begin{acks}{[Removed for double-blind review.]}\end{acks}
 
 %==============================================================================
-% Conflict of Interest
+% Declaration of Conflicting Interests
 %==============================================================================
 
-\section*{Conflict of Interest}
+\begin{dci}{The author declares no competing interests.}\end{dci}
 
-The authors declare no competing interests.
+%==============================================================================
+% Funding
+%==============================================================================
+
+\begin{funding}{This research received no specific grant from any funding agency in the public, commercial, or not-for-profit sectors.}\end{funding}
 
 %==============================================================================
 % AI Disclosure
@@ -763,7 +760,21 @@ The authors declare no competing interests.
 
 \section*{Use of Generative AI}
 
-Generative AI (Claude, Anthropic) was used as a coding assistant during data analysis pipeline development, figure generation, and manuscript formatting. All scientific content---including research design, interpretation of results, and substantive writing---was produced by the authors. The authors reviewed and verified all AI-assisted outputs for accuracy. No AI tool was used to generate or alter the study's data, statistical analyses, or scholarly conclusions.
+Generative AI (Claude, Anthropic) was used as a coding assistant during data analysis pipeline development, figure generation, and manuscript formatting. All scientific content---including research design, interpretation of results, and substantive writing---was produced by the author. The author reviewed and verified all AI-assisted outputs for accuracy. No AI tool was used to generate or alter the study's data, statistical analyses, or scholarly conclusions.
+
+%==============================================================================
+% Data Availability Statement
+%==============================================================================
+
+\section*{Data Availability Statement}
+
+The ECLS-K:2011 public-use data file is freely available from the National Center for Education Statistics at \url{https://nces.ed.gov/ecls/dataproducts.asp}. All analysis code, configuration files, and scripts to reproduce the results reported in this paper are available at \url{https://github.com/kismatraj/ecls-fairness-study}. The repository includes a complete pipeline (\texttt{scripts/run\_pipeline.py}) that reproduces all results, figures, and tables from the raw ECLS data file.
+
+%==============================================================================
+% Supplemental Material
+%==============================================================================
+
+\begin{sm}{Supplemental material for this article is available online.}\end{sm}
 
 %==============================================================================
 % References
