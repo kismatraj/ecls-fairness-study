@@ -36,7 +36,7 @@
 \begin{document}
 
 \begin{abstract}
-Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 (complete-case analytic sample $N = 9{,}104$; 70/30 train-test split; multiple imputation sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, with at-risk high-SES Black students potentially undetected (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases); however, this estimate is not statistically significant ($p = 0.41$) and requires replication with larger samples. We document persistent fairness gaps despite improved accuracy: additional longitudinal predictors improve overall discrimination but leave group-level fairness gaps unchanged or worsened. Multiple imputation sensitivity analyses on the full sample confirmed that differential performance persists after correcting for attrition (e.g., Black TPR increased from 0.30 to 0.53), with substantially higher absolute detection rates across all groups. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
+Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 (complete-case analytic sample $N = 9{,}104$; 70/30 train-test split; multiple imputation sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, with at-risk high-SES Black students potentially undetected (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases); however, this estimate is not statistically significant ($p = 0.41$) and requires replication with larger samples. SES-removal ablation confirmed that this pattern is mediated through cognitive scores ($\Delta$AUC = 0.003 when SES is removed), and in-processing fairness constraints (Fairlearn) reduced TPR disparities by 46--78\% but at substantial accuracy cost (AUC penalty = 0.21--0.23). A policy allocation simulation showed that the TPR gap translates into a 24-percentage-point difference in which students receive support, and that equalization redistributes detections across groups rather than improving outcomes for all. These findings argue that fairness disparities in early childhood prediction are irreducible properties of the prediction task as currently defined, requiring institutional---not merely algorithmic---intervention.
 \end{abstract}
 
 \keywords{Algorithmic fairness, machine learning, educational prediction, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011}
@@ -68,6 +68,7 @@ This study makes several contributions to the literature on algorithmic fairness
     \item We demonstrate the fragility of fairness assessments by showing that compliance with equal opportunity criteria depends critically on the choice of at-risk threshold.
     \item We conduct missing data sensitivity analyses (multiple imputation and inverse probability weighting) confirming that the pattern of differential performance persists after correcting for attrition, with substantially higher absolute detection rates in the full imputed sample.
     \item We provide empirical evidence that the ``poverty detector'' pattern is mediated through cognitive scores rather than SES directly (SES-removal ablation: $\Delta$AUC = 0.003), and that in-processing fairness constraints reduce disparities only at substantial cost to overall accuracy (AUC penalty of 0.21--0.23 points).
+    \item We translate fairness metrics into concrete policy consequences through an allocation simulation, showing that the TPR gap between White and Hispanic students corresponds to a 24-percentage-point difference in who receives support, and that equalization redistributes detections across groups rather than improving outcomes for all.
 \end{itemize}
 
 %==============================================================================
@@ -717,6 +718,35 @@ The results reveal a stark fairness-accuracy trade-off (Table~\ref{tab:fairlearn
 
 Compared to post-hoc threshold optimization (Section~4.9), in-processing constraints produced broadly similar outcomes: both approaches reduced fairness disparities at the cost of overall accuracy, and both were unable to fully eliminate group-level differences. The key advantage of in-processing methods is that they do not require race-conscious threshold adjustment at deployment time, avoiding the legal and ethical concerns associated with group-specific decision boundaries. However, the magnitude of the AUC penalty (0.21--0.23 points) raises the question of whether such a substantial reduction in predictive performance is acceptable in a domain where the cost of missed at-risk students is high. These findings reinforce the conclusion that fairness-accuracy trade-offs in this prediction task are not artifacts of the mitigation strategy but reflect a fundamental property of the data, consistent with the impossibility results of \citet{chouldechova2017fair}.
 
+\subsection{Policy Allocation Simulation}
+
+To translate fairness metrics into concrete policy consequences, we simulated the downstream effects of deploying the elastic net model under two scenarios: the default decision threshold (0.50), and group-specific thresholds calibrated to equalize TPR at the overall model rate of 0.283.
+
+\begin{table*}[ht!]
+\centering
+\caption{Policy Allocation Consequences: Default vs. Equal-TPR Thresholds}
+\label{tab:policy}
+\begin{tabular}{llrrrrc}
+\toprule
+\textbf{Scenario} & \textbf{Group} & \textbf{At-Risk} & \textbf{Detected} & \textbf{Missed} & \textbf{\% Missed} & \textbf{Falsely Flagged} \\
+\midrule
+\multirow{4}{*}{Default ($t = 0.50$)} & White & 174 & 30 & 144 & 82.8 & 15 \\
+ & Black & 75 & 22 & 53 & 70.7 & 23 \\
+ & Hispanic & 183 & 75 & 108 & 59.0 & 32 \\
+ & Other & 41 & 10 & 31 & 75.6 & 3 \\
+\addlinespace
+\multirow{4}{*}{Equal TPR ($t_g$)} & White & 174 & 49 & 125 & 71.8 & 37 \\
+ & Black & 75 & 21 & 54 & 72.0 & 20 \\
+ & Hispanic & 183 & 52 & 131 & 71.6 & 17 \\
+ & Other & 41 & 12 & 29 & 70.7 & 8 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Under the default threshold, the model missed 82.8\% of at-risk White students but only 59.0\% of at-risk Hispanic students---a 24-percentage-point gap in who receives support. In absolute terms, 144 at-risk White students went unidentified compared to 108 Hispanic students, despite White students comprising a larger share of the test set. Equalizing TPR across groups closed this gap (all groups: $\approx$71\% missed) but redistributed both detections and errors: 19 additional at-risk White students were correctly identified, while 23 fewer at-risk Hispanic students received flags. The overall cost of equalization was modest---\$27,000 in a stylized model assuming \$2,000 per intervention and \$5,000 per missed student (total system cost: \$2.11M default vs.\ \$2.14M equalized)---but the distributional shift was substantial.
+
+This simulation concretizes three insights. First, fairness metrics translate into real students: the 24-point TPR gap between White and Hispanic students means that, in a district with 1,000 at-risk students per group, approximately 240 more Hispanic students would receive interventions than White students with identical risk profiles. Second, equalization is not Pareto-improving---it helps some groups by harming others, a direct consequence of the impossibility results. Third, the aggregate cost difference is small, but the question of \textit{whose children are missed} is a distributive justice question that cannot be resolved by technical optimization alone.
+
 %==============================================================================
 \section{Discussion}
 %==============================================================================
@@ -745,6 +775,16 @@ The fairness disparities documented above demand explanation. Why does a model t
 
 \textbf{Calibration and trust:} Calibration unfairness is particularly consequential because practitioners rely on predicted probabilities, not just binary classifications, to prioritize interventions. If a school counselor sees that two students both have a 30\% predicted risk, they may allocate resources equally---but if the model is poorly calibrated for Black students, these probability estimates carry unequal information content \citep{pleiss2017calibration}.
 
+\subsection{Theoretical Implications: From Algorithm Selection to Institutional Design}
+
+These findings challenge a default assumption in educational data science: that fairness problems can be solved by choosing the right algorithm, the right features, or the right mitigation technique. Our results suggest instead that fairness disparities in early childhood prediction are \textit{irreducible properties of the prediction task as currently defined}---that is, of the combination of available features, outcome operationalization, and the social stratification embedded in both.
+
+This claim rests on three converging lines of evidence. First, algorithmic convergence: seven architectures spanning different inductive biases produce the same disparity pattern, indicating that no model can extract equitable predictions from these features. Second, the SES-removal ablation: removing the explicit socioeconomic indicator changes nothing, because the cognitive scores that drive prediction are themselves products of the same stratification system. The model does not need to ``see'' poverty directly---it reads its cognitive fingerprint. Third, in-processing fairness constraints: even when equity is embedded in the training objective, achieving parity requires a 27\% reduction in overall discrimination (AUC: 0.847 $\rightarrow$ 0.617), a cost that translates directly into missed at-risk students.
+
+The conceptual implication is that the locus of intervention must shift from the algorithm to the \textit{institutional context} in which prediction occurs. When the data-generating process---shaped by residential segregation, school funding inequities, differential access to early childhood education, and cumulative disadvantage---produces features that encode social position, no downstream statistical correction can fully undo that encoding without sacrificing the predictive signal itself. This is not a failure of machine learning; it is machine learning faithfully reflecting the structure of educational inequality. The policy question therefore changes: not ``how do we build a fair model?'' but ``what institutional changes would produce data from which fair prediction becomes possible?'' This reframing connects algorithmic fairness auditing to the broader literature on structural inequality in education, where decades of research have documented how opportunity gaps in early childhood compound into achievement gaps by elementary school.
+
+For policymakers, this means that algorithmic EWS should be understood as \textit{diagnostic instruments} that reveal the contours of institutional inequality, not as neutral tools that can be tuned to produce equitable outcomes. The convergence finding is itself the diagnosis: when every algorithm fails in the same way, the system---not the software---requires repair.
+
 \subsection{Implications for Educational Practice}
 
 The most immediate practical implication is that single-metric fairness assessments are dangerously insufficient. Our model simultaneously passed equal opportunity, failed equalized odds, exhibited severe calibration disparities, and showed intersectional blind spots---a combination that would not be detected by the standard practice of checking one or two fairness criteria before deployment. Intersectional auditing is particularly critical: the suggestive pattern that high-SES Black students may be systematically under-identified would be invisible to any analysis examining race or SES in isolation \citep{buolamwini2018gender, kearns2018preventing}. Schools adopting algorithmic EWS should require comprehensive, multi-dimensional fairness audits as a deployment prerequisite.
@@ -771,7 +811,7 @@ This study has several limitations:
 
     \item \textbf{Fairness scope:} Our audit focused on group fairness, calibration fairness, and intersectional fairness. We did not evaluate individual fairness \citep{dwork2012fairness} or counterfactual fairness methods, which represent complementary perspectives on algorithmic equity now increasingly discussed in the ML fairness literature.
 
-    \item \textbf{No policy simulation:} We document diagnostic fairness disparities but do not simulate their downstream consequences---e.g., how many students would be misallocated to interventions, the resource cost of false positives, or the opportunity cost of false negatives under realistic budget constraints. Translating fairness metrics into intervention allocation models would strengthen the practical relevance of these findings.
+    \item \textbf{Stylized policy simulation:} Our policy allocation simulation uses assumed costs (\$2,000 per intervention, \$5,000 per missed student) that are illustrative rather than empirically estimated. Actual costs vary substantially by district context, intervention type, and outcome horizon. More granular cost-effectiveness analysis with district-specific parameters would strengthen the practical relevance of these findings.
 
     \item \textbf{Limited mitigation methods:} We examined post-hoc threshold adjustment and two in-processing constraint formulations (Equalized Odds and TPR Parity). Other approaches---such as adversarial debiasing, pre-processing methods (e.g., reweighting or resampling training data), or multi-objective optimization---may achieve different accuracy-fairness trade-offs and warrant future investigation.
 
@@ -795,7 +835,7 @@ Several directions for future research emerge from this study:
 
     \item \textbf{External validation:} Replication on independent cohorts---such as the earlier ECLS-K:1998, state-level administrative data, or district-level EWS deployments---would test the generalizability of these fairness patterns beyond the ECLS-K:2011 sample.
 
-    \item \textbf{Policy simulation:} Translating fairness metrics into concrete resource allocation models---estimating how many students would be misidentified, the per-pupil cost of false positives, and the opportunity cost of missed at-risk students under realistic budget constraints---would bridge the gap between diagnostic auditing and actionable policy guidance.
+    \item \textbf{District-level cost-effectiveness:} Our stylized policy simulation demonstrates the distributive consequences of threshold choices but uses assumed cost parameters. Future work should partner with districts to estimate empirical intervention costs and quantify the return on investment of equitable versus efficiency-maximizing allocation strategies.
 
     \item \textbf{Intervention studies:} Ultimately, the value of EWS depends on whether they improve outcomes. Randomized studies examining the causal effect of EWS-informed interventions, with attention to differential effects across groups, are needed.
 \end{itemize}
