@@ -1,0 +1,25 @@
+{
+  "paper_path": "paper/main.tex",
+  "current_step": 6,
+  "baseline_path": ".claude/academic-review-suite-baseline.txt",
+  "issues": {
+    "writing_fixed": ["W1","W2","W3","W4","W5","W6","W7","W8","W9","W10","W11","W12","W13","W14"],
+    "experiment_fixed": ["E5","E9"],
+    "experiment_deferred": ["E1","E2","E3","E4","E6","E7","E8"],
+    "stage_c_fixed": ["C1a","C1b","C2a","C3a"],
+    "stage_b_fixes": ["four-fifths-rule-cite","missing-section-break","state-of-the-art-phrasing"]
+  },
+  "model_health": {
+    "google/gemini-2.0-flash-001": {"healthy": true},
+    "openrouter/aurora-alpha": {"healthy": true},
+    "arcee-ai/trinity-large-preview:free": {"healthy": true}
+  },
+  "reviews_completed": ["gemini-2.0-flash", "aurora-alpha", "arcee-trinity"],
+  "reference_check": {"total": 28, "verified": 23, "mismatch_false_positive": 5, "not_found": 0},
+  "final_gate": "GREEN",
+  "change_history": [
+    {"step": "writing_fixes", "change_percent": 2.7},
+    {"step": "experiment_E5_E9", "change_percent": 2.8},
+    {"step": "stage_c_b_fixes", "change_percent": "~3.5"}
+  ]
+}
