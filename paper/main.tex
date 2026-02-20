@@ -36,7 +36,7 @@
 \begin{document}
 
 \begin{abstract}
-Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 (complete-case analytic sample $N = 9{,}104$; 70/30 train-test split; multiple imputation sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, with at-risk high-SES Black students potentially undetected (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases); however, this estimate is not statistically significant ($p = 0.41$) and requires replication with larger samples. We document persistent fairness gaps despite improved accuracy: additional longitudinal predictors improve overall discrimination but leave group-level fairness gaps unchanged or worsened. Multiple imputation sensitivity analyses on the full sample confirmed that differential performance persists after correcting for attrition (e.g., Black TPR increased from 0.29 to 0.53), with substantially higher absolute detection rates across all groups. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
+Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 (complete-case analytic sample $N = 9{,}104$; 70/30 train-test split; multiple imputation sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, with at-risk high-SES Black students potentially undetected (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases); however, this estimate is not statistically significant ($p = 0.41$) and requires replication with larger samples. We document persistent fairness gaps despite improved accuracy: additional longitudinal predictors improve overall discrimination but leave group-level fairness gaps unchanged or worsened. Multiple imputation sensitivity analyses on the full sample confirmed that differential performance persists after correcting for attrition (e.g., Black TPR increased from 0.30 to 0.53), with substantially higher absolute detection rates across all groups. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
 \end{abstract}
 
 \keywords{Algorithmic fairness, machine learning, educational prediction, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011}
@@ -119,7 +119,7 @@ We used the public-use data file, which includes 18,174 children. After applying
 
 \subsubsection{Outcome Variable}
 
-The primary outcome was \textbf{academic risk in 5th grade}, operationalized as scoring below the 25th percentile on the reading theta score (X9RTHETA) from the spring 2016 assessment. The reading assessment measured skills including basic reading, vocabulary, and reading comprehension. The theta score is an item response theory (IRT)-based ability estimate that allows for longitudinal comparisons. In our sample, 15.7\% of children were classified as at-risk based on this threshold.
+The primary outcome was \textbf{academic risk in 5th grade}, operationalized as scoring below the 25th percentile on the reading theta score (X9RTHETA) from the spring 2016 assessment. The reading assessment measured skills including basic reading, vocabulary, and reading comprehension. The theta score is an item response theory (IRT)-based ability estimate that allows for longitudinal comparisons. Among children with valid 5th-grade reading scores ($N = 11{,}427$), 25.0\% were classified as at-risk based on this threshold.
 
 As a secondary analysis, we also examined the math outcome (X9MTHETA) to assess domain-specificity of fairness findings.
 
@@ -308,15 +308,18 @@ Table \ref{tab:sample} presents the demographic characteristics of the analytic 
 \multicolumn{3}{l}{\textit{Sex}} \\
 \quad Male & 9,273 & 51.1 \\
 \quad Female & 8,840 & 48.7 \\
+\quad Not reported & 38 & 0.2 \\
 \midrule
 \multicolumn{3}{l}{\textit{5th Grade Reading Risk}} \\
-\quad At-Risk (<25th \%ile) & 2,857 & 15.7 \\
-\quad Not At-Risk & 15,294 & 84.3 \\
+\quad At-Risk (<25th \%ile) & 2,857 & 25.0$^*$ \\
+\quad Not At-Risk & 8,570 & 75.0$^*$ \\
+\quad Missing outcome & 6,724 & 37.0 \\
 \bottomrule
+\multicolumn{3}{l}{\footnotesize $^*$Percentages for at-risk status computed among the 11,427 children with valid 5th-grade outcomes.} \\
 \end{tabular}
 \end{table*}
 
-The sample reflects the demographic diversity of the U.S.\ school-age population. Of the 18,151 children meeting inclusion criteria, 15.7\% were classified as at-risk in reading by 5th grade, providing adequate prevalence for model training.
+The sample reflects the demographic diversity of the U.S.\ school-age population. Of the 11,427 children with valid 5th-grade reading outcomes, 25.0\% were classified as at-risk (below the 25th percentile), providing adequate prevalence for model training.
 
 \subsection{Model Performance}
 
@@ -412,6 +415,7 @@ Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \
 \bottomrule
 \multicolumn{5}{l}{\footnotesize \textit{Note.} Asian $N = 8$ in the test set is too small for reliable inference;} \\
 \multicolumn{5}{l}{\footnotesize confidence intervals for groups with $N < 30$ may not achieve nominal coverage.} \\
+\multicolumn{5}{l}{\footnotesize 114 test-set observations with unreported race/ethnicity are excluded from this table.} \\
 \end{tabular}
 \end{table*}
 
@@ -445,6 +449,8 @@ Hispanic & 2.458 & +0.233 & 5.662 & +0.052 & No \\
 Black & 1.851 & +0.136 & 8.494 & +0.084 & No \\
 Other & 1.611 & +0.098 & 0.477 & $-$0.006 & No \\
 \bottomrule
+\multicolumn{6}{l}{\footnotesize \textit{Note.} Ratios computed from exact (unrounded) group metrics; minor discrepancies} \\
+\multicolumn{6}{l}{\footnotesize with ratios of displayed values in Table~\ref{tab:fairness} reflect rounding.} \\
 \end{tabular}
 \end{table*}
 
@@ -560,7 +566,7 @@ K through 3rd & Logistic Reg. & 12 & 0.831 & 0.843 & 0.386 & 0.112 \\
 \end{tabular}
 \end{table*}
 
-Logistic regression was the best-performing model across all four temporal scenarios (Figure \ref{fig:temporal_performance}), reinforcing the finding that classical methods are sufficient for this prediction task. AUC improved from 0.799 (K fall only) to 0.831 (K through 3rd grade), a meaningful gain of 0.032 AUC points. However, returns diminished rapidly: the largest gain came from adding spring kindergarten scores (+0.023 AUC), while adding 1st through 3rd grade data contributed only +0.009.
+Logistic regression was the best-performing model across all four temporal scenarios (Figure \ref{fig:temporal_performance}), reinforcing the finding that classical methods are sufficient for this prediction task. Note that the AUC for logistic regression at the full feature set (0.831) is slightly lower than the elastic net AUC reported in Table~\ref{tab:performance} (0.848); this reflects the temporal analysis using a separate hyperparameter grid optimized for each scenario rather than the main analysis grid, as well as the different regularization structure of logistic regression versus elastic net. AUC improved from 0.799 (K fall only) to 0.831 (K through 3rd grade), a meaningful gain of 0.032 AUC points. However, returns diminished rapidly: the largest gain came from adding spring kindergarten scores (+0.023 AUC), while adding 1st through 3rd grade data contributed only +0.009.
 
 Critically, while overall accuracy improved with more data, fairness disparities did not narrow proportionally (Figure \ref{fig:temporal_disparity}). The Hispanic-White TPR gap remained substantial across all scenarios, and calibration disparities persisted. We term this pattern \textit{persistent fairness gaps despite improved accuracy}: incorporating additional longitudinal predictors improves a model's overall discriminative ability (AUC) while leaving group-level fairness gaps---measured by TPR ratios, FPR ratios, and calibration error---unchanged or worsened. This phenomenon is distinct from distributional shift or concept drift, which concern changes in the data-generating process over time; instead, it describes a within-cohort property in which more developmental data reinforces the same socioeconomic signals that drive differential performance, rather than introducing orthogonal information that could equalize predictions across groups. This outcome is consistent with the theoretical impossibility results of \citet{chouldechova2017fair}---when base rates differ across groups, no classifier can simultaneously equalize all fairness criteria---but has not previously been documented empirically in longitudinal educational prediction, where the practical assumption that accumulating more student data will naturally produce more equitable predictions remains common.
 
@@ -592,7 +598,7 @@ A critical question is whether the fairness findings above are artifacts of the 
 \midrule
 10th & 6.3\% & FAIL & FAIL & FAIL \\
 20th & 12.6\% & FAIL & FAIL & FAIL \\
-25th & 15.7\% & PASS & FAIL & PASS \\
+25th & 25.0\% & PASS & FAIL & PASS \\
 30th & 18.9\% & FAIL & FAIL & FAIL \\
 \bottomrule
 \end{tabular}
@@ -608,9 +614,9 @@ Study completers differed systematically from dropouts on all baseline cognitive
 
 \subsubsection{Multiple Imputation Results}
 
-MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). All groups showed substantially higher TPR in the imputed sample---Black TPR increased from 0.29 to 0.53 (+0.24); Hispanic from 0.41 to 0.55 (+0.14); White from 0.17 to 0.37 (+0.20)---indicating that attrition disproportionately removed detectable at-risk students from the analytic sample. TPR ratios moved toward parity (Hispanic-White: 2.46 $\rightarrow$ 1.48; Black-White: 1.83 $\rightarrow$ 1.42), though the absolute Black-White TPR gap increased slightly (0.16 vs.\ 0.13 in complete-case). The fundamental pattern of differential performance across racial groups persisted in the full imputed sample, confirming that the primary findings are robust to attrition correction.
+MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). All groups showed substantially higher TPR in the imputed sample---Black TPR increased from 0.30 to 0.53 (+0.23); Hispanic from 0.39 to 0.55 (+0.16); White from 0.16 to 0.37 (+0.21)---indicating that attrition disproportionately removed detectable at-risk students from the analytic sample. TPR ratios moved toward parity (Hispanic-White: 2.46 $\rightarrow$ 1.49; Black-White: 1.85 $\rightarrow$ 1.43), though the absolute Black-White TPR gap increased slightly (0.16 vs.\ 0.14 in complete-case). The fundamental pattern of differential performance across racial groups persisted in the full imputed sample, confirming that the primary findings are robust to attrition correction.
 
-The magnitude of the MICE-induced TPR shifts deserves emphasis: the near-doubling of Black TPR (0.29 to 0.53) is not merely a sensitivity check footnote but a substantive finding. It indicates that the complete-case analytic sample systematically under-represents at-risk minority students who left the study, and that the true disparities in the full population may be larger in absolute terms than our primary analysis suggests. For policy purposes, the two sets of estimates address different deployment contexts: the complete-case results provide valid inference for the population of students who remain in a school district throughout the study period (relevant for EWS deployed in stable districts with low mobility), while the MICE estimates project performance on the full enrolled population including highly mobile students who transfer or leave (relevant for universal screening programs). Districts should consider which reference population matches their context when interpreting model performance.
+The magnitude of the MICE-induced TPR shifts deserves emphasis: the near-doubling of Black TPR (0.30 to 0.53) is not merely a sensitivity check footnote but a substantive finding. It indicates that the complete-case analytic sample systematically under-represents at-risk minority students who left the study, and that the true disparities in the full population may be larger in absolute terms than our primary analysis suggests. For policy purposes, the two sets of estimates address different deployment contexts: the complete-case results provide valid inference for the population of students who remain in a school district throughout the study period (relevant for EWS deployed in stable districts with low mobility), while the MICE estimates project performance on the full enrolled population including highly mobile students who transfer or leave (relevant for universal screening programs). Districts should consider which reference population matches their context when interpreting model performance.
 
 \subsubsection{IPW Results}
 
@@ -690,7 +696,7 @@ This study has several limitations:
 \begin{itemize}
     \item \textbf{Public-use data constraints:} The public-use ECLS-K:2011 file has some variables suppressed or top-coded to protect confidentiality, potentially limiting predictive power.
 
-    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) showed substantially higher absolute TPR for all groups (Black: 0.29 $\rightarrow$ 0.53; Hispanic: 0.41 $\rightarrow$ 0.55; White: 0.17 $\rightarrow$ 0.37), with TPR ratios moving toward parity but the pattern of differential performance persisting. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
+    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) showed substantially higher absolute TPR for all groups (Black: 0.30 $\rightarrow$ 0.53; Hispanic: 0.39 $\rightarrow$ 0.55; White: 0.16 $\rightarrow$ 0.37), with TPR ratios moving toward parity but the pattern of differential performance persisting. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
 
     \item \textbf{Single pre-pandemic cohort:} The ECLS-K:2011 followed a single cohort (2010--2016) that preceded the COVID-19 pandemic. Post-pandemic learning losses were substantial and sharply stratified by race and SES \citep{fahle2023learning}, suggesting that the SES-achievement gradient underlying our findings has likely steepened. Models trained on pre-pandemic data would face distributional shift when applied to contemporary cohorts. Future audits should test cross-cohort generalization across the pre-/post-pandemic boundary.
 
@@ -748,7 +754,7 @@ We acknowledge that predictive models for educational risk carry ethical implica
 % Declaration of Conflicting Interests
 %==============================================================================
 
-\begin{dci}{The author declares no competing interests.}\end{dci}
+\begin{dci}{The authors declare no competing interests.}\end{dci}
 
 %==============================================================================
 % Funding
@@ -762,7 +768,7 @@ We acknowledge that predictive models for educational risk carry ethical implica
 
 \section*{Use of Generative AI}
 
-Generative AI (Claude, Anthropic) was used as a coding assistant during data analysis pipeline development, figure generation, and manuscript formatting. All scientific content---including research design, interpretation of results, and substantive writing---was produced by the author. The author reviewed and verified all AI-assisted outputs for accuracy. No AI tool was used to generate or alter the study's data, statistical analyses, or scholarly conclusions.
+Generative AI (Claude, Anthropic) was used as a coding assistant during data analysis pipeline development, figure generation, and manuscript formatting. All scientific content---including research design, interpretation of results, and substantive writing---was produced by the authors. The authors reviewed and verified all AI-assisted outputs for accuracy. No AI tool was used to generate or alter the study's data, statistical analyses, or scholarly conclusions.
 
 %==============================================================================
 % Data Availability Statement
