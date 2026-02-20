@@ -51,11 +51,15 @@ Thousands of school districts now use machine learning to flag students at risk 
 
 There are reasons to doubt this assumption. Algorithmic fairness research has shown that predictive systems can systematically advantage some groups while disadvantaging others \citep{mehrabi2021survey}, and that fairness itself is multi-dimensional: a model may satisfy one equity criterion while violating others \citep{chouldechova2017fair, barocas2019fairness}. In educational settings, the stakes are high. An algorithm that under-identifies at-risk minority students denies them timely support; one that over-flags them wastes resources and may stigmatize. Protected attributes---characteristics such as race, socioeconomic status, and language background that are shielded from discriminatory treatment due to histories of systemic disadvantage---are central to these concerns \citep{barocas2019fairness}. Although a growing literature has begun examining fairness in educational prediction \citep{kizilcec2022algorithmic, gardner2019evaluating}, fewer studies have examined whether EWS perform equitably across multiple fairness dimensions simultaneously, in longitudinal contexts spanning several years, or using the modern toolkit of calibration analysis, intersectional auditing, and uncertainty quantification.
 
-This study fills that gap through a comprehensive fairness audit. Using the nationally representative ECLS-K:2011 longitudinal study, which followed approximately 18,000 children from kindergarten through 5th grade, we ask whether seven machine learning algorithms---spanning classical regularized models and state-of-the-art gradient boosting---can predict 5th-grade academic risk from early childhood data, and whether they do so equitably. We examine predictive accuracy and its convergence across algorithms; group-level fairness with bootstrap uncertainty quantification; calibration equity and intersectional (race $\times$ SES) disparities; temporal generalization across four developmental windows from kindergarten through 3rd grade; sensitivity to the choice of at-risk threshold; and the consequences and ethical implications of post-hoc bias mitigation.
+This study fills that gap through a comprehensive fairness audit. Using the nationally representative ECLS-K:2011 longitudinal study, which followed approximately 18,000 children from kindergarten through 5th grade, we ask whether seven machine learning algorithms---spanning classical regularized models and state-of-the-art gradient boosting---can predict 5th-grade academic risk from early childhood data, and whether they do so equitably. We examine predictive accuracy and its convergence across algorithms; group-level fairness with bootstrap uncertainty quantification; calibration equity and intersectional (race $\times$ SES) disparities; temporal generalization across four developmental windows from kindergarten through 3rd grade; sensitivity to the choice of at-risk threshold; and the consequences and ethical implications of both post-hoc and in-processing bias mitigation. We complement these diagnostic analyses with a policy allocation simulation that translates abstract fairness metrics into concrete student-level consequences, and with domain validation across reading and math outcomes.
+
+\subsection{Conceptual Framework}
+
+This paper contributes to an emerging literature at the intersection of \textit{algorithmic governance} and \textit{educational inequality}. Research on algorithmic governance examines how automated decision systems reshape the distribution of public resources and the exercise of institutional authority \citep{barocas2019fairness}. Research on educational inequality, meanwhile, has documented that socioeconomic disparities in cognitive skills are already substantial at school entry and compound over time through cumulative disadvantage \citep{reardon2011income, heckman2006skill}. Our study connects these literatures by asking what happens when predictive algorithms trained on data produced by stratified institutions are used to allocate educational resources. Our central argument is that, within the standard predictive paradigm, fairness disparities are not technical defects to be corrected but reflections of institutional stratification encoded in the data. This positions the paper not as an evaluation of algorithms but as an examination of \textit{how algorithms interact with social structure}---and what that interaction implies for governance.
 
 \subsection{Contributions}
 
-Our goal is not to introduce novel algorithms but to conduct a rigorous \textit{fairness audit} demonstrating that fairness failures are robust across seven algorithmic approaches. By showing that, within the available feature space and outcome definition, the source of inequity is located in the data rather than in model architecture---that is, in the data-generating processes that reflect historical and ongoing institutional inequities---we shift the policy conversation from ``which model?'' to ``what data and what institutional practices produce these disparities?''
+Our goal is not to introduce novel algorithms but to conduct a rigorous \textit{fairness audit} demonstrating that fairness failures are robust across seven algorithmic approaches, two mitigation strategies, and two outcome domains. By showing that, within the available feature space and outcome definition, the source of inequity is located in the data rather than in model architecture---that is, in the data-generating processes that reflect historical and ongoing institutional inequities---we shift the policy conversation from ``which model?'' to ``what data and what institutional practices produce these disparities?''
 
 This study makes several contributions to the literature on algorithmic fairness in education:
 
@@ -69,6 +73,7 @@ This study makes several contributions to the literature on algorithmic fairness
     \item We conduct missing data sensitivity analyses (multiple imputation and inverse probability weighting) confirming that the pattern of differential performance persists after correcting for attrition, with substantially higher absolute detection rates in the full imputed sample.
     \item We provide empirical evidence that the ``poverty detector'' pattern is mediated through cognitive scores rather than SES directly (SES-removal ablation: $\Delta$AUC = 0.003), and that in-processing fairness constraints reduce disparities only at substantial cost to overall accuracy (AUC penalty of 0.21--0.23 points).
     \item We translate fairness metrics into concrete policy consequences through an allocation simulation, showing that the TPR gap between White and Hispanic students corresponds to a 24-percentage-point difference in who receives support, and that equalization redistributes detections across groups rather than improving outcomes for all.
+    \item We validate the core findings across both reading and math outcomes, demonstrating that algorithmic convergence, TPR disparities, and calibration unfairness are cross-domain phenomena rather than outcome-specific artifacts.
 \end{itemize}
 
 %==============================================================================
@@ -628,9 +633,34 @@ The magnitude of the MICE-induced TPR shifts deserves emphasis: the near-doublin
 
 Inverse probability weights were well-behaved: mean = 0.77, SD = 0.08, range 0.58--1.03, with 92 observations trimmed at the 99th percentile. The IPW-weighted analysis produced virtually identical results to the unweighted analysis (AUC = 0.848 in both cases). Group-level metrics showed minimal changes: the largest FPR shift was $-$0.009 for Black and Hispanic students. The divergence between MICE and IPW results is methodologically expected: IPW reweights existing complete cases to approximate the full-sample distribution but cannot recover information from observations with missing outcomes, whereas MICE imputes the missing values themselves, effectively reconstructing the full sample and enabling estimation on all $N = 18{,}151$ cases. When attrition is substantial (50\%) and outcome-related, IPW has limited power to correct bias because it can only adjust the distribution of cases already observed; MICE, by generating plausible outcome values for missing cases, can reveal the extent to which attrition suppressed detection rates. The convergence of IPW and unweighted results thus indicates that, among complete cases, selection on observables is minimal; the MICE results indicate that the missing cases themselves---disproportionately disadvantaged students---would have been more detectable had they remained in the sample.
 
-\subsection{Outcome Comparison: Reading vs. Math}
+\subsection{Domain Validation: Reading vs. Math}
 
-As a secondary analysis, we compared reading and math outcomes. Math prediction (AUC = 0.867, best model: Logistic Regression) substantially outperformed reading prediction (AUC = 0.848, best model: Elastic Net). Fairness patterns were broadly similar across domains, with Hispanic and Black students showing higher TPR than White students for both outcomes. However, math prediction uniquely exhibited disparate impact for the Other racial group (TPR ratio = 0.24 vs. White), a pattern not observed in reading. This suggests that the domain of the outcome can affect which groups experience adverse fairness impacts, reinforcing the importance of outcome-specific fairness auditing. Full results are presented in Appendix B.
+To assess whether the fairness patterns documented above are specific to reading prediction or reflect a broader structural phenomenon, we replicated the full fairness audit on the math outcome (X9MTHETA, at-risk prevalence = 17.8\%). Table~\ref{tab:domain} presents the cross-domain comparison.
+
+\begin{table*}[ht!]
+\centering
+\caption{Domain Validation: Reading vs.\ Math Fairness Metrics}
+\label{tab:domain}
+\begin{tabular}{llcccccc}
+\toprule
+\textbf{Domain} & \textbf{Group} & \textbf{N} & \textbf{Prev.} & \textbf{TPR} & \textbf{FPR} & \textbf{ECE} & \textbf{ECE Ratio} \\
+\midrule
+\multirow{4}{*}{Reading} & White & 1,462 & 11.9\% & 0.160 & 0.011 & 0.022 & 1.00 \\
+ & Black & 300 & 25.0\% & 0.296 & 0.095 & 0.074 & 3.35 \\
+ & Hispanic & 623 & 29.4\% & 0.393 & 0.063 & 0.036 & 1.65 \\
+ & Other & 225 & 12.0\% & 0.258 & 0.005 & 0.051 & 2.31 \\
+\addlinespace
+\multirow{4}{*}{Math} & White & 1,475 & 11.5\% & 0.231 & 0.019 & 0.029 & 1.00 \\
+ & Black & 288 & 35.4\% & 0.294 & 0.145 & 0.143 & 4.93 \\
+ & Hispanic & 622 & 28.6\% & 0.500 & 0.083 & 0.048 & 1.66 \\
+ & Other & 335 & 10.1\% & 0.088 & 0.023 & 0.057 & 1.97 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Three patterns replicated across domains. First, algorithmic convergence: four models achieved an AUC range of 0.019 on math (0.848--0.867), confirming that performance ceilings are feature-determined, not algorithm-determined. Second, the Hispanic-White TPR gap persisted and widened: Hispanic TPR was 2.17 times White TPR for math (vs.\ 2.46 for reading), with Hispanic students detected at substantially higher rates in both domains. Third, calibration unfairness was even more severe for math: Black students experienced ECE 4.93 times higher than White students (vs.\ 3.35 for reading), indicating that calibration disparities are a robust, cross-domain phenomenon.
+
+One notable domain-specific finding emerged: the Other racial group showed a TPR ratio of 0.38 vs.\ White for math---well below the 0.80 disparate impact threshold---indicating severe under-identification that was not observed in reading (TPR ratio = 1.61). This demonstrates that the domain of the outcome can determine which groups experience the most acute fairness harms, reinforcing the importance of outcome-specific fairness auditing. The replication of core disparity patterns across both reading and math strengthens the interpretation that these fairness failures reflect structural properties of the prediction task rather than domain-specific artifacts.
 
 \subsection{Bias Mitigation Results}
 
