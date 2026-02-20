@@ -35,13 +35,13 @@
 
 \begin{document}
 
-\maketitle
-
 \begin{abstract}
 Machine learning models are increasingly used to identify at-risk students, yet fairness remains underexplored in longitudinal educational contexts. We conducted a comprehensive fairness audit of seven algorithms predicting 5th-grade academic risk from early childhood data using the ECLS-K:2011 (complete-case analytic sample $N = 9{,}104$; 70/30 train-test split; multiple imputation sensitivity analyses on the full sample of $N = 18{,}151$). All seven algorithms---including three gradient boosting methods---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not artifacts of model architecture. Bootstrap confidence intervals confirmed significant true positive rate disparities: Hispanic students were identified at 2.5 times the rate of White students. Black students experienced 3.35 times higher calibration error. Exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, with at-risk high-SES Black students potentially undetected (TPR = 0\%, $N = 42$, $\approx$6 at-risk cases); however, this estimate is not statistically significant ($p = 0.41$) and requires replication with larger samples. We identify a ``temporal fairness paradox''---defined as the phenomenon whereby additional longitudinal predictors improve overall discrimination but leave group-level fairness gaps unchanged or worsened. Multiple imputation sensitivity analyses on the full sample confirmed that differential performance persists after correcting for attrition (e.g., Black TPR increased from 0.29 to 0.53), with substantially higher absolute detection rates across all groups. These findings argue for comprehensive, multi-dimensional fairness auditing before deploying algorithmic systems in education.
 \end{abstract}
 
 \keywords{Algorithmic fairness, machine learning, educational prediction, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011}
+
+\maketitle
 
 %==============================================================================
 \section{Introduction}
