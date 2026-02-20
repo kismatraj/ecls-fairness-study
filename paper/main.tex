@@ -67,6 +67,7 @@ This study makes several contributions to the literature on algorithmic fairness
     \item We demonstrate that additional longitudinal data from kindergarten through 3rd grade improves accuracy but fails to resolve---and in some cases worsens---fairness disparities. While this outcome is consistent with theoretical impossibility results \citep{chouldechova2017fair}, it has not previously been documented empirically in longitudinal educational prediction, where the practical assumption that ``more data helps'' remains widespread.
     \item We demonstrate the fragility of fairness assessments by showing that compliance with equal opportunity criteria depends critically on the choice of at-risk threshold.
     \item We conduct missing data sensitivity analyses (multiple imputation and inverse probability weighting) confirming that the pattern of differential performance persists after correcting for attrition, with substantially higher absolute detection rates in the full imputed sample.
+    \item We provide empirical evidence that the ``poverty detector'' pattern is mediated through cognitive scores rather than SES directly (SES-removal ablation: $\Delta$AUC = 0.003), and that in-processing fairness constraints reduce disparities only at substantial cost to overall accuracy (AUC penalty of 0.21--0.23 points).
 \end{itemize}
 
 %==============================================================================
@@ -271,7 +272,11 @@ We conducted three complementary sensitivity analyses to assess the robustness o
 
 We implemented \textbf{threshold optimization} as a post-processing bias mitigation strategy. Rather than using a single decision threshold (typically 0.5) for all groups, we selected group-specific thresholds to equalize true positive rates across groups. The target TPR was set to the overall TPR of the best-performing model.
 
-We note that group-specific decision thresholds constitute a form of race-conscious classification, which raises both legal and ethical concerns. Legally, under the Equal Protection Clause, race-conscious government actions are subject to strict scrutiny, requiring a compelling interest and narrow tailoring \citep{barocas2019fairness}. Ethically, group-specific thresholds can produce individual-level harms: a student whose threshold is raised because of their racial group membership may be denied support they would have received under a uniform threshold, regardless of their individual risk profile. The system must also ``know'' each student's race at decision time to apply the correct threshold, creating a race-conscious classification mechanism that raises concerns about reinforcing racial categorization---even when the intent is to promote equity. We present threshold optimization as a \textit{diagnostic tool} to illustrate the theoretical bounds of post-hoc equalization, not as a recommended intervention for deployment. We focused on post-processing mitigation because it is model-agnostic and most commonly discussed in policy contexts; in-processing alternatives---such as fairness-constrained optimization \citep{agarwal2018reductions} or adversarial debiasing---may offer more defensible approaches by embedding equity considerations during model training rather than adjusting outputs after the fact.
+We note that group-specific decision thresholds constitute a form of race-conscious classification, which raises both legal and ethical concerns. Legally, under the Equal Protection Clause, race-conscious government actions are subject to strict scrutiny, requiring a compelling interest and narrow tailoring \citep{barocas2019fairness}. Ethically, group-specific thresholds can produce individual-level harms: a student whose threshold is raised because of their racial group membership may be denied support they would have received under a uniform threshold, regardless of their individual risk profile. The system must also ``know'' each student's race at decision time to apply the correct threshold, creating a race-conscious classification mechanism that raises concerns about reinforcing racial categorization---even when the intent is to promote equity. We present threshold optimization as a \textit{diagnostic tool} to illustrate the theoretical bounds of post-hoc equalization, not as a recommended intervention for deployment.
+
+To complement this post-processing approach, we also evaluated \textbf{in-processing fairness constraints} using Fairlearn's \texttt{ExponentiatedGradient} algorithm \citep{agarwal2018reductions, bird2020fairlearn}. We tested two constraint formulations: (1)~Equalized Odds, jointly constraining TPR and FPR across racial groups; and (2)~TPR Parity, constraining the maximum TPR difference to 0.05. These in-processing methods embed fairness considerations directly during model training, avoiding the race-conscious threshold adjustment required by post-processing.
+
+Finally, we conducted an \textbf{SES-removal ablation} to test the ``poverty detector'' hypothesis by retraining the elastic net model after removing the SES quintile feature, assessing whether the socioeconomic signal is the primary driver of fairness disparities or whether it is captured redundantly through cognitive scores.
 
 %==============================================================================
 \section{Results}
@@ -651,6 +656,67 @@ Threshold optimization successfully equalized TPR across the major demographic g
 
 These results illustrate two fundamental problems with naive post-hoc equalization. First, equalizing to a low overall TPR (0.283) can \textit{harm the very groups it intends to help}: Hispanic students, who were being identified at a higher rate under the uncorrected model, would receive fewer interventions after equalization. This is a direct consequence of the impossibility results of \citet{chouldechova2017fair}: when base rates differ across groups, no classifier can simultaneously equalize TPR, FPR, and PPV. Second, implementing group-specific thresholds requires the system to ``know'' each student's race at decision time, creating a race-conscious classification mechanism that faces both legal scrutiny and practical concerns about reinforcing racial categorization. In-processing alternatives---such as adversarial debiasing or fairness constraints during training---may offer more defensible approaches by addressing disparity at its source rather than through post-hoc adjustment.
 
+\subsection{SES-Removal Ablation}
+
+To test whether the model functions as a ``poverty detector,'' we retrained the elastic net after removing SES quintile (X1SESQ5)---the third-strongest predictor (mean $|$SHAP$|$ = 0.253)---from the feature set. If fairness disparities are primarily driven by socioeconomic proxies, removing SES should meaningfully alter group-level metrics.
+
+\begin{table*}[ht!]
+\centering
+\caption{SES-Removal Ablation: Elastic Net Performance With and Without SES}
+\label{tab:ses_ablation}
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Condition} & \textbf{AUC} & \textbf{Group} & \textbf{N} & \textbf{TPR} & \textbf{FPR} \\
+\midrule
+\multirow{4}{*}{With SES (12 features)} & \multirow{4}{*}{0.848} & White & 1,462 & 0.161 & 0.011 \\
+ & & Black & 300 & 0.293 & 0.093 \\
+ & & Hispanic & 623 & 0.393 & 0.064 \\
+ & & Other & 339 & 0.244 & 0.007 \\
+\addlinespace
+\multirow{4}{*}{Without SES (11 features)} & \multirow{4}{*}{0.845} & White & 1,462 & 0.172 & 0.009 \\
+ & & Black & 300 & 0.293 & 0.089 \\
+ & & Hispanic & 623 & 0.393 & 0.070 \\
+ & & Other & 339 & 0.268 & 0.013 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+Removing SES produced a negligible AUC drop (0.848 $\rightarrow$ 0.845, $\Delta$ = 0.003) and left group-level TPR and FPR virtually unchanged (Table~\ref{tab:ses_ablation}). Black and Hispanic TPR remained identical (0.293 and 0.393, respectively). This result indicates that SES is largely redundant once cognitive baseline scores are included---consistent with the interpretation that the model captures socioeconomic disadvantage primarily through its cognitive correlates rather than through SES directly. The ``poverty detector'' pattern persists even when the explicit poverty indicator is removed, because early cognitive scores are themselves products of socioeconomic stratification.
+
+\subsection{In-Processing Fairness Constraints}
+
+To evaluate whether fairness-constrained training can improve upon post-hoc threshold adjustment, we applied Fairlearn's \texttt{ExponentiatedGradient} algorithm \citep{agarwal2018reductions, bird2020fairlearn} with two constraint formulations: Equalized Odds (jointly constraining TPR and FPR across groups) and TPR Parity (constraining maximum TPR difference to 0.05). These in-processing methods embed fairness constraints directly during model training, avoiding the race-conscious threshold adjustment required by post-processing approaches.
+
+\begin{table*}[ht!]
+\centering
+\caption{In-Processing Fairness Constraints: Unconstrained vs. Fairlearn Results}
+\label{tab:fairlearn}
+\begin{tabular}{llccccc}
+\toprule
+\textbf{Method} & \textbf{AUC} & \textbf{Group} & \textbf{N} & \textbf{TPR} & \textbf{FPR} & \textbf{Accuracy} \\
+\midrule
+\multirow{4}{*}{Unconstrained} & \multirow{4}{*}{0.847} & White & 1,462 & 0.161 & 0.012 & 0.890 \\
+ & & Black & 300 & 0.280 & 0.098 & 0.747 \\
+ & & Hispanic & 623 & 0.393 & 0.070 & 0.772 \\
+ & & Other & 339 & 0.244 & 0.007 & 0.903 \\
+\addlinespace
+\multirow{4}{*}{Equalized Odds} & \multirow{4}{*}{0.617} & White & 1,462 & 0.167 & 0.057 & 0.851 \\
+ & & Black & 300 & 0.213 & 0.080 & 0.743 \\
+ & & Hispanic & 623 & 0.219 & 0.043 & 0.740 \\
+ & & Other & 339 & 0.268 & 0.060 & 0.858 \\
+\addlinespace
+\multirow{4}{*}{TPR Parity} & \multirow{4}{*}{0.633} & White & 1,462 & 0.167 & 0.009 & 0.893 \\
+ & & Black & 300 & 0.293 & 0.098 & 0.750 \\
+ & & Hispanic & 623 & 0.284 & 0.050 & 0.754 \\
+ & & Other & 339 & 0.220 & 0.020 & 0.888 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+The results reveal a stark fairness-accuracy trade-off (Table~\ref{tab:fairlearn}). Equalized Odds reduced the TPR range across groups from 0.232 to 0.052---a 78\% reduction in disparity---but at substantial cost to overall discrimination (AUC: 0.847 $\rightarrow$ 0.617, a 27\% relative drop). TPR Parity achieved a more moderate disparity reduction (TPR range: 0.232 $\rightarrow$ 0.126, 46\% reduction) with a comparable AUC penalty (0.847 $\rightarrow$ 0.633). Neither constrained method fully achieved its target: the Equalized Odds model did not fully equalize FPR, and the TPR Parity model's 0.126 range exceeded the specified 0.05 bound, suggesting that the optimization encountered difficulty satisfying tight constraints with this data.
+
+Compared to post-hoc threshold optimization (Section~4.9), in-processing constraints produced broadly similar outcomes: both approaches reduced fairness disparities at the cost of overall accuracy, and both were unable to fully eliminate group-level differences. The key advantage of in-processing methods is that they do not require race-conscious threshold adjustment at deployment time, avoiding the legal and ethical concerns associated with group-specific decision boundaries. However, the magnitude of the AUC penalty (0.21--0.23 points) raises the question of whether such a substantial reduction in predictive performance is acceptable in a domain where the cost of missed at-risk students is high. These findings reinforce the conclusion that fairness-accuracy trade-offs in this prediction task are not artifacts of the mitigation strategy but reflect a fundamental property of the data, consistent with the impossibility results of \citet{chouldechova2017fair}.
+
 %==============================================================================
 \section{Discussion}
 %==============================================================================
@@ -663,7 +729,7 @@ The dimensions of that inequity are multiple and compounding. The model detected
 
 Two additional findings challenge common assumptions about prediction systems. The persistence of fairness gaps despite improved accuracy---additional longitudinal data improved AUC from 0.799 to 0.831 without resolving fairness disparities---is consistent with theoretical impossibility results \citep{chouldechova2017fair} but challenges the practical expectation, common among EWS practitioners, that accumulating more student data will naturally produce more equitable predictions. And the fragility of fairness assessments across thresholds (compliance at only one of four tested thresholds) reveals that claims of fairness are inseparable from the policy choices embedded in outcome definitions.
 
-Attempts to mitigate these disparities post hoc created new problems. Threshold optimization equalized TPR across groups but did so by \textit{reducing} identification of at-risk Hispanic students to match the lower White detection rate---harming the very group it intended to help. This outcome, a direct consequence of the impossibility results of \citet{chouldechova2017fair}, underscores that group-specific thresholds raise both practical and legal concerns as a form of race-conscious classification. Finally, MICE sensitivity analysis on the full sample ($N = 18{,}151$) confirmed that the pattern of differential performance persists after correcting for attrition, with all groups showing substantially higher absolute detection rates. IPW produced nearly identical results to unweighted analysis, ruling out selection bias as an explanation for the observed fairness patterns.
+Attempts to mitigate these disparities---both post hoc and during training---created new problems. Threshold optimization equalized TPR across groups but did so by \textit{reducing} identification of at-risk Hispanic students to match the lower White detection rate---harming the very group it intended to help. In-processing fairness constraints (Equalized Odds and TPR Parity via Fairlearn) reduced TPR disparities by 46--78\% but at the cost of a 0.21--0.23 AUC penalty, raising concerns about whether such accuracy reductions are acceptable when missed at-risk students face real consequences. Both mitigation approaches encountered the same fundamental trade-off, consistent with the impossibility results of \citet{chouldechova2017fair}. SES-removal ablation further confirmed the structural nature of these disparities: removing the explicit SES feature produced negligible changes in both overall accuracy ($\Delta$AUC = 0.003) and group-level fairness metrics, demonstrating that the ``poverty detector'' pattern is mediated through cognitive scores that are themselves products of socioeconomic stratification. Finally, MICE sensitivity analysis on the full sample ($N = 18{,}151$) confirmed that the pattern of differential performance persists after correcting for attrition, with all groups showing substantially higher absolute detection rates. IPW produced nearly identical results to unweighted analysis, ruling out selection bias as an explanation for the observed fairness patterns.
 
 \subsection{Interpreting Fairness Disparities}
 
@@ -675,7 +741,7 @@ The fairness disparities documented above demand explanation. Why does a model t
 
 \textbf{Structural inequities:} The patterns in the data reflect historical and ongoing structural inequities in educational opportunity. Children from disadvantaged backgrounds may show weaker early signals not because of inherent ability, but because of differential access to high-quality early childhood education.
 
-\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the third-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The MICE analysis on the full sample reinforces this interpretation: when attrition-related selection bias is addressed, the pattern of differential performance persists, and all groups show substantially higher absolute detection rates---indicating that attrition selectively removed the very students the model would have flagged.
+\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the third-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The SES-removal ablation provides direct evidence for this entanglement: removing SES from the model produced negligible changes in both AUC ($\Delta$ = 0.003) and group-level fairness metrics, confirming that the socioeconomic signal is captured redundantly through cognitive scores that are themselves products of socioeconomic stratification. The MICE analysis on the full sample reinforces this interpretation: when attrition-related selection bias is addressed, the pattern of differential performance persists, and all groups show substantially higher absolute detection rates---indicating that attrition selectively removed the very students the model would have flagged.
 
 \textbf{Calibration and trust:} Calibration unfairness is particularly consequential because practitioners rely on predicted probabilities, not just binary classifications, to prioritize interventions. If a school counselor sees that two students both have a 30\% predicted risk, they may allocate resources equally---but if the model is poorly calibrated for Black students, these probability estimates carry unequal information content \citep{pleiss2017calibration}.
 
@@ -707,7 +773,7 @@ This study has several limitations:
 
     \item \textbf{No policy simulation:} We document diagnostic fairness disparities but do not simulate their downstream consequences---e.g., how many students would be misallocated to interventions, the resource cost of false positives, or the opportunity cost of false negatives under realistic budget constraints. Translating fairness metrics into intervention allocation models would strengthen the practical relevance of these findings.
 
-    \item \textbf{Post-hoc mitigation only:} We examined only post-hoc threshold adjustment. In-processing methods (e.g., adversarial debiasing, fairness constraints during training) might achieve better accuracy-fairness trade-offs.
+    \item \textbf{Limited mitigation methods:} We examined post-hoc threshold adjustment and two in-processing constraint formulations (Equalized Odds and TPR Parity). Other approaches---such as adversarial debiasing, pre-processing methods (e.g., reweighting or resampling training data), or multi-objective optimization---may achieve different accuracy-fairness trade-offs and warrant future investigation.
 
     \item \textbf{Bootstrap precision:} We used 500 bootstrap iterations for confidence intervals, which provides adequate stability for the metrics reported here. However, future work with narrower confidence intervals may benefit from 1,000+ iterations.
 
@@ -719,7 +785,7 @@ This study has several limitations:
 Several directions for future research emerge from this study:
 
 \begin{itemize}
-    \item \textbf{In-processing fairness methods:} Future work should evaluate constraint-based methods that incorporate fairness during model training, potentially achieving better accuracy-fairness trade-offs than post-hoc threshold adjustment.
+    \item \textbf{Extended fairness-constrained methods:} Our initial evaluation of Fairlearn's Equalized Odds and TPR Parity constraints revealed substantial AUC penalties (0.21--0.23 points). Future work should evaluate alternative in-processing approaches---such as adversarial debiasing, pre-processing reweighting, and fairness-aware ensemble methods---that may achieve more favorable accuracy-fairness trade-offs.
 
     \item \textbf{Causal fairness methods:} Approaches that distinguish between legitimate and illegitimate predictive pathways could help identify which features contribute to fairness disparities through discriminatory versus non-discriminatory mechanisms.
 
@@ -738,7 +804,7 @@ Several directions for future research emerge from this study:
 \section{Conclusion}
 %==============================================================================
 
-When seven algorithms converge on nearly identical performance and exhibit the same pattern of fairness failures, the conclusion is clear: within the available feature space and outcome definition, switching algorithms does not resolve fairness disparities. The inequities are embedded in the features, outcome definitions, and social stratification that shape the training data, and no amount of architectural sophistication alone will resolve them. The persistence of fairness gaps despite improved accuracy---more data improves discrimination without resolving equity concerns, an outcome consistent with known impossibility results but not yet documented in longitudinal educational prediction---reinforces this conclusion.
+When seven algorithms converge on nearly identical performance and exhibit the same pattern of fairness failures, the conclusion is clear: within the available feature space and outcome definition, switching algorithms does not resolve fairness disparities. The inequities are embedded in the features, outcome definitions, and social stratification that shape the training data, and no amount of architectural sophistication alone will resolve them. SES-removal ablation confirms this structural interpretation: the ``poverty detector'' pattern persists even without the explicit SES feature, because early cognitive scores already encode socioeconomic stratification. In-processing fairness constraints can reduce disparities, but only at a substantial cost to predictive accuracy (AUC penalty of 0.21--0.23 points)---a trade-off that may itself be unacceptable when missed at-risk students face real consequences. The persistence of fairness gaps despite improved accuracy---more data improves discrimination without resolving equity concerns, an outcome consistent with known impossibility results but not yet documented in longitudinal educational prediction---reinforces this conclusion.
 
 These findings carry a practical imperative. As predictive analytics become standard in K-12 settings, multi-dimensional fairness auditing must become a deployment prerequisite. The tools exist---bootstrap uncertainty quantification, calibration analysis, intersectional auditing, SHAP explainability---but they must be used together, not in isolation. A model that passes one fairness criterion may fail others severely. The policy conversation must shift from ``which algorithm?'' to ``what data, what definitions, and what institutional practices produce these disparities?'' Only then can early warning systems fulfill their promise of helping every student, not just those the data makes easy to see.
 
