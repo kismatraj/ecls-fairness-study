@@ -104,7 +104,7 @@
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{../results/figures/calibration_curves_by_group.pdf}
-\caption*{\textbf{Figure S8.} Calibration Curves by Racial/Ethnic Group. Deviation from the diagonal indicates miscalibration. Black students show the largest deviation, consistent with the ECE ratio of 3.35 reported in the main text.}
+\caption*{\textbf{Figure S8.} Calibration Curves by Racial/Ethnic Group. Deviation from the diagonal indicates miscalibration. Black students show the largest deviation, consistent with the ECE ratio of 3.68 reported in the main text.}
 \label{fig:calibration_supp}
 \end{figure}
 
@@ -230,10 +230,10 @@ X12LANGST & 0.000 & 0.000 & 0.000 & 0.000 \\
  & Asian & 12 & 0.521 [0.000, 1.000] & 0.255 [0.000, 0.625] & 0.513 [0.000, 1.000] \\
 \addlinespace
 \multirow{5}{*}{25th}
- & White & 1,462 & 0.160 [0.113, 0.206] & 0.011 [0.006, 0.017] & 0.660 [0.500, 0.794] \\
- & Hispanic & 623 & 0.393 [0.326, 0.459] & 0.063 [0.044, 0.087] & 0.722 [0.637, 0.798] \\
- & Black & 300 & 0.296 [0.207, 0.388] & 0.095 [0.052, 0.133] & 0.508 [0.341, 0.667] \\
- & Other & 225 & 0.258 [0.074, 0.445] & 0.005 [0.000, 0.015] & 0.871 [0.571, 1.000] \\
+ & White & 1,462 & 0.170 [0.122, 0.219] & 0.012 [0.007, 0.018] & 0.660 [0.500, 0.775] \\
+ & Hispanic & 623 & 0.409 [0.343, 0.479] & 0.072 [0.053, 0.095] & 0.704 [0.619, 0.765] \\
+ & Black & 300 & 0.296 [0.207, 0.388] & 0.103 [0.063, 0.142] & 0.487 [0.325, 0.632] \\
+ & Other & 225 & 0.258 [0.074, 0.445] & 0.011 [0.000, 0.026] & 0.758 [0.428, 1.000] \\
  & Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \\
 \addlinespace
 \multirow{5}{*}{30th}
@@ -302,7 +302,7 @@ Table S6 compares overall model performance between reading and math prediction 
 \toprule
 \textbf{Outcome} & \textbf{Best Model} & \textbf{AUC} & \textbf{Accuracy} & \textbf{F1} & \textbf{Recall} \\
 \midrule
-Reading & Elastic Net & 0.848 & 0.851 & 0.399 & 0.283 \\
+Reading & Elastic Net & 0.848 & 0.850 & 0.406 & 0.294 \\
 Math & Logistic Regression & 0.867 & 0.847 & 0.459 & 0.366 \\
 \bottomrule
 \end{tabular}
@@ -322,10 +322,10 @@ Table S7 presents the group-level fairness metrics for both outcomes side by sid
 \textbf{Outcome} & \textbf{Group} & \textbf{N} & \textbf{TPR [95\% CI]} & \textbf{FPR [95\% CI]} & \textbf{PPV [95\% CI]} \\
 \midrule
 \multirow{5}{*}{Reading}
- & White & 1,462 & 0.160 [0.113, 0.206] & 0.011 [0.006, 0.017] & 0.660 [0.500, 0.794] \\
- & Hispanic & 623 & 0.393 [0.326, 0.459] & 0.063 [0.044, 0.087] & 0.722 [0.637, 0.798] \\
- & Black & 300 & 0.296 [0.207, 0.388] & 0.095 [0.052, 0.133] & 0.508 [0.341, 0.667] \\
- & Other & 225 & 0.258 [0.074, 0.445] & 0.005 [0.000, 0.015] & 0.871 [0.571, 1.000] \\
+ & White & 1,462 & 0.170 [0.122, 0.219] & 0.012 [0.007, 0.018] & 0.660 [0.500, 0.775] \\
+ & Hispanic & 623 & 0.409 [0.343, 0.479] & 0.072 [0.053, 0.095] & 0.704 [0.619, 0.765] \\
+ & Black & 300 & 0.296 [0.207, 0.388] & 0.103 [0.063, 0.142] & 0.487 [0.325, 0.632] \\
+ & Other & 225 & 0.258 [0.074, 0.445] & 0.011 [0.000, 0.026] & 0.758 [0.428, 1.000] \\
  & Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \\
 \addlinespace
 \multirow{5}{*}{Math}

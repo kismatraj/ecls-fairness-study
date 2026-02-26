@@ -36,7 +36,7 @@
 \begin{document}
 
 \begin{abstract}
-We conducted a comprehensive fairness audit of seven machine learning algorithms predicting 5th-grade academic risk from early childhood data (ECLS-K:2011; complete-case $N = 9{,}104$; multiple imputation sensitivity on $N = 18{,}151$). All seven algorithms---spanning classical regularized models and state-of-the-art gradient boosting---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not model architecture. Bootstrap confidence intervals confirmed significant disparities: Hispanic students were identified at 2.5 times the rate of White students, and Black students experienced 3.35 times higher calibration error. Additional longitudinal data improved accuracy (AUC: 0.799 to 0.831) without resolving these gaps, and fairness compliance was threshold-dependent (satisfied at only one of four tested cut-points). Counterfactual decomposition revealed that differences in baseline feature distributions account for more than 100\% of the Hispanic--White TPR gap (152\% averaged across reading and math)---meaning the raw distributional divergence would produce an even larger gap than observed, with the model partially compressing rather than amplifying it. SES-removal ablation confirmed that this structural encoding is mediated through cognitive scores ($\Delta$AUC = 0.003), and exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, though key subgroup estimates rest on cell sizes too small for definitive conclusions. Both post-processing and in-processing mitigation reduced disparities but at substantial accuracy cost (AUC penalty = 0.21--0.23), consistent with known impossibility results. These findings demonstrate that fairness disparities in early childhood prediction are not resolvable through algorithmic selection alone, pointing toward institutional rather than merely technical intervention.
+We conducted a comprehensive fairness audit of seven machine learning algorithms predicting 5th-grade academic risk from early childhood data (ECLS-K:2011; complete-case $N = 9{,}104$; multiple imputation sensitivity on $N = 18{,}151$). All seven algorithms---spanning classical regularized models and state-of-the-art gradient boosting---converged on nearly identical performance (AUC range = 0.011), indicating that fairness failures are properties of the prediction task, not model architecture. Bootstrap confidence intervals confirmed significant disparities: Hispanic students were identified at approximately 2.4 times the rate of White students, and Black students experienced 3.7 times higher calibration error. Additional longitudinal data improved accuracy (AUC: 0.799 to 0.831) without resolving these gaps, and fairness compliance was threshold-dependent (satisfied at only one of four tested cut-points). Counterfactual decomposition revealed that differences in baseline feature distributions account for more than 100\% of the Hispanic--White TPR gap (152\% averaged across reading and math)---meaning the raw distributional divergence would produce an even larger gap than observed, with the model partially compressing rather than amplifying it. SES-removal ablation confirmed that this structural encoding is mediated through cognitive scores ($\Delta$AUC = 0.003), and exploratory intersectional analysis produced a preliminary pattern consistent with the model functioning as a poverty detector, though key subgroup estimates rest on cell sizes too small for definitive conclusions. Both post-processing and in-processing mitigation reduced disparities but at substantial accuracy cost (AUC penalty = 0.21--0.23), consistent with known impossibility results. These findings demonstrate that fairness disparities in early childhood prediction are not resolvable through algorithmic selection alone, pointing toward institutional rather than merely technical intervention.
 \end{abstract}
 
 \keywords{Algorithmic fairness, machine learning, educational prediction, calibration fairness, intersectional fairness, temporal generalization, ECLS-K:2011}
@@ -365,9 +365,9 @@ Table \ref{tab:performance} presents the predictive performance of all seven mod
 \toprule
 \textbf{Model} & \textbf{AUC} & \textbf{Accuracy} & \textbf{Precision} & \textbf{Recall} & \textbf{F1} & \textbf{Brier} \\
 \midrule
-Elastic Net & \textbf{0.848} & \textbf{0.851} & 0.675 & 0.283 & 0.399 & \textbf{0.108} \\
+Elastic Net & \textbf{0.848} & 0.850 & 0.657 & 0.294 & 0.406 & 0.108 \\
 Logistic Regression & 0.847 & 0.849 & 0.657 & 0.281 & 0.394 & 0.108 \\
-CatBoost & 0.846 & 0.852 & 0.662 & \textbf{0.308} & \textbf{0.421} & 0.107 \\
+CatBoost & 0.846 & \textbf{0.852} & 0.662 & \textbf{0.308} & \textbf{0.421} & \textbf{0.107} \\
 Random Forest & 0.841 & 0.848 & 0.645 & 0.285 & 0.395 & 0.109 \\
 XGBoost & 0.840 & 0.846 & 0.618 & 0.302 & 0.406 & 0.109 \\
 Hist Gradient Boosting & 0.839 & 0.846 & 0.623 & 0.298 & 0.403 & 0.109 \\
@@ -400,19 +400,19 @@ Table \ref{tab:features} presents feature importance from three complementary me
 \toprule
 \textbf{Feature} & \textbf{Mean $|$SHAP$|$} & \textbf{EN Coef.} & \textbf{Permutation Imp.\ [95\% CI]} \\
 \midrule
-Spring K Math (X2MTHETK) & 0.410 & 0.501 & 0.046 [0.042, 0.054] \\
-Spring K Reading (X2RTHETK) & 0.254 & 0.350 & 0.023 [0.018, 0.027] \\
-SES Quintile (X1SESQ5) & 0.253 & 0.303 & 0.013 [0.007, 0.019] \\
-Fall K Math (X1MTHETK) & 0.227 & 0.288 & 0.012 [0.007, 0.017] \\
-Approaches to Learning, 1st (X4TCHAPP) & 0.218 & 0.266 & 0.016 [0.012, 0.022] \\
-Executive Function (X6DCCSSCR) & 0.067 & 0.115 & 0.001 [$-$0.001, 0.003] \\
-Fall K Reading (X1RTHETK) & 0.000 & 0.038 & 0.000 \\
+Spring K Math (X2MTHETK) & 0.402 & 0.501 & 0.042 [0.038, 0.050] \\
+SES Quintile (X1SESQ5) & 0.266 & 0.303 & 0.013 [0.007, 0.019] \\
+Spring K Reading (X2RTHETK) & 0.253 & 0.350 & 0.022 [0.017, 0.026] \\
+Fall K Math (X1MTHETK) & 0.228 & 0.288 & 0.011 [0.007, 0.016] \\
+Approaches to Learning, 1st (X4TCHAPP) & 0.224 & 0.266 & 0.016 [0.012, 0.022] \\
+Executive Function (X6DCCSSCR) & 0.077 & 0.115 & 0.002 [$-$0.001, 0.003] \\
+Fall K Reading (X1RTHETK) & 0.031 & 0.038 & 0.000 \\
 Child Sex, Race, Language, ATL (K) & 0.000 & 0.000 & 0.000 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Spring kindergarten math (X2MTHETK) was the dominant predictor across all methods (Figure \ref{fig:shap}), with mean $|$SHAP$|$ = 0.410, accounting for approximately 34\% of total SHAP importance. SHAP and permutation importance rankings showed high agreement (mean agreement = 0.87), with both methods identifying the same top-5 features. Notably, race/ethnicity, home language, child sex, and early approaches-to-learning measures received zero importance across all methods, confirming that elastic net regularization effectively excluded these features from the final model.
+Spring kindergarten math (X2MTHETK) was the dominant predictor across all methods (Figure \ref{fig:shap}), with mean $|$SHAP$|$ = 0.402, accounting for approximately 27\% of total SHAP importance. SHAP and permutation importance rankings showed high agreement (mean agreement = 0.90), with both methods identifying the same top-5 features. Notably, race/ethnicity, home language, and early approaches-to-learning measures received zero importance across all methods, and child sex received negligible importance (mean $|$SHAP$|$ = 0.003), confirming that elastic net regularization effectively excluded these features from the final model.
 
 \begin{figure*}[ht!]
 \centering
@@ -439,10 +439,10 @@ Table \ref{tab:fairness} presents performance metrics by racial/ethnic group wit
 \toprule
 \textbf{Group} & \textbf{N} & \textbf{TPR [95\% CI]} & \textbf{FPR [95\% CI]} & \textbf{PPV [95\% CI]} \\
 \midrule
-White & 1,462 & 0.160 [0.113, 0.206] & 0.011 [0.006, 0.017] & 0.660 [0.500, 0.794] \\
-Hispanic & 623 & 0.393 [0.326, 0.459] & 0.063 [0.044, 0.087] & 0.722 [0.637, 0.798] \\
-Black & 300 & 0.296 [0.207, 0.388] & 0.095 [0.052, 0.133] & 0.508 [0.341, 0.667] \\
-Other & 225 & 0.258 [0.074, 0.445] & 0.005 [0.000, 0.015] & 0.871 [0.571, 1.000] \\
+White & 1,462 & 0.170 [0.122, 0.219] & 0.012 [0.007, 0.018] & 0.660 [0.500, 0.775] \\
+Hispanic & 623 & 0.409 [0.343, 0.479] & 0.072 [0.053, 0.095] & 0.704 [0.619, 0.765] \\
+Black & 300 & 0.296 [0.207, 0.388] & 0.103 [0.063, 0.142] & 0.487 [0.325, 0.632] \\
+Other & 225 & 0.258 [0.074, 0.445] & 0.011 [0.000, 0.026] & 0.758 [0.428, 1.000] \\
 Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \\
 \bottomrule
 \multicolumn{5}{l}{\footnotesize \textit{Note.} Asian $N = 8$ in the test set is too small for reliable inference;} \\
@@ -451,11 +451,11 @@ Asian & 8 & 0.760 [0.250, 1.000] & 0.000 [0.000, 0.000] & 1.000 [1.000, 1.000] \
 \end{tabular}
 \end{table*}
 
-Bootstrap confidence intervals enable formal statistical comparison of inter-group differences (Figure \ref{fig:tpr_ci}). The Hispanic TPR of 0.393 [0.326, 0.459] was significantly higher than the White TPR of 0.160 [0.113, 0.206], with non-overlapping confidence intervals ($p < 0.05$). The Black-White TPR difference (0.296 vs. 0.160) showed partially overlapping CIs, suggesting a marginally significant difference. The model detected at-risk Hispanic students at 2.5 times the rate of at-risk White students.
+Bootstrap confidence intervals enable formal statistical comparison of inter-group differences (Figure \ref{fig:tpr_ci}). The Hispanic TPR of 0.409 [0.343, 0.479] was significantly higher than the White TPR of 0.170 [0.122, 0.219], with non-overlapping confidence intervals ($p < 0.05$). The Black-White TPR difference (0.296 vs. 0.170) showed partially overlapping CIs, suggesting a marginally significant difference. The model detected at-risk Hispanic students at approximately 2.4 times the rate of at-risk White students.
 
 We emphasize that the Asian subgroup ($N = 8$, CI: 0.250--1.000) is too small for any meaningful inference; its extreme TPR of 0.760 and perfect PPV are essentially uninformative and should not be interpreted as evidence of model performance for Asian students. Similarly, the Other subgroup ($N = 225$, but only $\approx$27 at-risk) yields wide confidence intervals (TPR CI: 0.074--0.445) that render point estimates exploratory at best.
 
-False positive rate disparities were also substantial: Black students experienced an FPR of 0.095 [0.052, 0.133], compared to 0.011 [0.006, 0.017] for White students---8.5 times higher (see also Supplementary Figures S7--S8 for ROC and calibration curves by group).
+False positive rate disparities were also substantial: Black students experienced an FPR of 0.103 [0.063, 0.142], compared to 0.012 [0.007, 0.018] for White students---8.8 times higher (see also Supplementary Figures S7--S8 for ROC and calibration curves by group).
 
 \begin{figure*}[ht!]
 \centering
@@ -476,10 +476,10 @@ Table \ref{tab:disparity} presents formal disparity metrics comparing each group
 \toprule
 \textbf{Group} & \textbf{TPR Ratio} & \textbf{TPR Diff} & \textbf{FPR Ratio} & \textbf{FPR Diff} & \textbf{Disp. Impact} \\
 \midrule
-Asian & 4.750 & +0.600 & 0.000 & $-$0.011 & No \\
-Hispanic & 2.458 & +0.233 & 5.662 & +0.052 & No \\
-Black & 1.851 & +0.136 & 8.494 & +0.084 & No \\
-Other & 1.611 & +0.098 & 0.477 & $-$0.006 & No \\
+Asian & 4.350 & +0.578 & 0.000 & $-$0.012 & No \\
+Hispanic & 2.377 & +0.237 & 6.245 & +0.061 & No \\
+Black & 1.701 & +0.121 & 8.777 & +0.091 & No \\
+Other & 1.504 & +0.087 & 0.867 & $-$0.002 & No \\
 \bottomrule
 \multicolumn{6}{l}{\footnotesize \textit{Note.} Ratios computed from exact (unrounded) group metrics; minor discrepancies} \\
 \multicolumn{6}{l}{\footnotesize with ratios of displayed values in Table~\ref{tab:fairness} reflect rounding.} \\
@@ -490,7 +490,7 @@ Other & 1.611 & +0.098 & 0.477 & $-$0.006 & No \\
 
 \begin{itemize}
     \item \textbf{Equal Opportunity:} PASS. All groups had TPR ratios $>$ 0.80 (all minority groups had \textit{higher} TPR than White students).
-    \item \textbf{Equalized Odds:} FAIL. While TPR ratios exceeded 0.80, FPR ratios for Black (8.494) and Hispanic (5.662) students dramatically exceeded 1.0, indicating disproportionately high false positive rates.
+    \item \textbf{Equalized Odds:} FAIL. While TPR ratios exceeded 0.80, FPR ratios for Black (8.777) and Hispanic (6.245) students dramatically exceeded 1.0, indicating disproportionately high false positive rates.
     \item \textbf{Statistical Parity:} PASS. Positive prediction rates did not trigger the 0.80 disparate impact threshold.
 \end{itemize}
 
@@ -506,20 +506,20 @@ Table \ref{tab:calibration} presents calibration metrics by demographic group.
 \toprule
 \textbf{Group} & \textbf{N} & \textbf{ECE} & \textbf{MCE} & \textbf{Brier} & \textbf{ECE Ratio} \\
 \midrule
-White & 1,462 & 0.022 & 0.112 & 0.082 & 1.00 \\
-Hispanic & 623 & 0.036 & 0.115 & 0.155 & 1.65 \\
-Other & 225 & 0.051 & 0.940 & 0.090 & 2.31 \\
-Black & 300 & 0.074 & 0.456 & 0.162 & \textbf{3.35} \\
+White & 1,462 & 0.021 & 0.102 & 0.082 & 1.00 \\
+Hispanic & 623 & 0.038 & 0.225 & 0.154 & 1.81 \\
+Other & 225 & 0.045 & 0.946 & 0.090 & 2.17 \\
+Black & 300 & 0.077 & 0.460 & 0.162 & \textbf{3.68} \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Calibration fairness analysis revealed substantial disparities (Figure \ref{fig:calibration_error}). Black students experienced an ECE of 0.074, 3.35 times higher than White students (0.022), indicating that predicted risk probabilities for Black students were systematically miscalibrated. The Maximum Calibration Error for Black students (MCE = 0.456) was 4.1 times the White MCE (0.112), indicating severe miscalibration in certain probability ranges. These calibration disparities mean that even when the model makes the correct binary classification, the confidence levels are less reliable for minority students---a critical concern when practitioners use predicted probabilities to prioritize intervention resources.
+Calibration fairness analysis revealed substantial disparities (Figure \ref{fig:calibration_error}). Black students experienced an ECE of 0.077, 3.68 times higher than White students (0.021), indicating that predicted risk probabilities for Black students were systematically miscalibrated. The Maximum Calibration Error for Black students (MCE = 0.460) was 4.5 times the White MCE (0.102), indicating severe miscalibration in certain probability ranges. These calibration disparities mean that even when the model makes the correct binary classification, the confidence levels are less reliable for minority students---a critical concern when practitioners use predicted probabilities to prioritize intervention resources.
 
 \begin{figure*}[ht!]
 \centering
 \includegraphics[width=0.85\textwidth]{../results/figures/calibration_error_comparison.pdf}
-\caption{Expected and Maximum Calibration Error by Demographic Group. Black students experience calibration error 3.35 times higher than the White reference group.}
+\caption{Expected and Maximum Calibration Error by Demographic Group. Black students experience calibration error 3.68 times higher than the White reference group.}
 \label{fig:calibration_error}
 \end{figure*}
 
@@ -553,7 +553,7 @@ Black Q4 & 42 & 14.3\% & \textbf{0.000} & 0.056 & 0.810 \\
 \end{tabular}
 \end{table*}
 
-A suggestive finding was the model's failure to identify any at-risk Black students in the 4th SES quintile (TPR = 0\%, $N = 42$, approximately 6 at-risk cases), as shown in Figure~\ref{fig:intersectional}. Despite a 14.3\% prevalence of academic risk in this subgroup, the model flagged none of these students. However, we urge caution in interpreting this result: with only $\approx$6 positive cases, a binomial test of TPR = 0 against a null of TPR = 0.283 (the overall model TPR) yields $p = 0.41$, which is not statistically significant. The observed TPR = 0\% is consistent with sampling variability in a small cell. This pattern of potential ``intersectional invisibility'' extended to other high-SES minority subgroups: Hispanic Q4 achieved only 20\% TPR ($N = 62$, $\approx$10 at-risk). In contrast, low-SES students across all racial groups had relatively higher TPRs (0.400 to 0.481), consistent with the model's reliance on SES as a predictor.
+A suggestive finding was the model's failure to identify any at-risk Black students in the 4th SES quintile (TPR = 0\%, $N = 42$, approximately 6 at-risk cases), as shown in Figure~\ref{fig:intersectional}. Despite a 14.3\% prevalence of academic risk in this subgroup, the model flagged none of these students. However, we urge caution in interpreting this result: with only $\approx$6 positive cases, a binomial test of TPR = 0 against a null of TPR = 0.294 (the overall model TPR) yields $p = 0.41$, which is not statistically significant. The observed TPR = 0\% is consistent with sampling variability in a small cell. This pattern of potential ``intersectional invisibility'' extended to other high-SES minority subgroups: Hispanic Q4 achieved only 20\% TPR ($N = 62$, $\approx$10 at-risk). In contrast, low-SES students across all racial groups had relatively higher TPRs (0.400 to 0.481), consistent with the model's reliance on SES as a predictor.
 
 The intersectional pattern is consistent with a plausible working hypothesis that the model operates as a \textit{poverty detector}: it identifies at-risk students primarily through socioeconomic signals, missing those whose risk arises from other factors. This interpretation is supported by the strong SES gradient visible across all racial groups (Table~\ref{tab:intersectional}), but the small cell sizes in high-SES minority subgroups---particularly the 3--6 positive cases that drive the most extreme TPR estimates---fall below thresholds for reliable estimation and require replication with larger samples before informing policy conclusions.
 
@@ -625,13 +625,13 @@ The 25th percentile was the \textit{only} threshold at which the model passed eq
 
 \subsubsection{Attrition Analysis}
 
-Study completers differed systematically from dropouts on all baseline cognitive variables. Completers scored higher on fall kindergarten reading ($d = 0.22$), spring kindergarten reading ($d = 0.26$), fall kindergarten math ($d = 0.28$), and spring kindergarten math ($d = 0.30$). Attrition was also differential by demographics: White students were over-represented among completers (53.4\% vs.\ 40.0\% of dropouts), while Asian (0.4\% vs.\ 3.9\%), Black (11.0\% vs.\ 15.4\%), and Other (7.8\% vs.\ 12.3\%) students were under-represented. These patterns indicate that complete-case analysis likely under-represents the most disadvantaged students, motivating the MICE and IPW sensitivity analyses.
+Study completers differed systematically from dropouts on all baseline cognitive variables. Completers scored higher on fall kindergarten reading ($d = 0.27$), spring kindergarten reading ($d = 0.27$), fall kindergarten math ($d = 0.31$), and spring kindergarten math ($d = 0.26$). Attrition was also differential by demographics: White students were over-represented among completers (53.4\% vs.\ 40.0\% of dropouts), while Asian (0.4\% vs.\ 3.9\%), Black (11.0\% vs.\ 15.4\%), and Other (7.8\% vs.\ 12.3\%) students were under-represented. These patterns indicate that complete-case analysis likely under-represents the most disadvantaged students, motivating the MICE and IPW sensitivity analyses.
 
 \subsubsection{Multiple Imputation Results}
 
-MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). All groups showed substantially higher TPR in the imputed sample---Black TPR increased from 0.30 to 0.53 (+0.23); Hispanic from 0.39 to 0.55 (+0.16); White from 0.16 to 0.37 (+0.21)---indicating that attrition disproportionately removed detectable at-risk students from the analytic sample. TPR ratios moved toward parity (Hispanic-White: 2.46 $\rightarrow$ 1.49; Black-White: 1.85 $\rightarrow$ 1.43), though the absolute Black-White TPR gap increased slightly (0.16 vs.\ 0.14 in complete-case). The fundamental pattern of differential performance across racial groups persisted in the full imputed sample, confirming that the primary findings are robust to attrition correction.
+MICE on the full sample ($N = 18{,}151$, $m = 10$ imputations) yielded slightly higher overall AUC (0.864, SE = 0.006) compared to complete-case analysis (0.848). All groups showed substantially higher TPR in the imputed sample---Black TPR increased from 0.29 to 0.53 (+0.24); Hispanic from 0.41 to 0.55 (+0.14); White from 0.17 to 0.37 (+0.20)---indicating that attrition disproportionately removed detectable at-risk students from the analytic sample. TPR ratios moved toward parity (Hispanic-White: 2.38 $\rightarrow$ 1.49; Black-White: 1.70 $\rightarrow$ 1.43), though the absolute Black-White TPR gap increased (0.16 vs.\ 0.12 in complete-case). The fundamental pattern of differential performance across racial groups persisted in the full imputed sample, confirming that the primary findings are robust to attrition correction.
 
-The near-doubling of Black TPR (0.30 to 0.53) under MICE indicates that complete-case analysis systematically under-represents at-risk minority students. The two sets of estimates address different deployment contexts: complete-case results apply to stable-enrollment populations, while MICE estimates project performance on the full enrolled population including mobile students.
+The near-doubling of Black TPR (0.29 to 0.53) under MICE indicates that complete-case analysis systematically under-represents at-risk minority students. The two sets of estimates address different deployment contexts: complete-case results apply to stable-enrollment populations, while MICE estimates project performance on the full enrolled population including mobile students.
 
 \subsubsection{IPW Results}
 
@@ -649,26 +649,26 @@ To assess whether the fairness patterns documented above are specific to reading
 \toprule
 \textbf{Domain} & \textbf{Group} & \textbf{N} & \textbf{Prev.} & \textbf{TPR} & \textbf{FPR} & \textbf{ECE} & \textbf{ECE Ratio} \\
 \midrule
-\multirow{4}{*}{Reading} & White & 1,462 & 11.9\% & 0.160 & 0.011 & 0.022 & 1.00 \\
- & Black & 300 & 25.0\% & 0.296 & 0.095 & 0.074 & 3.35 \\
- & Hispanic & 623 & 29.4\% & 0.393 & 0.063 & 0.036 & 1.65 \\
- & Other & 225 & 12.0\% & 0.258 & 0.005 & 0.051 & 2.31 \\
+\multirow{4}{*}{Reading} & White & 1,462 & 11.9\% & 0.170 & 0.012 & 0.021 & 1.00 \\
+ & Black & 300 & 25.0\% & 0.296 & 0.103 & 0.077 & 3.68 \\
+ & Hispanic & 623 & 29.4\% & 0.409 & 0.072 & 0.038 & 1.81 \\
+ & Other & 225 & 12.0\% & 0.258 & 0.011 & 0.045 & 2.17 \\
 \addlinespace
-\multirow{4}{*}{Math} & White & 1,475 & 11.5\% & 0.231 & 0.019 & 0.029 & 1.00 \\
- & Black & 288 & 35.4\% & 0.294 & 0.145 & 0.143 & 4.93 \\
- & Hispanic & 622 & 28.6\% & 0.500 & 0.083 & 0.048 & 1.66 \\
- & Other & 335 & 10.1\% & 0.088 & 0.023 & 0.057 & 1.97 \\
+\multirow{4}{*}{Math} & White & 1,475 & 11.5\% & 0.259 & 0.024 & 0.029 & 1.00 \\
+ & Black & 288 & 35.4\% & 0.326 & 0.161 & 0.143 & 4.93 \\
+ & Hispanic & 622 & 28.6\% & 0.530 & 0.093 & 0.048 & 1.66 \\
+ & Other & 225 & 10.1\% & 0.061 & 0.024 & 0.057 & 1.97 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Three patterns replicated across domains. First, algorithmic convergence: four models achieved an AUC range of 0.019 on math (0.848--0.867), confirming that performance ceilings are feature-determined, not algorithm-determined. Second, the Hispanic-White TPR gap persisted and widened: Hispanic TPR was 2.17 times White TPR for math (vs.\ 2.46 for reading), with Hispanic students detected at substantially higher rates in both domains. Third, calibration unfairness was even more severe for math: Black students experienced ECE 4.93 times higher than White students (vs.\ 3.35 for reading), indicating that calibration disparities are a robust, cross-domain phenomenon.
+Three patterns replicated across domains. First, algorithmic convergence: four models achieved an AUC range of 0.019 on math (0.848--0.867), confirming that performance ceilings are feature-determined, not algorithm-determined. Second, the Hispanic-White TPR gap persisted and widened: Hispanic TPR was 2.0 times White TPR for math (vs.\ 2.4 for reading), with Hispanic students detected at substantially higher rates in both domains. Third, calibration unfairness was even more severe for math: Black students experienced ECE 4.93 times higher than White students (vs.\ 3.68 for reading), indicating that calibration disparities are a robust, cross-domain phenomenon.
 
-One notable domain-specific finding emerged: the Other racial group showed a TPR ratio of 0.38 vs.\ White for math---well below the 0.80 disparate impact threshold---indicating severe under-identification that was not observed in reading (TPR ratio = 1.61). This demonstrates that the domain of the outcome can determine which groups experience the most acute fairness harms, reinforcing the importance of outcome-specific fairness auditing. The replication of core disparity patterns across both reading and math strengthens the interpretation that these fairness failures reflect structural properties of the prediction task rather than domain-specific artifacts.
+One notable domain-specific finding emerged: the Other racial group showed a TPR ratio of 0.24 vs.\ White for math---well below the 0.80 disparate impact threshold---indicating severe under-identification that was not observed in reading (TPR ratio = 1.50). This demonstrates that the domain of the outcome can determine which groups experience the most acute fairness harms, reinforcing the importance of outcome-specific fairness auditing. The replication of core disparity patterns across both reading and math strengthens the interpretation that these fairness failures reflect structural properties of the prediction task rather than domain-specific artifacts.
 
 \subsection{Bias Mitigation Results}
 
-We applied threshold optimization to equalize TPR across groups, targeting the overall model TPR of 0.283. Table \ref{tab:mitigation} presents the results.
+We applied threshold optimization to equalize TPR across groups, targeting the overall model TPR of 0.293. Table \ref{tab:mitigation} presents the results.
 
 \begin{table*}[ht!]
 \centering
@@ -678,20 +678,20 @@ We applied threshold optimization to equalize TPR across groups, targeting the o
 \toprule
 \textbf{Group} & \textbf{TPR Bef.} & \textbf{TPR Aft.} & \textbf{$\Delta$TPR} & \textbf{Acc.\ Bef.} & \textbf{Acc.\ Aft.} & \textbf{$\Delta$Acc.} \\
 \midrule
-White & 0.160 & 0.293 & +0.133 & 0.891 & 0.886 & $-$0.005 \\
-Black & 0.296 & 0.293 & $-$0.003 & 0.747 & 0.747 & +0.000 \\
-Hispanic & 0.393 & 0.295 & $-$0.098 & 0.775 & 0.762 & $-$0.013 \\
-Asian & 0.760 & 0.250 & $-$0.510 & 0.875 & 0.625 & $-$0.250 \\
-Other & 0.258 & 0.296 & +0.038 & 0.902 & 0.884 & $-$0.018 \\
+White & 0.172 & 0.293 & +0.121 & 0.891 & 0.886 & $-$0.005 \\
+Black & 0.293 & 0.293 & +0.000 & 0.747 & 0.747 & +0.000 \\
+Hispanic & 0.410 & 0.295 & $-$0.115 & 0.775 & 0.762 & $-$0.013 \\
+Asian & 0.750 & 0.250 & $-$0.500 & 0.875 & 0.625 & $-$0.250 \\
+Other & 0.259 & 0.296 & +0.037 & 0.902 & 0.884 & $-$0.018 \\
 \bottomrule
 \end{tabular}
 \end{table*}
 
-Threshold optimization successfully equalized TPR across major groups (all achieving TPR $\approx$ 0.29), but at a cost: Hispanic students experienced reduced sensitivity ($-$0.098), meaning the ``fair'' system would identify \textit{fewer} at-risk Hispanic students to achieve parity with the White detection rate. This illustrates a fundamental problem with post-hoc equalization: equalizing to a low overall TPR can harm the very groups it intends to help, a direct consequence of the impossibility results of \citet{chouldechova2017fair}. Additionally, group-specific thresholds require the system to ``know'' each student's race at decision time, creating a race-conscious classification mechanism that faces both legal scrutiny and practical concerns.
+Threshold optimization successfully equalized TPR across major groups (all achieving TPR $\approx$ 0.29), but at a cost: Hispanic students experienced reduced sensitivity ($-$0.115), meaning the ``fair'' system would identify \textit{fewer} at-risk Hispanic students to achieve parity with the White detection rate. This illustrates a fundamental problem with post-hoc equalization: equalizing to a low overall TPR can harm the very groups it intends to help, a direct consequence of the impossibility results of \citet{chouldechova2017fair}. Additionally, group-specific thresholds require the system to ``know'' each student's race at decision time, creating a race-conscious classification mechanism that faces both legal scrutiny and practical concerns.
 
 \subsection{SES-Removal Ablation}
 
-To test whether the model functions as a ``poverty detector,'' we retrained the elastic net after removing SES quintile (X1SESQ5)---the third-strongest predictor (mean $|$SHAP$|$ = 0.253)---from the feature set. If fairness disparities are primarily driven by socioeconomic proxies, removing SES should meaningfully alter group-level metrics.
+To test whether the model functions as a ``poverty detector,'' we retrained the elastic net after removing SES quintile (X1SESQ5)---the second-strongest predictor (mean $|$SHAP$|$ = 0.266)---from the feature set. If fairness disparities are primarily driven by socioeconomic proxies, removing SES should meaningfully alter group-level metrics.
 
 \begin{table*}[ht!]
 \centering
@@ -757,7 +757,7 @@ Both in-processing and post-hoc approaches produced broadly similar outcomes: re
 
 \subsection{Policy Allocation Simulation}
 
-To translate fairness metrics into concrete policy consequences, we simulated the downstream effects of deploying the elastic net model under two scenarios: the default decision threshold (0.50), and group-specific thresholds calibrated to equalize TPR at the overall model rate of 0.283.
+To translate fairness metrics into concrete policy consequences, we simulated the downstream effects of deploying the elastic net model under two scenarios: the default decision threshold (0.50), and group-specific thresholds calibrated to equalize TPR at the overall model rate of 0.293.
 
 \begin{table*}[ht!]
 \centering
@@ -831,7 +831,7 @@ Feature-level decomposition identified kindergarten cognitive scores as the domi
 
 \subsection{Summary of Findings}
 
-Seven models converged on nearly identical performance (AUC range = 0.011) and exhibited the same pattern of differential performance across racial groups---the convergence itself constituting evidence that fairness failures are properties of the data, not model architecture \citep{grinsztajn2022tree}. The dimensions of inequity were multiple and compounding: Hispanic students were identified at 2.5 times the rate of White students (confirmed by non-overlapping bootstrap CIs); Black students experienced 8.5 times higher FPR and 3.35 times higher calibration error \citep{pleiss2017calibration}; additional longitudinal data improved accuracy without resolving these gaps; and fairness compliance was threshold-dependent. Both mitigation strategies reduced disparities but at substantial accuracy cost (AUC penalty = 0.21--0.23), consistent with impossibility results \citep{chouldechova2017fair}. SES-removal ablation ($\Delta$AUC = 0.003) confirmed that the poverty-detector pattern is mediated through cognitive scores, and counterfactual decomposition showed that the structural component accounts for more than 100\% of the Hispanic--White TPR gap (152\% averaged across domains), with the model compressing rather than amplifying distributional divergence. MICE analysis on the full sample ($N = 18{,}151$) confirmed that differential performance persists after correcting for attrition.
+Seven models converged on nearly identical performance (AUC range = 0.011) and exhibited the same pattern of differential performance across racial groups---the convergence itself constituting evidence that fairness failures are properties of the data, not model architecture \citep{grinsztajn2022tree}. The dimensions of inequity were multiple and compounding: Hispanic students were identified at approximately 2.4 times the rate of White students (confirmed by non-overlapping bootstrap CIs); Black students experienced 8.8 times higher FPR and 3.7 times higher calibration error \citep{pleiss2017calibration}; additional longitudinal data improved accuracy without resolving these gaps; and fairness compliance was threshold-dependent. Both mitigation strategies reduced disparities but at substantial accuracy cost (AUC penalty = 0.21--0.23), consistent with impossibility results \citep{chouldechova2017fair}. SES-removal ablation ($\Delta$AUC = 0.003) confirmed that the poverty-detector pattern is mediated through cognitive scores, and counterfactual decomposition showed that the structural component accounts for more than 100\% of the Hispanic--White TPR gap (152\% averaged across domains), with the model compressing rather than amplifying distributional divergence. MICE analysis on the full sample ($N = 18{,}151$) confirmed that differential performance persists after correcting for attrition.
 
 \subsection{Interpreting Fairness Disparities}
 
@@ -839,11 +839,11 @@ The fairness disparities documented above demand explanation. Why does a model t
 
 \textbf{Differential base rates:} At-risk prevalence was substantially higher among Black (25.0\%) and Hispanic (29.4\%) students compared to White students (11.9\%). When base rates differ, even a well-calibrated model will exhibit different error rates across groups \citep{chouldechova2017fair}.
 
-\textbf{Proxy discrimination:} Although race was excluded from the model, other features (particularly SES) are correlated with race and may serve as proxies. The elastic net assigned substantial weight to SES (mean $|$SHAP$|$ = 0.253), which could contribute to differential performance.
+\textbf{Proxy discrimination:} Although race was excluded from the model, other features (particularly SES) are correlated with race and may serve as proxies. The elastic net assigned substantial weight to SES (mean $|$SHAP$|$ = 0.266), which could contribute to differential performance.
 
 \textbf{Structural inequities:} The patterns in the data reflect historical and ongoing structural inequities in educational opportunity. Children from disadvantaged backgrounds may show weaker early signals not because of inherent ability, but because of differential access to high-quality early childhood education.
 
-\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the third-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The SES-removal ablation provides direct evidence for this entanglement: removing SES from the model produced negligible changes in both AUC ($\Delta$ = 0.003) and group-level fairness metrics, confirming that the socioeconomic signal is captured redundantly through cognitive scores that are themselves products of socioeconomic stratification. The MICE analysis on the full sample reinforces this interpretation: when attrition-related selection bias is addressed, the pattern of differential performance persists, and all groups show substantially higher absolute detection rates---indicating that attrition selectively removed the very students the model would have flagged.
+\textbf{The poverty detector problem:} The intersectional analysis suggests the model may function primarily as a poverty detector, though small cell sizes require cautious interpretation. SES is the second-strongest predictor, and its effects are deeply entangled with cognitive scores---which themselves reflect socioeconomic advantage. This creates a pattern where the model identifies low-SES children of all races but may miss at-risk children who come from relatively advantaged backgrounds. The SES-removal ablation provides direct evidence for this entanglement: removing SES from the model produced negligible changes in both AUC ($\Delta$ = 0.003) and group-level fairness metrics, confirming that the socioeconomic signal is captured redundantly through cognitive scores that are themselves products of socioeconomic stratification. The MICE analysis on the full sample reinforces this interpretation: when attrition-related selection bias is addressed, the pattern of differential performance persists, and all groups show substantially higher absolute detection rates---indicating that attrition selectively removed the very students the model would have flagged.
 
 \textbf{Calibration and trust:} Calibration unfairness is particularly consequential because practitioners rely on predicted probabilities, not just binary classifications, to prioritize interventions. If a school counselor sees that two students both have a 30\% predicted risk, they may allocate resources equally---but if the model is poorly calibrated for Black students, these probability estimates carry unequal information content \citep{pleiss2017calibration}.
 
@@ -880,7 +880,7 @@ This study has several limitations:
 \begin{itemize}
     \item \textbf{Public-use data constraints:} The public-use ECLS-K:2011 file has some variables suppressed or top-coded to protect confidentiality, potentially limiting predictive power.
 
-    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) showed substantially higher absolute TPR for all groups (Black: 0.30 $\rightarrow$ 0.53; Hispanic: 0.39 $\rightarrow$ 0.55; White: 0.16 $\rightarrow$ 0.37), with TPR ratios moving toward parity but the pattern of differential performance persisting. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
+    \item \textbf{Missing data and attrition:} Our primary analysis used complete cases ($N = 9{,}104$), representing 50\% of the original cohort. Attrition analysis revealed that dropouts had significantly lower baseline cognitive scores (Cohen's $d \geq 0.20$ on all cognitive variables) and were disproportionately from minority and lower-SES backgrounds (e.g., White representation: 53.4\% among completers vs.\ 40.0\% among dropouts). MICE sensitivity analysis on the full sample ($N = 18{,}151$) showed substantially higher absolute TPR for all groups (Black: 0.29 $\rightarrow$ 0.53; Hispanic: 0.41 $\rightarrow$ 0.55; White: 0.17 $\rightarrow$ 0.37), with TPR ratios moving toward parity but the pattern of differential performance persisting. IPW reweighting produced virtually identical results (AUC = 0.848), with well-behaved weights (mean = 0.77, SD = 0.08, range 0.58--1.03). While these sensitivity analyses support the robustness of our primary conclusions, the analytic sample likely under-represents the most disadvantaged students, and the true magnitude of fairness disparities may be larger than reported.
 
     \item \textbf{Single pre-pandemic cohort:} The ECLS-K:2011 followed a single cohort (2010--2016) that preceded the COVID-19 pandemic. Post-pandemic learning losses were substantial and sharply stratified by race and SES \citep{fahle2023learning}, suggesting that the SES-achievement gradient underlying our findings has likely steepened. Models trained on pre-pandemic data would face distributional shift when applied to contemporary cohorts. Future audits should test cross-cohort generalization across the pre-/post-pandemic boundary.
 
@@ -1025,7 +1025,7 @@ Spring K Reading & 965 & 5.3\% \\
 \end{tabular}
 \end{table*}
 
-The high rate of missing outcome data (37\%) reflects sample attrition over the longitudinal study. As documented in Section 4.7, completers differed systematically from dropouts on all baseline cognitive variables (Cohen's $d = 0.22$--$0.30$), with White students over-represented among completers. MICE and IPW sensitivity analyses confirmed that the pattern of differential performance persists after correcting for attrition.
+The high rate of missing outcome data (37\%) reflects sample attrition over the longitudinal study. As documented in Section 4.7, completers differed systematically from dropouts on all baseline cognitive variables (Cohen's $d = 0.26$--$0.31$), with White students over-represented among completers. MICE and IPW sensitivity analyses confirmed that the pattern of differential performance persists after correcting for attrition.
 
 \newpage
 \section{Supplementary Results}
