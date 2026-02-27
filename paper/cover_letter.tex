@@ -1,12 +1,14 @@
-\documentclass[12pt,a4paper]{article}
+\documentclass[11pt,a4paper]{article}
 
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.8in,top=0.6in,bottom=0.7in]{geometry}
 \usepackage{hyperref}
 \usepackage{setspace}
-\onehalfspacing
+\singlespacing
 \hypersetup{colorlinks=true,urlcolor=blue}
 
 \pagestyle{empty}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
 
 \begin{document}
 
@@ -14,17 +16,15 @@
 \today
 \end{flushright}
 
-\vspace{0.5cm}
+\vspace{-0.4cm}
 
-\noindent Editor-in-Chief\\
+Editor-in-Chief\\
 \textit{AERA Open}\\
 American Educational Research Association
 
-\bigskip
+\vspace{0.1cm}
 
-\noindent Dear Editor,
-
-\medskip
+Dear Editor,
 
 We are pleased to submit our manuscript, ``When Algorithms Mirror Inequality: Structural Encoding of Fairness Disparities in Early Childhood Risk Prediction,'' for consideration as a regular article in \textit{AERA Open}.
 
@@ -32,30 +32,28 @@ This paper began with a straightforward question: if a school district deploys a
 
 Using the nationally representative ECLS-K:2011 ($N = 9{,}104$), we evaluated seven algorithms spanning logistic regression to modern gradient boosting. All seven produced nearly identical disparities---Hispanic students flagged at 2.4 times the rate of White students, Black students experiencing nearly four times higher calibration error. That convergence is the central finding: these gaps are not artifacts of any particular model. They are embedded in the data before any algorithm touches it.
 
-Through counterfactual decomposition, we traced the pattern to its source. Statistically aligning Hispanic and White students on baseline characteristics did not merely close the gap---it reversed it. The portion attributable to differences in early cognitive scores and socioeconomic conditions exceeded the observed disparity by 52\%, revealing that the algorithms were quietly \textit{compressing} inequality rather than amplifying it. Removing SES variables changed almost nothing, because kindergarten test scores already encode the same socioeconomic signal. In effect, these models operate as poverty detectors---and no amount of algorithmic refinement can remedy that from within.
+Through counterfactual decomposition, we traced the pattern to its source. Statistically aligning Hispanic and White students on baseline characteristics did not merely close the gap---it reversed it. The portion attributable to differences in early cognitive scores and socioeconomic conditions exceeded the observed disparity by 52\%, revealing that algorithms were quietly \textit{compressing} inequality rather than amplifying it. Removing SES variables changed almost nothing, because kindergarten test scores already encode the same socioeconomic signal. In effect, these models operate as poverty detectors---and no algorithmic refinement can remedy that from within.
 
-We believe these findings speak directly to \textit{AERA Open}'s readership. First, they reframe the debate from ``which algorithm is fairest?'' to ``what institutional conditions produce data from which fair prediction is even possible?''---a question for educators and policymakers, not just computer scientists. Second, the paper provides a replicable analytic template---combining calibration analysis, intersectional auditing, temporal stability testing, and uncertainty quantification---that researchers can apply to the growing number of predictive tools in K--12 settings.
+These findings speak directly to \textit{AERA Open}'s readership. First, they reframe the debate from ``which algorithm is fairest?'' to ``what institutional conditions produce data from which fair prediction is even possible?''---a question for educators and policymakers, not just computer scientists. Second, the paper provides a replicable template---combining calibration analysis, intersectional auditing, temporal stability testing, and uncertainty quantification---that researchers can apply to predictive tools increasingly common in K--12 settings.
 
-The manuscript is approximately 10,000 words with 6 figures and 14 tables, accompanied by Supplementary Materials with 9 figures and 8 tables. All analyses use freely available public-use data and reproducible open-source code. This manuscript has not been published or submitted elsewhere, and all authors have approved the submitted version.
+The manuscript is approximately 10,000 words with 6 figures and 14 tables, plus Supplementary Materials with 9 figures and 8 tables. All analyses use freely available public-use data and reproducible open-source code. This manuscript has not been published or submitted elsewhere, and all authors have approved the submitted version.
 
 We appreciate your time and consideration.
 
-\bigskip
+\vspace{0.2cm}
 
-\noindent Sincerely,
+Sincerely,
 
-\medskip
-
-\noindent Kismat Raj Vishwakarma\\
+Kismat Raj Vishwakarma\\
 \textit{On behalf of all authors}
 
-\vfill
+\vspace{0.5cm}
 
 \noindent\rule{0.3\textwidth}{0.4pt}
 
 \smallskip
 
-\noindent\textbf{Corresponding Author}\\
+\textbf{Corresponding Author}\\
 Kismat Raj Vishwakarma\\
 National Institute of Electronics \& Information Technology (NIELIT), India\\
 Email: \href{mailto:kismat.vishwakarma@gmail.com}{kismat.vishwakarma@gmail.com}
