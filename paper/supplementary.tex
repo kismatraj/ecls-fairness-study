@@ -55,14 +55,14 @@
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{../results/figures/fairness_ppv_with_ci.pdf}
-\caption*{\textbf{Figure S1.} Positive Predictive Value (PPV) by Racial/Ethnic Group with 95\% Bootstrap Confidence Intervals. PPV represents the proportion of students flagged as at-risk who are truly at-risk. The Other group shows the highest PPV (0.871) but with wide confidence intervals reflecting small sample size, while the Black group has the lowest PPV (0.508), indicating that nearly half of Black students flagged as at-risk are false positives.}
+\caption*{\textbf{Figure S1.} Positive Predictive Value (PPV) by Racial/Ethnic Group with 95\% Bootstrap Confidence Intervals. PPV represents the proportion of students flagged as at-risk who are truly at-risk. The Other group shows the highest PPV (0.758) but with wide confidence intervals reflecting small sample size, while the Black group has the lowest PPV (0.487), indicating that nearly half of Black students flagged as at-risk are false positives.}
 \label{fig:ppv_ci}
 \end{figure}
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.85\textwidth]{../results/figures/explanation_comparison.pdf}
-\caption*{\textbf{Figure S2.} SHAP vs.\ Permutation Importance Comparison. Normalized importance scores from SHAP (mean absolute SHAP values) and permutation importance are compared across all features. Both methods identify the same top-5 predictors with high agreement (mean agreement = 0.87), with spring kindergarten math (X2MTHETK) as the dominant predictor. Features with zero importance under both methods (race, sex, language, early ATL) were effectively excluded by elastic net regularization.}
+\caption*{\textbf{Figure S2.} SHAP vs.\ Permutation Importance Comparison. Normalized importance scores from SHAP (mean absolute SHAP values) and permutation importance are compared across all features. Both methods identify the same top-5 predictors with high agreement (mean agreement = 0.90), with spring kindergarten math (X2MTHETK) as the dominant predictor. Features with zero importance under both methods (race, sex, language, early ATL) were effectively excluded by elastic net regularization.}
 \label{fig:explanation_comparison}
 \end{figure}
 
@@ -131,17 +131,17 @@
 \textbf{Feature} & \textbf{SHAP (norm.)} & \textbf{Perm.\ (norm.)} & \textbf{Agree.} & \textbf{SHAP Rk.} & \textbf{Perm.\ Rk.} \\
 \midrule
 X2MTHETK & 1.000 & 1.000 & 1.000 & 1 & 1 \\
-X2RTHETK & 0.621 & 0.494 & 0.873 & 2 & 2 \\
-X1SESQ5 & 0.618 & 0.297 & 0.680 & 3 & 4 \\
-X1MTHETK & 0.554 & 0.263 & 0.709 & 4 & 5 \\
-X4TCHAPP & 0.533 & 0.356 & 0.823 & 5 & 3 \\
-X6DCCSSCR & 0.163 & 0.029 & 0.866 & 6 & 6 \\
-X1RTHETK & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
-X12LANGST & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
-X2TCHAPP & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
-X1TCHAPP & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
-X\_CHSEX\_R & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
-X\_RACETH\_R & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
+X1SESQ5 & 0.661 & 0.332 & 0.671 & 2 & 4 \\
+X2RTHETK & 0.629 & 0.504 & 0.875 & 3 & 2 \\
+X1MTHETK & 0.567 & 0.271 & 0.705 & 4 & 5 \\
+X4TCHAPP & 0.557 & 0.391 & 0.833 & 5 & 3 \\
+X6DCCSSCR & 0.191 & 0.037 & 0.846 & 6 & 6 \\
+X1RTHETK & 0.076 & 0.000 & 0.924 & 7 & 7 \\
+X\_CHSEX\_R & 0.008 & 0.000 & 0.992 & 8 & 10 \\
+X12LANGST & 0.000 & 0.000 & 1.000 & 10.5 & 10 \\
+X1TCHAPP & 0.000 & 0.000 & 1.000 & 10.5 & 10 \\
+X2TCHAPP & 0.000 & 0.000 & 1.000 & 10.5 & 10 \\
+X\_RACETH\_R & 0.000 & 0.000 & 1.000 & 10.5 & 10 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -154,18 +154,18 @@ X\_RACETH\_R & 0.000 & 0.000 & 1.000 & 9.5 & 9.5 \\
 \toprule
 \textbf{Feature} & \textbf{Mean Imp.} & \textbf{Std.} & \textbf{CI 2.5\%} & \textbf{CI 97.5\%} \\
 \midrule
-X2MTHETK & 0.046 & 0.004 & 0.042 & 0.054 \\
-X2RTHETK & 0.023 & 0.003 & 0.018 & 0.027 \\
+X2MTHETK & 0.042 & 0.003 & 0.038 & 0.050 \\
+X2RTHETK & 0.022 & 0.002 & 0.017 & 0.026 \\
 X4TCHAPP & 0.016 & 0.003 & 0.012 & 0.022 \\
 X1SESQ5 & 0.013 & 0.003 & 0.007 & 0.019 \\
-X1MTHETK & 0.012 & 0.002 & 0.007 & 0.017 \\
-X6DCCSSCR & 0.001 & 0.001 & $-$0.001 & 0.003 \\
-X1RTHETK & 0.000 & 0.000 & 0.000 & 0.000 \\
+X1MTHETK & 0.011 & 0.002 & 0.007 & 0.016 \\
+X6DCCSSCR & 0.002 & 0.001 & $-$0.001 & 0.003 \\
+X1RTHETK & 0.000 & 0.000 & $-$0.001 & 0.001 \\
 X1TCHAPP & 0.000 & 0.000 & 0.000 & 0.000 \\
 X2TCHAPP & 0.000 & 0.000 & 0.000 & 0.000 \\
-X\_CHSEX\_R & 0.000 & 0.000 & 0.000 & 0.000 \\
 X\_RACETH\_R & 0.000 & 0.000 & 0.000 & 0.000 \\
 X12LANGST & 0.000 & 0.000 & 0.000 & 0.000 \\
+X\_CHSEX\_R & 0.000 & 0.000 & 0.000 & 0.000 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -314,7 +314,7 @@ Table S7 presents the group-level fairness metrics for both outcomes side by sid
 
 \begin{table}[H]
 \centering
-\caption*{\textbf{Table S7.} Fairness Metrics by Racial/Ethnic Group for Reading and Math Outcomes (with 95\% Bootstrap Confidence Intervals). Both outcomes show higher TPR for Hispanic and Black students relative to White students. Math shows notably higher FPR for Black students (0.161) than reading (0.095).}
+\caption*{\textbf{Table S7.} Fairness Metrics by Racial/Ethnic Group for Reading and Math Outcomes (with 95\% Bootstrap Confidence Intervals). Both outcomes show higher TPR for Hispanic and Black students relative to White students. Math shows notably higher FPR for Black students (0.161) than reading (0.103).}
 \label{tab:outcome_fairness}
 \footnotesize
 \begin{tabular}{llrccc}
@@ -352,10 +352,10 @@ Table S8 presents formal disparity metrics for both outcomes relative to the Whi
 \textbf{Outcome} & \textbf{Group} & \textbf{TPR Rat.} & \textbf{TPR Diff} & \textbf{FPR Rat.} & \textbf{FPR Diff} & \textbf{Disp.\ Imp.} \\
 \midrule
 \multirow{4}{*}{Reading}
- & Asian & 4.661 & +0.589 & 0.000 & $-$0.011 & No \\
- & Hispanic & 2.445 & +0.233 & 5.855 & +0.053 & No \\
- & Black & 1.823 & +0.132 & 8.587 & +0.082 & No \\
- & Other & 1.611 & +0.098 & 0.465 & $-$0.006 & No \\
+ & Asian & 4.350 & +0.578 & 0.000 & $-$0.012 & No \\
+ & Hispanic & 2.377 & +0.237 & 6.245 & +0.061 & No \\
+ & Black & 1.701 & +0.121 & 8.777 & +0.091 & No \\
+ & Other & 1.504 & +0.087 & 0.867 & $-$0.002 & No \\
 \addlinespace
 \multirow{4}{*}{Math}
  & Asian & 3.841 & +0.740 & 4.681 & +0.087 & No \\
@@ -368,6 +368,6 @@ Table S8 presents formal disparity metrics for both outcomes relative to the Whi
 
 \noindent The most notable difference between reading and math outcomes is the disparate impact flagged for the Other racial group in math prediction (TPR ratio = 0.24). While all minority groups have \textit{higher} TPR than White students for reading, the Other group has dramatically \textit{lower} TPR for math (0.061 vs.\ 0.259 for White). This finding indicates that fairness properties are domain-specific: a model that passes fairness criteria for one academic outcome may fail for another, reinforcing the importance of outcome-specific fairness auditing.
 
-Additionally, math prediction shows substantially higher FPR for Black students (0.161 vs.\ 0.095 for reading), meaning that non-at-risk Black students are even more likely to be incorrectly flagged in math than in reading. The Asian group achieves perfect recall in math (TPR = 1.000), though the very small sample size (N = 12) limits interpretation.
+Additionally, math prediction shows substantially higher FPR for Black students (0.161 vs.\ 0.103 for reading), meaning that non-at-risk Black students are even more likely to be incorrectly flagged in math than in reading. The Asian group achieves perfect recall in math (TPR = 1.000), though the very small sample size (N = 12) limits interpretation.
 
 \end{document}
