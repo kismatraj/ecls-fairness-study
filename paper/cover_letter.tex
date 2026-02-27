@@ -4,8 +4,8 @@
 \usepackage{hyperref}
 \hypersetup{colorlinks=true,urlcolor=blue}
 
-\signature{Kismat Raj\\University of Windsor}
-\address{Kismat Raj\\University of Windsor\\Windsor, Ontario, Canada\\krajdev@gmail.com}
+\signature{Kismat Raj Vishwakarma\\(on behalf of all authors)}
+\address{Kismat Raj Vishwakarma\\National Institute of Electronics \& Information Technology (NIELIT), India\\kismat.vishwakarma@gmail.com}
 \date{\today}
 
 \begin{document}
@@ -14,27 +14,27 @@
 
 \opening{Dear Editor,}
 
-I am pleased to submit my manuscript, ``Algorithmic Fairness and Temporal Generalization in Early Childhood Risk Prediction: A Multi-Dimensional Audit Using the ECLS-K:2011 Longitudinal Study,'' for consideration as a regular article in \textit{AERA Open}.
+We are pleased to submit our manuscript, ``When Algorithms Mirror Inequality: Structural Encoding of Fairness Disparities in Early Childhood Risk Prediction,'' for consideration as a regular article in \textit{AERA Open}.
 
-\textbf{Summary.} This study conducts a comprehensive, multi-dimensional fairness audit of machine learning models that use early childhood data to predict 5th-grade academic risk. Using the nationally representative ECLS-K:2011 public-use data ($N = 9{,}104$), we trained seven algorithms---including three state-of-the-art gradient boosting methods---and evaluated them across group fairness, calibration fairness, intersectional fairness, and temporal generalization.
+\textbf{Summary.} School districts increasingly deploy machine learning algorithms to identify students at risk of academic failure, yet whether these tools work equitably across demographic groups---and why they may not---remains understudied. Using the nationally representative ECLS-K:2011 ($N = 9{,}104$; sensitivity analyses on $N = 18{,}151$), we audited seven algorithms spanning classical regression and state-of-the-art gradient boosting, evaluating group fairness, calibration fairness, intersectional fairness, and temporal generalization simultaneously.
 
-\textbf{Key findings and contributions.} Three results are especially noteworthy:
+\textbf{Key findings.} Three results are especially noteworthy:
 
 \begin{enumerate}
-    \item \textit{The ``poverty detector'' problem.} Intersectional analysis (race $\times$ SES) revealed that high-SES Black students were completely invisible to the model (TPR = 0\%), despite a 14\% at-risk prevalence in this subgroup. The model identifies risk primarily through socioeconomic signals, systematically missing minority students whose difficulties arise from non-poverty-related factors. This finding would not emerge from standard single-attribute fairness audits.
+    \item \textit{Structural encoding, not algorithmic bias.} All seven algorithms converged on nearly identical performance (AUC = 0.837--0.848) and the same pattern of racial disparities---Hispanic students flagged at 2.4 times the rate of White students, Black students experiencing 3.7 times higher calibration error. Counterfactual decomposition traced these disparities to differences in children's baseline characteristics: the gap attributable to distributional differences exceeded the observed disparity (152\%), meaning the algorithms partially \textit{compressed} rather than amplified inequality. The source of inequity lies in the data, not the model.
 
-    \item \textit{The temporal paradox.} Additional longitudinal data (kindergarten through 3rd grade) improved overall accuracy but failed to resolve---and in some cases worsened---fairness disparities across racial/ethnic groups. This challenges the common assumption that more data naturally produces fairer predictions.
+    \item \textit{The poverty detector problem.} Removing socioeconomic status from the model changed almost nothing ($\Delta$AUC = 0.003), because cognitive scores already encode the same disadvantage. Exploratory intersectional analysis (race $\times$ SES) suggested the model identifies risk primarily through socioeconomic signals, potentially missing minority students whose difficulties arise from non-poverty-related factors.
 
-    \item \textit{Threshold fragility.} Fairness compliance was achieved at only one of four tested at-risk thresholds, demonstrating that fairness claims are contingent on specific analytical choices rather than inherent model properties.
+    \item \textit{Irreducibility within the predictive paradigm.} Additional longitudinal data improved accuracy without resolving fairness gaps. Fairness compliance held at only one of four tested thresholds. Both post-processing and in-processing mitigation reduced disparities but at substantial accuracy cost (AUC penalty = 0.21--0.23), consistent with known impossibility results.
 \end{enumerate}
 
-\textbf{Significance for AERA Open's readership.} As predictive analytics become increasingly prevalent in K--12 settings, this work provides both a methodological framework and empirical evidence for why comprehensive fairness auditing---spanning group metrics with uncertainty quantification, calibration analysis, intersectional subgroup assessment, and temporal stability---should be a prerequisite for deployment. The finding that classical regularized models match state-of-the-art methods also carries practical implications: schools need not adopt complex algorithms to achieve competitive prediction, but no algorithm resolves the underlying equity challenges.
+\textbf{Significance for AERA Open's readership.} This manuscript reframes the policy conversation from ``which algorithm?'' to ``what data and institutional practices produce these disparities?'' It provides both a methodological framework for comprehensive fairness auditing---spanning uncertainty quantification, calibration analysis, intersectional assessment, and temporal stability---and empirical evidence that fairness failures in early childhood prediction are properties of the institutional conditions that generate the data, not fixable by algorithmic selection alone. As predictive analytics become standard in K--12 settings, this evidence base is essential for responsible deployment.
 
-\textbf{Fit with AERA Open.} This manuscript addresses a timely intersection of educational research, quantitative methods, and equity---core concerns for AERA's readership. The work is empirical, uses rigorous methods on nationally representative data, and yields actionable implications for researchers, practitioners, and policymakers considering algorithmic tools in education.
+\textbf{Fit with AERA Open.} This manuscript addresses a timely intersection of educational equity, quantitative methods, and algorithmic governance---core concerns for AERA's readership. The work is empirical, uses rigorous methods on nationally representative data, and yields actionable implications for researchers, practitioners, and policymakers considering algorithmic tools in education.
 
-\textbf{Manuscript details.} The manuscript is approximately 8,000 words with 11 figures and 10 tables in the main text, plus an Online Supplementary Materials document with 6 additional figures and 8 tables. All analyses use freely available public-use data and fully reproducible open-source code. This manuscript has not been published or submitted elsewhere.
+\textbf{Manuscript details.} The manuscript is approximately 10,000 words with 6 figures and 14 tables in the main text, plus Supplementary Materials with 9 additional figures and 8 tables. All analyses use freely available public-use data and fully reproducible open-source code. This manuscript has not been published or submitted elsewhere. All authors have approved the submitted version.
 
-I appreciate your consideration and look forward to your response.
+We appreciate your consideration and look forward to your response.
 
 \closing{Sincerely,}
 
